@@ -3,10 +3,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import {
   Table,
@@ -31,13 +31,14 @@ import {
   User,
 } from "lucide-react"
 
-type NavKey = "inicio" | "explorar" | "nova" | "notificacoes" | "perfil"
+type NavKey = "inicio" | "dashboard" | "explorar" | "nova" | "notificacoes" | "perfil"
 
 const navItems: { key: NavKey; label: string; icon: React.ElementType }[] = [
-  { key: "inicio", label: "Início", icon: Home },
+  { key: "inicio", label: "InÃ­cio", icon: Home },
+  { key: "dashboard", label: "Dashboard", icon: ShieldCheck },
   { key: "explorar", label: "Explorar", icon: Compass },
   { key: "nova", label: "Nova Arte", icon: PlusSquare },
-  { key: "notificacoes", label: "Notificações", icon: Bell },
+  { key: "notificacoes", label: "NotificaÃ§Ãµes", icon: Bell },
   { key: "perfil", label: "Perfil", icon: User },
 ]
 
@@ -45,6 +46,7 @@ export function AppShell() {
   const [active, setActive] = useState<NavKey>("inicio")
   const [commissionOpen, setCommissionOpen] = useState(false)
   const [selectedPrice, setSelectedPrice] = useState(100)
+  const [priceRange, setPriceRange] = useState<[number, number]>([50, 300])
 
   const artistMap = useMemo(
     () => new Map(users.map((user) => [user.id, user])),
@@ -80,87 +82,87 @@ export function AppShell() {
               })}
             </div>
           </section>
-
-          <Separator />
-
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Painel interno
-                </p>
-                <h2 className="text-xl font-semibold">Painel Administrativo</h2>
-              </div>
-              <Button variant="outline" size="sm">
-                Ver relatórios
-              </Button>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              {[
-                { label: "Volume Transacionado", value: "R$ 82.450,00" },
-                { label: "Receita (Taxas)", value: "R$ 8.245,00" },
-                { label: "Disputas Abertas", value: "12" },
-              ].map((metric) => (
-                <Card key={metric.label} className="border-border/60 bg-card/95">
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      {metric.label}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-6">
-                    <p className="text-2xl font-semibold">{metric.value}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <Card className="border-border/60 bg-card/95">
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Lista de Moderação
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Conteúdo</TableHead>
-                      <TableHead>Motivo</TableHead>
-                      <TableHead>Autor</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {moderationReports.map((report) => (
-                      <TableRow key={report.id}>
-                        <TableCell>{report.conteudo}</TableCell>
-                        <TableCell>{report.motivo}</TableCell>
-                        <TableCell>{report.autor}</TableCell>
-                        <TableCell>
-                          <Badge variant={report.status === "novo" ? "default" : "outline"}>
-                            {report.status === "novo" ? "Novo" : "Revisado"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="sm">
-                              Ignorar
-                            </Button>
-                            <Button variant="destructive" size="sm">
-                              Banir
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </section>
         </>
+      )}
+
+      {active === "dashboard" && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                Painel interno
+              </p>
+              <h2 className="text-xl font-semibold">Painel Administrativo</h2>
+            </div>
+            <Button variant="outline" size="sm">
+              Ver relatÇürios
+            </Button>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              { label: "Volume Transacionado", value: "R$ 82.450,00" },
+              { label: "Receita (Taxas)", value: "R$ 8.245,00" },
+              { label: "Disputas Abertas", value: "12" },
+            ].map((metric) => (
+              <Card key={metric.label} className="border-border/60 bg-card/95">
+                <CardHeader>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {metric.label}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pb-6">
+                  <p className="text-2xl font-semibold">{metric.value}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <Card className="border-border/60 bg-card/95">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Lista de ModeraÇõÇœo
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ConteÇ§do</TableHead>
+                    <TableHead>Motivo</TableHead>
+                    <TableHead>Autor</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">AÇõÇæes</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {moderationReports.map((report) => (
+                    <TableRow key={report.id}>
+                      <TableCell>{report.conteudo}</TableCell>
+                      <TableCell>{report.motivo}</TableCell>
+                      <TableCell>{report.autor}</TableCell>
+                      <TableCell>
+                        <Badge variant={report.status === "novo" ? "default" : "outline"}>
+                          {report.status === "novo" ? "Novo" : "Revisado"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="ghost" size="sm">
+                            Ignorar
+                          </Button>
+                          <Button variant="destructive" size="sm">
+                            Banir
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </section>
       )}
 
       {active === "explorar" && (
@@ -179,9 +181,9 @@ export function AppShell() {
                   <SelectValue placeholder="Ordenar por" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="relevancia">Relevância</SelectItem>
+                  <SelectItem value="relevancia">RelevÃ¢ncia</SelectItem>
                   <SelectItem value="recentes">Mais recentes</SelectItem>
-                  <SelectItem value="preco">Menor preço</SelectItem>
+                  <SelectItem value="preco">Menor preÃ§o</SelectItem>
                 </SelectContent>
               </Select>
               <Sheet>
@@ -190,9 +192,9 @@ export function AppShell() {
                 </SheetTrigger>
                 <SheetContent side="right">
                   <SheetHeader>
-                    <SheetTitle>Filtros avançados</SheetTitle>
+                    <SheetTitle>Filtros avanÃ§ados</SheetTitle>
                     <SheetDescription>
-                      Ajuste o estilo, prazo e faixa de preço.
+                      Ajuste o estilo, prazo e faixa de preÃ§o.
                     </SheetDescription>
                   </SheetHeader>
                   <div className="mt-6 space-y-4">
@@ -216,15 +218,35 @@ export function AppShell() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="7dias">Até 7 dias</SelectItem>
-                          <SelectItem value="15dias">Até 15 dias</SelectItem>
-                          <SelectItem value="30dias">Até 30 dias</SelectItem>
+                          <SelectItem value="7dias">AtÃ© 7 dias</SelectItem>
+                          <SelectItem value="15dias">AtÃ© 15 dias</SelectItem>
+                          <SelectItem value="30dias">AtÃ© 30 dias</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm font-medium">Faixa de preço</p>
-                      <Input placeholder="R$ 50 - R$ 300" />
+                      <p className="text-sm font-medium">Faixa de preÃ§o</p>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>
+                          R${" "}
+                          {priceRange[0].toLocaleString("pt-BR", {
+                            minimumFractionDigits: 0,
+                          })}
+                        </span>
+                        <span>
+                          R${" "}
+                          {priceRange[1].toLocaleString("pt-BR", {
+                            minimumFractionDigits: 0,
+                          })}
+                        </span>
+                      </div>
+                      <Slider
+                        value={priceRange}
+                        onValueChange={setPriceRange}
+                        min={50}
+                        max={300}
+                        step={10}
+                      />
                     </div>
                     <Button className="w-full">Aplicar filtros</Button>
                   </div>
@@ -254,11 +276,11 @@ export function AppShell() {
             <CardContent className="space-y-4 pt-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Título</p>
+                  <p className="text-sm font-medium">TÃ­tulo</p>
                   <Input placeholder="Ex: Retrato futurista" />
                 </div>
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Preço base</p>
+                  <p className="text-sm font-medium">PreÃ§o base</p>
                   <Input placeholder="R$ 120,00" />
                 </div>
               </div>
@@ -270,28 +292,28 @@ export function AppShell() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ilustracao">Ilustração</SelectItem>
+                      <SelectItem value="ilustracao">IlustraÃ§Ã£o</SelectItem>
                       <SelectItem value="pixel">Pixel Art</SelectItem>
                       <SelectItem value="3d">3D Render</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Nível de conteúdo</p>
+                  <p className="text-sm font-medium">NÃ­vel de conteÃºdo</p>
                   <Select defaultValue="seguro">
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="seguro">Seguro</SelectItem>
-                      <SelectItem value="sensivel">Sensível</SelectItem>
+                      <SelectItem value="sensivel">SensÃ­vel</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium">Descrição</p>
-                <Textarea placeholder="Descreva seu projeto e referências" />
+                <p className="text-sm font-medium">DescriÃ§Ã£o</p>
+                <Textarea placeholder="Descreva seu projeto e referÃªncias" />
               </div>
               <Button className="w-full">Publicar arte</Button>
             </CardContent>
@@ -305,7 +327,7 @@ export function AppShell() {
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
               Central
             </p>
-            <h1 className="text-2xl font-semibold">Notificações</h1>
+            <h1 className="text-2xl font-semibold">NotificaÃ§Ãµes</h1>
           </div>
           <div className="space-y-3">
             {notifications.map((item) => (
@@ -341,8 +363,8 @@ export function AppShell() {
               <ShieldCheck className="size-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold">Ateliê Seguro</p>
-              <p className="text-xs text-muted-foreground">Comissões protegidas</p>
+              <p className="text-sm font-semibold">AteliÃª Seguro</p>
+              <p className="text-xs text-muted-foreground">ComissÃµes protegidas</p>
             </div>
           </div>
           <div className="mt-8 space-y-1">
@@ -383,7 +405,7 @@ export function AppShell() {
                 {activeLabel}
               </p>
               <h2 className="text-lg font-semibold">
-                Plataforma de Comissões
+                Plataforma de ComissÃµes
               </h2>
             </div>
             <div className="flex items-center gap-3">
