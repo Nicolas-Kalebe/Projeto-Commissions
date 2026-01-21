@@ -242,7 +242,7 @@ export function AppShell() {
                       </div>
                       <Slider
                         value={priceRange}
-                        onValueChange={setPriceRange}
+                        onValueChange={(value) => setPriceRange([value[0], value[1]])}
                         min={50}
                         max={300}
                         step={10}
@@ -408,6 +408,11 @@ export function AppShell() {
                 Plataforma de ComissÃµes
               </h2>
             </div>
+            <div className="w-full max-w-xl flex gap-4">
+              <Input placeholder="Buscar estilos ou artistas" />
+              <Button className="font-['arial']">Search</Button>
+            </div>
+
             <div className="flex items-center gap-3">
               <Badge variant="secondary">Saldo protegido</Badge>
               <Avatar className="size-9">

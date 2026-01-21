@@ -1,7 +1,13 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { arts, priceSheets, users } from "@/data"
 import { PriceSheetCard } from "@/components/profile/PriceSheetCard"
@@ -27,7 +33,13 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
   return (
     <section className="space-y-6">
       <div className="relative overflow-hidden rounded-xl border bg-card">
-        <div className="h-40 w-full bg-[linear-gradient(120deg,oklch(0.92_0.04_80),oklch(0.86_0.02_20),oklch(0.95_0.02_240))]" />
+        <div
+          className="h-48 w-[calc(100%+3rem)] -mx-6 bg-cover bg-center md:h-56"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1600&q=80')",
+          }}
+        />
         <div className="relative -mt-10 flex flex-col gap-4 px-6 pb-6 md:flex-row md:items-end md:justify-between">
           <div className="flex items-center gap-4">
             <Avatar className="size-20 border-4 border-background shadow-sm">
@@ -60,49 +72,48 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
         </div>
       </div>
 
-      <Tabs defaultValue="portfolio" className="w-full">
-        <TabsList>
-          <TabsTrigger value="portfolio">Portfólio</TabsTrigger>
-          <TabsTrigger value="precos">Tabela de Preços</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="portfolio">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Portfólio</h3>
+        </div>
+        <Carousel opts={{ loop: true }} className="relative">
+          <CarouselContent className="-ml-2">
             {portfolio.map((art) => (
-              <Card key={art.id} className="overflow-hidden">
-                <img
-                  src={art.imageUrl}
-                  alt={art.titulo}
-                  className="h-44 w-full object-cover"
-                  loading="lazy"
-                />
-                <CardContent className="space-y-2 p-4">
-                  <p className="text-sm font-semibold">{art.titulo}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {art.tags.map((tag) => (
-                      <Badge key={tag} variant="outline">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <CarouselItem
+                key={art.id}
+                className="basis-full pl-2 sm:basis-full lg:basis-1/2"
+              >
+                <Card className="overflow-hidden border-0 shadow-none">
+                  <img
+                    src={art.imageUrl}
+                    alt={art.titulo}
+                    className="w-full object-cover"
+                    style={{ aspectRatio: "16 / 9" }}
+                    loading="lazy"
+                  />
+                </Card>
+              </CarouselItem>
             ))}
-          </div>
-        </TabsContent>
+          </CarouselContent>
+          <CarouselPrevious className="-left-4" />
+          <CarouselNext className="-right-4" />
+        </Carousel>
+      </section>
 
-        <TabsContent value="precos">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {priceSheets.map((sheet) => (
-              <PriceSheetCard
-                key={sheet.id}
-                sheet={sheet}
-                onRequest={onRequestCommission}
-              />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Tabela de Preços</h3>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {priceSheets.map((sheet) => (
+            <PriceSheetCard
+              key={sheet.id}
+              sheet={sheet}
+              onRequest={onRequestCommission}
+            />
+          ))}
+        </div>
+      </section>
     </section>
   )
 }
