@@ -119,6 +119,46 @@ export const arts: Art[] = [
     nsfw: false,
     preco: 70,
   },
+  {
+    id: "artwork-9",
+    titulo: "Campo Vertical",
+    imageUrl:
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=700&h=1000&fit=crop&auto=format",
+    artistId: "art-1",
+    tags: ["#Landscape", "#Vertical", "#Soft"],
+    nsfw: false,
+    preco: 150,
+  },
+  {
+    id: "artwork-10",
+    titulo: "Luz Larga",
+    imageUrl:
+      "https://images.unsplash.com/photo-1496318447583-f524534e9ce1?q=80&w=1200&h=600&fit=crop&auto=format",
+    artistId: "art-1",
+    tags: ["#Wide", "#Glow", "#Atmosphere"],
+    nsfw: false,
+    preco: 200,
+  },
+  {
+    id: "artwork-11",
+    titulo: "Retrato Alto",
+    imageUrl:
+      "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=700&h=1100&fit=crop&auto=format",
+    artistId: "art-1",
+    tags: ["#Portrait", "#Moody", "#Detail"],
+    nsfw: false,
+    preco: 180,
+  },
+  {
+    id: "artwork-12",
+    titulo: "Panorama Frio",
+    imageUrl:
+      "https://images.unsplash.com/photo-1481277542470-605612bd2d61?q=80&w=1400&h=700&fit=crop&auto=format",
+    artistId: "art-1",
+    tags: ["#Panorama", "#Blue", "#Calm"],
+    nsfw: false,
+    preco: 220,
+  },
 ]
 
 export const priceSheets: PriceSheet[] = [
