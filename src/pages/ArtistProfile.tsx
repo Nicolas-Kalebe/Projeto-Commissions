@@ -9,10 +9,11 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { arts, priceSheets, users } from "@/data"
 import { PriceSheetCard } from "@/components/profile/PriceSheetCard"
-import { Star } from "lucide-react"
+import { Star, X } from "lucide-react"
 
 interface ArtistProfileProps {
   onRequestCommission: (price: number) => void
@@ -20,6 +21,8 @@ interface ArtistProfileProps {
 
 export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
   const [showGallery, setShowGallery] = useState(false)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
   const artist = users.find((user) => user.id === "art-1")
   const portfolioIds = new Set(["artwork-1", "artwork-2", "artwork-7", "artwork-8"])
   const portfolio = arts.filter(
@@ -92,7 +95,7 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
               <Card className="border-border/60 p-0 bg-background/90 h-20">
                   <CardContent className="flex h-full w-full flex-col items-center justify-center p-0 text-center">
                   <p className="text-xs uppercase text-muted-foreground">
-                    Avaliação
+                    AvaliaÃƒÂ§ÃƒÂ£o
                   </p>
                   <div className="flex items-center justify-center gap-2">
                     <div className="flex items-center gap-0.5">
@@ -121,7 +124,7 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
 
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-0">
-          <h3 className="text-lg font-semibold">Portfólio</h3>
+          <h3 className="text-lg font-semibold">PortfÃƒÂ³lio</h3>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -144,20 +147,28 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
           </div>
         </div>
         {showGallery ? (
-          <div className="columns-1 gap-1 py-1 sm:columns-2 lg:columns-3 mt-4.5">
-            {gallery.map((art) => (
-              <div key={art.id} className="mb-1 overflow-hidden">
+          <div className="columns-1 gap-1 py-1 sm:columns-2 lg:columns-3 mt-2.5">
+            {gallery.map((art, index) => (
+              <button
+                key={art.id}
+                type="button"
+                className="mb-1 overflow-hidden"
+                onClick={() => {
+                  setLightboxIndex(index)
+                  setLightboxOpen(true)
+                }}
+              >
                 <img
                   src={art.imageUrl}
                   alt={art.titulo}
                   className="h-auto w-full"
                   loading="lazy"
                 />
-              </div>
+              </button>
             ))}
           </div>
         ) : (
-          <Carousel opts={{ loop: true }} className="relative">
+          <Carousel opts={{ loop: true }} className="relative mt-2.5">
             <CarouselContent className="-ml-2">
               {portfolio.map((art) => (
                 <CarouselItem
@@ -182,9 +193,88 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
         )}
       </section>
 
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+  <DialogContent
+    className="fixed left-1/2 top-1/2 flex w-full -translate-x-1/2 -translate-y-1/2 justify-center border-0 bg-transparent p-0 shadow-none [&>button]:hidden"
+  >
+    {/* Contador */}
+    <div className="absolute left-1/2 top-4 z-50 -translate-x-1/2 text-xs text-white/80">
+      {lightboxIndex + 1} / {gallery.length}
+    </div>
+
+    {/* Botão fechar */}
+    <Button
+      variant="secondary"
+      size="icon"
+      className="absolute right-4 top-4 z-50"
+      onClick={() => setLightboxOpen(false)}
+    >
+      <X className="h-4 w-4" />
+      <span className="sr-only">Fechar</span>
+    </Button>
+
+    {/* Área da imagem */}
+    <div className="relative flex h-[min(70vh,640px)] w-[92vw] max-w-[2400px] items-center justify-center overflow-hidden">
+      {/* Anterior */}
+      <Button
+        variant="secondary"
+        size="icon"
+        className="absolute left-0 top-1/2 z-50 -translate-y-1/2 -translate-x-10"
+        onClick={() =>
+          setLightboxIndex((prev) =>
+            prev === 0 ? gallery.length - 1 : prev - 1
+          )
+        }
+      >
+        <span className="sr-only">Anterior</span>
+        <svg
+          viewBox="0 0 24 24"
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </Button>
+
+      {/* Imagem */}
+      <img
+        src={gallery[lightboxIndex]?.imageUrl}
+        alt={gallery[lightboxIndex]?.titulo}
+        className="h-[600px] w-auto max-h-full max-w-full object-contain"
+      />
+
+      {/* Próximo */}
+      <Button
+        variant="secondary"
+        size="icon"
+        className="absolute right-0 top-1/2 z-50 -translate-y-1/2 translate-x-10"
+        onClick={() =>
+          setLightboxIndex((prev) =>
+            prev === gallery.length - 1 ? 0 : prev + 1
+          )
+        }
+      >
+        <span className="sr-only">Próximo</span>
+        <svg
+          viewBox="0 0 24 24"
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
+
+
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Tabela de Preços</h3>
+          <h3 className="text-lg font-semibold">Tabela de PreÃƒÂ§os</h3>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {priceSheets.map((sheet) => (
