@@ -35,6 +35,7 @@ export function AppShell() {
   const [commissionOpen, setCommissionOpen] = useState(false)
   const [selectedPrice, setSelectedPrice] = useState(100)
   const [priceRange, setPriceRange] = useState<[number, number]>([50, 300])
+  const [profileTheme, setProfileTheme] = useState("#FFFFFF")
 
   const artistMap = useMemo(
     () => new Map(users.map((user) => [user.id, user])),
@@ -68,15 +69,24 @@ export function AppShell() {
       )}
 
       {active === "perfil" && (
-        <ArtistProfile onRequestCommission={handleRequestCommission} />
+        <ArtistProfile
+          onRequestCommission={handleRequestCommission}
+          profileTheme={profileTheme}
+          onThemeChange={setProfileTheme}
+        />
       )}
     </div>
   )
   return (
-    <div className="min-h-svh bg-background text-foreground">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.98_0.02_90),transparent)]" />
-      <div className="flex gap-1">
-        <aside className="hidden h-svh w-64 flex-col border-r bg-background/80 px-2 py-3 backdrop-blur lg:flex">
+    <div
+      className="min-h-svh bg-background text-foreground"
+      style={active === "perfil" ? { backgroundColor: profileTheme } : undefined}
+    >
+      {active !== "perfil" && (
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.98_0.02_90),transparent)]" />
+      )}
+      <div className="flex">
+        <aside className="hidden h-svh w-64 flex-col border-r bg-background/80 px-4 py-6 backdrop-blur lg:flex">
           <div className="flex items-center gap-2 px-2">
             <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <ShieldCheck className="size-5" />
@@ -110,7 +120,6 @@ export function AppShell() {
           <header className="sticky top-0 z-20 flex h-16 items-center justify-center border-b bg-background/80 px-6 backdrop-blur">
             <div className="w-full max-w-xl flex gap-4">
               <Input placeholder="Buscar estilos ou artistas" />
-              <Button className="font-['arial']">Search</Button>
             </div>
 
             <div className="absolute right-6 flex items-center gap-3">
