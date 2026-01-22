@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArtistProfile } from "@/pages/ArtistProfile"
 import { CommissionModal } from "@/pages/CommissionModal"
 import { DashboardPage } from "@/pages/DashboardPage"
-import { ExplorePage } from "@/pages/ExplorePage"
 import { HomeFeed } from "@/pages/HomeFeed"
 import { NewArtPage } from "@/pages/NewArtPage"
 import { NotificationsPage } from "@/pages/NotificationsPage"
@@ -15,19 +14,17 @@ import { arts, moderationReports, notifications, users } from "@/data"
 import { cn } from "@/lib/utils"
 import {
   Bell,
-  Compass,
   Home,
   PlusSquare,
   ShieldCheck,
   User,
 } from "lucide-react"
 
-type NavKey = "inicio" | "dashboard" | "explorar" | "nova" | "notificacoes" | "perfil"
+type NavKey = "inicio" | "dashboard" | "nova" | "notificacoes" | "perfil"
 
 const navItems: { key: NavKey; label: string; icon: React.ElementType }[] = [
   { key: "inicio", label: "Iní­cio", icon: Home },
   { key: "dashboard", label: "Dashboard", icon: ShieldCheck },
-  { key: "explorar", label: "Explorar", icon: Compass },
   { key: "nova", label: "Nova Arte", icon: PlusSquare },
   { key: "notificacoes", label: "Notificações", icon: Bell },
   { key: "perfil", label: "Perfil", icon: User },
@@ -54,20 +51,16 @@ export function AppShell() {
   const shellContent = (
     <div className="space-y-10 pb-24 lg:pb-10">
       {active === "inicio" && (
-        <HomeFeed arts={arts} artistMap={artistMap} />
-      )}
-
-      {active === "dashboard" && (
-        <DashboardPage moderationReports={moderationReports} />
-      )}
-
-      {active === "explorar" && (
-        <ExplorePage
+        <HomeFeed
           arts={arts}
           artistMap={artistMap}
           priceRange={priceRange}
           onPriceRangeChange={setPriceRange}
         />
+      )}
+
+      {active === "dashboard" && (
+        <DashboardPage moderationReports={moderationReports} />
       )}
 
       {active === "nova" && <NewArtPage />}
