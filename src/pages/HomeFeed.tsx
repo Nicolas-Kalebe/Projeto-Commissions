@@ -31,13 +31,13 @@ export function HomeFeed({
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
           <Input placeholder="Buscar estilos ou artistas" />
           <Select defaultValue="relevancia">
-            <SelectTrigger className="w-full sm:w-48">
+            <SelectTrigger className="w-full sm:w-57">
               <SelectValue placeholder="Ordenar por" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="relevancia">RelevÃƒÆ’Ã‚Â¢ncia</SelectItem>
+              <SelectItem value="relevancia">Relevância</SelectItem>
               <SelectItem value="recentes">Mais recentes</SelectItem>
-              <SelectItem value="preco">Menor preÃƒÆ’Ã‚Â§o</SelectItem>
+              <SelectItem value="preco">Menor preço</SelectItem>
             </SelectContent>
           </Select>
           <Sheet>
@@ -46,9 +46,9 @@ export function HomeFeed({
             </SheetTrigger>
             <SheetContent side="right">
               <SheetHeader>
-                <SheetTitle>Filtros avanÃƒÆ’Ã‚Â§ados</SheetTitle>
+                <SheetTitle>Filtros avançados</SheetTitle>
                 <SheetDescription>
-                  Ajuste o estilo, prazo e faixa de preÃƒÆ’Ã‚Â§o.
+                  Ajuste o estilo, prazo e faixa de preço.
                 </SheetDescription>
               </SheetHeader>
               <div className="mt-6 space-y-4">
@@ -108,7 +108,7 @@ export function HomeFeed({
           </Sheet>
         </div>
       </div>
-      <div className="columns-1 gap-4 sm:columns-2 xl:columns-3">
+      <div className="columns-1 gap-4 sm:columns-2 xl:columns-4">
         {arts.map((art) => {
           const artist = artistMap.get(art.artistId)
           if (!artist) return null
