@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArtistProfile } from "@/pages/ArtistProfile"
 import { CommissionModal } from "@/pages/CommissionModal"
 import { DashboardPage } from "@/pages/DashboardPage"
-import { ExplorePage } from "@/pages/ExplorePage"
 import { HomeFeed } from "@/pages/HomeFeed"
 import { NewArtPage } from "@/pages/NewArtPage"
 import { NotificationsPage } from "@/pages/NotificationsPage"
@@ -15,19 +14,17 @@ import { arts, moderationReports, notifications, users } from "@/data"
 import { cn } from "@/lib/utils"
 import {
   Bell,
-  Compass,
   Home,
   PlusSquare,
   ShieldCheck,
   User,
 } from "lucide-react"
 
-type NavKey = "inicio" | "dashboard" | "explorar" | "nova" | "notificacoes" | "perfil"
+type NavKey = "inicio" | "dashboard" | "nova" | "notificacoes" | "perfil"
 
 const navItems: { key: NavKey; label: string; icon: React.ElementType }[] = [
   { key: "inicio", label: "Iní­cio", icon: Home },
   { key: "dashboard", label: "Dashboard", icon: ShieldCheck },
-  { key: "explorar", label: "Explorar", icon: Compass },
   { key: "nova", label: "Nova Arte", icon: PlusSquare },
   { key: "notificacoes", label: "Notificações", icon: Bell },
   { key: "perfil", label: "Perfil", icon: User },
@@ -44,30 +41,24 @@ export function AppShell() {
     []
   )
 
-  const activeLabel = navItems.find((item) => item.key === active)?.label
-
   const handleRequestCommission = (price: number) => {
     setSelectedPrice(price)
     setCommissionOpen(true)
   }
 
-  const shellContent = (
-    <div className="space-y-10 pb-24 lg:pb-10">
-      {active === "inicio" && (
-        <HomeFeed arts={arts} artistMap={artistMap} />
-      )}
+  const homeContent = (
+    <HomeFeed
+      arts={arts}
+      artistMap={artistMap}
+      priceRange={priceRange}
+      onPriceRangeChange={setPriceRange}
+    />
+  )
 
+  const sectionContent = (
+    <div className="space-y-10 pb-24 lg:pb-10">
       {active === "dashboard" && (
         <DashboardPage moderationReports={moderationReports} />
-      )}
-
-      {active === "explorar" && (
-        <ExplorePage
-          arts={arts}
-          artistMap={artistMap}
-          priceRange={priceRange}
-          onPriceRangeChange={setPriceRange}
-        />
       )}
 
       {active === "nova" && <NewArtPage />}
@@ -84,8 +75,8 @@ export function AppShell() {
   return (
     <div className="min-h-svh bg-background text-foreground">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.98_0.02_90),transparent)]" />
-      <div className="flex">
-        <aside className="hidden h-svh w-64 flex-col border-r bg-background/80 px-4 py-6 backdrop-blur lg:flex">
+      <div className="flex gap-1">
+        <aside className="hidden h-svh w-64 flex-col border-r bg-background/80 px-2 py-3 backdrop-blur lg:flex">
           <div className="flex items-center gap-2 px-2">
             <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <ShieldCheck className="size-5" />
@@ -95,7 +86,7 @@ export function AppShell() {
               <p className="text-xs text-muted-foreground">Comissões protegidas</p>
             </div>
           </div>
-          <div className="mt-8 space-y-1">
+          <div className="mt-2 space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon
               return (
@@ -103,7 +94,7 @@ export function AppShell() {
                   key={item.key}
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start gap-2",
+                    "w-full justify-start gap-2 py-1",
                     active === item.key && "bg-muted text-foreground"
                   )}
                   onClick={() => setActive(item.key)}
@@ -114,36 +105,20 @@ export function AppShell() {
               )
             })}
           </div>
-          <div className="mt-auto flex items-center gap-3 rounded-lg border bg-card p-3">
-            <Avatar>
-              <AvatarImage src={users[2].avatarUrl} alt={users[2].nome} />
-              <AvatarFallback>MS</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-sm font-medium">{users[2].nome}</p>
-              <p className="text-xs text-muted-foreground">Conta cliente</p>
-            </div>
-          </div>
         </aside>
-
         <div className="flex min-h-svh flex-1 flex-col">
-          <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                {activeLabel}
-              </p>
-              <h2 className="text-lg font-semibold">
-                Plataforma de ComissÃµes
-              </h2>
-            </div>
+          <header className="sticky top-0 z-20 flex h-16 items-center justify-center border-b bg-background/80 px-6 backdrop-blur">
             <div className="w-full max-w-xl flex gap-4">
               <Input placeholder="Buscar estilos ou artistas" />
               <Button className="font-['arial']">Search</Button>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Badge variant="secondary">Saldo protegido</Badge>
-              <Avatar className="size-9">
+            <div className="absolute right-6 flex items-center gap-3">
+              <Avatar
+                className="size-9 cursor-pointer"
+                onClick={() => setActive("perfil")}
+                role="button"
+              >
                 <AvatarImage src={users[2].avatarUrl} alt={users[2].nome} />
                 <AvatarFallback>MS</AvatarFallback>
               </Avatar>
@@ -151,9 +126,13 @@ export function AppShell() {
           </header>
 
           <ScrollArea className="h-[calc(100svh-4rem)]">
-            <main className="mx-auto w-full max-w-6xl px-6 py-8">
-              {shellContent}
-            </main>
+            {active === "inicio" ? (
+              <main className="w-full px-6 py-8">{homeContent}</main>
+            ) : (
+              <main className="mx-auto w-full max-w-6xl px-6 py-8">
+                {sectionContent}
+              </main>
+            )}
           </ScrollArea>
         </div>
       </div>
@@ -190,4 +169,5 @@ export function AppShell() {
     </div>
   )
 }
+
 
