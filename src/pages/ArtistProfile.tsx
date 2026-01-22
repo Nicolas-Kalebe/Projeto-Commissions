@@ -194,9 +194,11 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
       </section>
 
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-  <DialogContent
-    className="fixed left-1/2 top-1/2 flex w-full -translate-x-1/2 -translate-y-1/2 justify-center border-0 bg-transparent p-0 shadow-none [&>button]:hidden"
-  >
+      <DialogContent
+        className="fixed left-1/2 top-1/2 flex w-[96vw] max-w-none -translate-x-1/2 -translate-y-1/2 justify-center border-0 bg-transparent p-0 shadow-none [&>button]:hidden"
+        onPointerDownOutside={() => setLightboxOpen(false)}
+        onClick={() => setLightboxOpen(false)}
+      >
     {/* Contador */}
     <div className="absolute left-1/2 top-4 z-50 -translate-x-1/2 text-xs text-white/80">
       {lightboxIndex + 1} / {gallery.length}
@@ -214,17 +216,24 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
     </Button>
 
     {/* Área da imagem */}
-    <div className="relative flex h-[min(70vh,640px)] w-[92vw] max-w-[2400px] items-center justify-center overflow-hidden">
+    <div
+      className="relative flex items-center justify-center"
+      style={{
+        width: "min(2000px, 96vw)",
+        height: "min(800px, 90vh)",
+      }}
+    >
       {/* Anterior */}
       <Button
         variant="secondary"
         size="icon"
-        className="absolute left-0 top-1/2 z-50 -translate-y-1/2 -translate-x-10"
-        onClick={() =>
+        className="absolute left-0 top-1/2 z-50 -translate-y-1/2 translate-x-3"
+        onClick={(event) => {
+          event.stopPropagation()
           setLightboxIndex((prev) =>
             prev === 0 ? gallery.length - 1 : prev - 1
           )
-        }
+        }}
       >
         <span className="sr-only">Anterior</span>
         <svg
@@ -242,19 +251,21 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
       <img
         src={gallery[lightboxIndex]?.imageUrl}
         alt={gallery[lightboxIndex]?.titulo}
-        className="h-[600px] w-auto max-h-full max-w-full object-contain"
+        className="h-full w-full object-contain"
+        onClick={(event) => event.stopPropagation()}
       />
 
       {/* Próximo */}
       <Button
         variant="secondary"
         size="icon"
-        className="absolute right-0 top-1/2 z-50 -translate-y-1/2 translate-x-10"
-        onClick={() =>
+        className="absolute right-0 top-1/2 z-50 -translate-y-1/2 -translate-x-3"
+        onClick={(event) => {
+          event.stopPropagation()
           setLightboxIndex((prev) =>
             prev === gallery.length - 1 ? 0 : prev + 1
           )
-        }
+        }}
       >
         <span className="sr-only">Próximo</span>
         <svg
