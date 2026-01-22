@@ -54,6 +54,7 @@ export function ArtistProfile({
   const [portfolioSort, setPortfolioSort] = useState<"recentes" | "populares">(
     "recentes"
   )
+  const [showPriceTable, setShowPriceTable] = useState(false)
   const artist = users.find((user) => user.id === "art-1")
   const gallery = arts.filter((art) => art.artistId === "art-1")
   const following = 312
@@ -289,66 +290,114 @@ export function ArtistProfile({
           borderColor: `${profileTheme}66`,
         }}
       >
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Portifolio</h3>
-          <Select
-            value={portfolioSort}
-            onValueChange={(value) =>
-              setPortfolioSort(value as "recentes" | "populares")
-            }
-          >
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Ordenar por" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recentes">Mais recentes</SelectItem>
-              <SelectItem value="populares">Mais populares</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {sortedGallery.map((art, index) => (
-            <button
-              key={art.id}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1 rounded-full border bg-background/80 p-1 text-lg font-bold">
+            <Button
               type="button"
-              className="group relative overflow-hidden rounded-xl border bg-card"
-              style={{ borderColor: `${profileTheme}55` }}
-              onClick={() => {
-                setLightboxIndex(index)
-                setLightboxOpen(true)
-              }}
+              size="default"
+              variant={showPriceTable ? "ghost" : "default"}
+              onClick={() => setShowPriceTable(false)}
+              className={
+                showPriceTable
+                  ? "rounded-full text-muted-foreground"
+                  : "rounded-full"
+              }
             >
-              <div className="absolute bottom-3 right-3 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="icon-sm"
-                  aria-label="Curtir"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <Heart className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="icon-sm"
-                  aria-label="Salvar"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <Bookmark className="h-4 w-4" />
-                </Button>
-              </div>
+              Portifolio
+            </Button>
+            <Button
+              type="button"
+              size="default"
+              variant={showPriceTable ? "default" : "ghost"}
+              onClick={() => setShowPriceTable(true)}
+              className={
+                showPriceTable
+                  ? "rounded-full"
+                  : "rounded-full text-muted-foreground"
+              }
+            >
+              Servicos
+            </Button>
+          </div>
+          {!showPriceTable && (
+            <Select
+              value={portfolioSort}
+              onValueChange={(value) =>
+                setPortfolioSort(value as "recentes" | "populares")
+              }
+            >
+              <SelectTrigger className="w-36">
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recentes">Mais recentes</SelectItem>
+                <SelectItem value="populares">Mais populares</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+        {showPriceTable ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {priceSheets.map((sheet) => (
+              <PriceSheetCard
+                key={sheet.id}
+                sheet={sheet}
+                onRequest={onRequestCommission}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {sortedGallery.map((art, index) => (
+              <button
+                key={art.id}
+                type="button"
+                className="group relative overflow-hidden rounded-xl border bg-card"
+                style={{ borderColor: `${profileTheme}55` }}
+                onClick={() => {
+                  setLightboxIndex(index)
+                  setLightboxOpen(true)
+                }}
+              >
+                <div className="absolute bottom-3 right-3 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon-sm"
+                    aria-label="Curtir"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <Heart className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon-sm"
+                    aria-label="Salvar"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <Bookmark className="h-4 w-4" />
+                  </Button>
+                </div>
               <div className="aspect-[4/3] w-full overflow-hidden">
-                <img
-                  src={art.imageUrl}
-                  alt={art.titulo}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-                  loading="lazy"
-                />
+                <div className="relative h-full w-full">
+                  <img
+                    src={art.imageUrl}
+                    alt={art.titulo}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                    loading="lazy"
+                  />
+                  <div className="pointer-events-none absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
+                    <span className="p-3 text-sm font-semibold text-white">
+                      {art.titulo}
+                    </span>
+                  </div>
+                </div>
               </div>
             </button>
           ))}
-        </div>
+          </div>
+        )}
       </section>
 
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
@@ -446,27 +495,6 @@ export function ArtistProfile({
   </DialogContent>
 </Dialog>
 
-
-      <section
-        className="space-y-4 rounded-xl border p-4 md:p-5"
-        style={{
-          backgroundColor: `${profileTheme}33`,
-          borderColor: `${profileTheme}66`,
-        }}
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Tabela de PreÃƒÂ§os</h3>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {priceSheets.map((sheet) => (
-            <PriceSheetCard
-              key={sheet.id}
-              sheet={sheet}
-              onRequest={onRequestCommission}
-            />
-          ))}
-        </div>
-      </section>
     </section>
   )
 }

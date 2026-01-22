@@ -167,18 +167,24 @@ export const priceSheets: PriceSheet[] = [
     titulo: "Headshot Anime",
     preco: 50,
     descricao: "Arte colorida apenas do rosto, com fundo simples.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?q=80&w=800&auto=format&fit=crop",
   },
   {
     id: "ps-2",
     titulo: "Meio Corpo",
     preco: 120,
     descricao: "Ilustração detalhada até o torso com luz cinematográfica.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=800&auto=format&fit=crop",
   },
   {
     id: "ps-3",
     titulo: "Cena Completa",
     preco: 250,
     descricao: "Personagem em ambiente completo com props e atmosfera.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1496318447583-f524534e9ce1?q=80&w=800&auto=format&fit=crop",
   },
 ]
 
