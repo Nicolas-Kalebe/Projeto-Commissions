@@ -137,6 +137,8 @@ export function AppShell() {
           <ScrollArea className="h-[calc(100svh-4rem)]">
             {active === "inicio" ? (
               <main className="w-full px-6 py-8">{homeContent}</main>
+            ) : active === "perfil" ? (
+              <main className="w-full px-0 py-0">{sectionContent}</main>
             ) : (
               <main className="mx-auto w-full max-w-6xl px-6 py-8">
                 {sectionContent}

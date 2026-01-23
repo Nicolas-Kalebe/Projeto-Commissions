@@ -135,25 +135,134 @@ export function ArtistProfile({
 
   return (
     <section
-      className="min-h-screen space-y-6 rounded-2xl p-4 md:p-6"
+      className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-8"
       style={{ backgroundColor: profileTheme }}
     >
-      <div
-        className="relative overflow-hidden rounded-xl border bg-card"
-        style={{
-          borderColor: profileTheme,
-          boxShadow: `0 16px 40px -28px ${profileTheme}`,
-        }}
-      >
-        <div
-          className="h-48 w-[calc(100%+3rem)] -mx-6 bg-cover bg-center md:h-56"
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+        <section
+          className="space-y-4 rounded-xl border p-4 md:p-5"
           style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1600&q=80')",
+            backgroundColor: `${profileTheme}33`,
+            borderColor: `${profileTheme}66`,
           }}
-        />
-        <div className="relative mt-5 flex flex-col gap-4 px-6 pb-6 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1 rounded-full border bg-background/80 p-1 text-lg font-bold">
+              <Button
+                type="button"
+                size="default"
+                variant={showPriceTable ? "ghost" : "default"}
+                onClick={() => setShowPriceTable(false)}
+                className={
+                  showPriceTable
+                    ? "rounded-full text-muted-foreground"
+                    : "rounded-full"
+                }
+              >
+                Portifolio
+              </Button>
+              <Button
+                type="button"
+                size="default"
+                variant={showPriceTable ? "default" : "ghost"}
+                onClick={() => setShowPriceTable(true)}
+                className={
+                  showPriceTable
+                    ? "rounded-full"
+                    : "rounded-full text-muted-foreground"
+                }
+              >
+                Servicos
+              </Button>
+            </div>
+            {!showPriceTable && (
+              <Select
+                value={portfolioSort}
+                onValueChange={(value) =>
+                  setPortfolioSort(value as "recentes" | "populares")
+                }
+              >
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="Ordenar por" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recentes">Mais recentes</SelectItem>
+                  <SelectItem value="populares">Mais populares</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          {showPriceTable ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {priceSheets.map((sheet) => (
+                <PriceSheetCard
+                  key={sheet.id}
+                  sheet={sheet}
+                  onRequest={onRequestCommission}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {sortedGallery.map((art, index) => (
+                <button
+                  key={art.id}
+                  type="button"
+                  className="group relative overflow-hidden rounded-xl border bg-card"
+                  style={{ borderColor: `${profileTheme}55` }}
+                  onClick={() => {
+                    setLightboxIndex(index)
+                    setLightboxOpen(true)
+                  }}
+                >
+                  <div className="absolute bottom-3 right-3 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon-sm"
+                      aria-label="Curtir"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <Heart className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon-sm"
+                      aria-label="Salvar"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <Bookmark className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="aspect-[4/3] w-full overflow-hidden">
+                    <div className="relative h-full w-full">
+                      <img
+                        src={art.imageUrl}
+                        alt={art.titulo}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                        loading="lazy"
+                      />
+                      <div className="pointer-events-none absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
+                        <span className="p-3 text-sm font-semibold text-white">
+                          {art.titulo}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+        <aside
+          className="space-y-4 rounded-xl border bg-card p-5"
+          style={{
+            borderColor: profileTheme,
+            boxShadow: `0 16px 40px -28px ${profileTheme}`,
+          }}
+        >
+          <div className="flex items-start gap-4">
             <Avatar className="size-20 border-4 border-background shadow-sm">
               <AvatarImage src={artist.avatarUrl} alt={artist.nome} />
               <AvatarFallback>{initials}</AvatarFallback>
@@ -183,222 +292,88 @@ export function ArtistProfile({
                   Ativo hoje
                 </Badge>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {socialLinks.map((link) => (
-                  <Button
-                    key={link.name}
-                    asChild
-                    variant="outline"
-                    size="icon-sm"
-                    aria-label={link.name}
-                  >
-                    <a href={link.href} target="_blank" rel="noreferrer">
-                      <link.icon className="h-4 w-4" />
-                    </a>
-                  </Button>
-                ))}
-              </div>
             </div>
           </div>
-          <div className="w-full max-w-sm space-y-3">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Card
-                className="border-border/60 p-0 bg-background/90 h-20"
-                style={{ borderColor: `${profileTheme}55` }}
+          <div className="flex flex-wrap gap-2">
+            {socialLinks.map((link) => (
+              <Button
+                key={link.name}
+                asChild
+                variant="outline"
+                size="icon-sm"
+                aria-label={link.name}
               >
-                  <CardContent className="flex h-full w-full flex-col items-center justify-center p-0 text-center">
-                  <p className="text-xs uppercase text-muted-foreground">
-                    Seguidores
-                  </p>
-                  <p className="text-lg font-semibold">
-                    {artist.seguidores.toLocaleString("pt-BR")}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card
-                className="border-border/60 p-0 bg-background/90 h-20"
-                style={{ borderColor: `${profileTheme}55` }}
-              >
-                  <CardContent className="flex h-full w-full flex-col items-center justify-center p-0 text-center">
-                  <p className="text-xs uppercase text-muted-foreground">
-                    Seguindo
-                  </p>
-                  <p className="text-lg font-semibold">
-                    {following.toLocaleString("pt-BR")}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card
-                className="border-border/60 p-0 bg-background/90 h-20"
-                style={{ borderColor: `${profileTheme}55` }}
-              >
-                  <CardContent className="flex h-full w-full flex-col items-center justify-center p-0 text-center">
-                  <p className="text-xs uppercase text-muted-foreground">
-                    Avaliacao
-                  </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="flex items-center gap-0.5">
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <Star
-                          key={index}
-                          className={`h-3.5 w-3.5 ${
-                            index < Math.round(rating)
-                              ? "fill-foreground text-foreground"
-                              : "text-muted-foreground"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm font-semibold">
-                      {rating.toFixed(1)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="flex gap-2">
-              <Button className="px-4" style={followButtonStyles}>
-                Seguir artista
+                <a href={link.href} target="_blank" rel="noreferrer">
+                  <link.icon className="h-4 w-4" />
+                </a>
               </Button>
-              <Button variant="outline" size="icon" aria-label="Enviar DM">
-                <MessageCircle className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="fixed right-4 top-1/2 z-40 flex -translate-y-1/2 flex-col items-center gap-2 rounded-full border bg-background/90 p-2 shadow-sm">
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Testes
-        </span>
-        {themeOptions.map((option) => (
-          <button
-            key={option.name}
-            type="button"
-            onClick={() => onThemeChange(option.color)}
-            className="h-7 w-7 rounded-full border border-border/60 shadow-sm transition-transform hover:scale-105"
-            style={{ backgroundColor: option.color }}
-            aria-label={`Tema ${option.name}`}
-          />
-        ))}
-      </div>
-
-      <section
-        className="space-y-4 rounded-xl border p-4 md:p-5"
-        style={{
-          backgroundColor: `${profileTheme}33`,
-          borderColor: `${profileTheme}66`,
-        }}
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-1 rounded-full border bg-background/80 p-1 text-lg font-bold">
-            <Button
-              type="button"
-              size="default"
-              variant={showPriceTable ? "ghost" : "default"}
-              onClick={() => setShowPriceTable(false)}
-              className={
-                showPriceTable
-                  ? "rounded-full text-muted-foreground"
-                  : "rounded-full"
-              }
-            >
-              Portifolio
-            </Button>
-            <Button
-              type="button"
-              size="default"
-              variant={showPriceTable ? "default" : "ghost"}
-              onClick={() => setShowPriceTable(true)}
-              className={
-                showPriceTable
-                  ? "rounded-full"
-                  : "rounded-full text-muted-foreground"
-              }
-            >
-              Servicos
-            </Button>
-          </div>
-          {!showPriceTable && (
-            <Select
-              value={portfolioSort}
-              onValueChange={(value) =>
-                setPortfolioSort(value as "recentes" | "populares")
-              }
-            >
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder="Ordenar por" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recentes">Mais recentes</SelectItem>
-                <SelectItem value="populares">Mais populares</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-        {showPriceTable ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {priceSheets.map((sheet) => (
-              <PriceSheetCard
-                key={sheet.id}
-                sheet={sheet}
-                onRequest={onRequestCommission}
-              />
             ))}
           </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {sortedGallery.map((art, index) => (
-              <button
-                key={art.id}
-                type="button"
-                className="group relative overflow-hidden rounded-xl border bg-card"
-                style={{ borderColor: `${profileTheme}55` }}
-                onClick={() => {
-                  setLightboxIndex(index)
-                  setLightboxOpen(true)
-                }}
-              >
-                <div className="absolute bottom-3 right-3 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon-sm"
-                    aria-label="Curtir"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <Heart className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon-sm"
-                    aria-label="Salvar"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <Bookmark className="h-4 w-4" />
-                  </Button>
-                </div>
-              <div className="aspect-[4/3] w-full overflow-hidden">
-                <div className="relative h-full w-full">
-                  <img
-                    src={art.imageUrl}
-                    alt={art.titulo}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-                    loading="lazy"
-                  />
-                  <div className="pointer-events-none absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
-                    <span className="p-3 text-sm font-semibold text-white">
-                      {art.titulo}
-                    </span>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Card
+              className="border-border/60 h-20 bg-background/90 p-0"
+              style={{ borderColor: `${profileTheme}55` }}
+            >
+              <CardContent className="flex h-full w-full flex-col items-center justify-center p-0 text-center">
+                <p className="text-xs uppercase text-muted-foreground">
+                  Seguidores
+                </p>
+                <p className="text-lg font-semibold">
+                  {artist.seguidores.toLocaleString("pt-BR")}
+                </p>
+              </CardContent>
+            </Card>
+            <Card
+              className="border-border/60 h-20 bg-background/90 p-0"
+              style={{ borderColor: `${profileTheme}55` }}
+            >
+              <CardContent className="flex h-full w-full flex-col items-center justify-center p-0 text-center">
+                <p className="text-xs uppercase text-muted-foreground">
+                  Seguindo
+                </p>
+                <p className="text-lg font-semibold">
+                  {following.toLocaleString("pt-BR")}
+                </p>
+              </CardContent>
+            </Card>
+            <Card
+              className="border-border/60 h-20 bg-background/90 p-0"
+              style={{ borderColor: `${profileTheme}55` }}
+            >
+              <CardContent className="flex h-full w-full flex-col items-center justify-center p-0 text-center">
+                <p className="text-xs uppercase text-muted-foreground">
+                  Avaliacao
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Star
+                        key={index}
+                        className={`h-3.5 w-3.5 ${
+                          index < Math.round(rating)
+                            ? "fill-foreground text-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                      />
+                    ))}
                   </div>
+                  <span className="text-sm font-semibold">
+                    {rating.toFixed(1)}
+                  </span>
                 </div>
-              </div>
-            </button>
-          ))}
+              </CardContent>
+            </Card>
           </div>
-        )}
-      </section>
+          <div className="flex gap-2">
+            <Button className="flex-1 px-4" style={followButtonStyles}>
+              Seguir artista
+            </Button>
+            <Button variant="outline" size="icon" aria-label="Enviar DM">
+              <MessageCircle className="h-4 w-4" />
+            </Button>
+          </div>
+        </aside>
+      </div>
 
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
       <DialogContent
