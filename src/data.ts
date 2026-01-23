@@ -13,7 +13,7 @@ export const users: User[] = [
     nome: "Luna Azevedo",
     role: "artista",
     avatarUrl:
-      "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?q=80&w=300&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=300&auto=format&fit=crop",
     bio: "Ilustradora digital focada em fantasia suave e personagens expressivos.",
     seguidores: 12840,
     destaque: "Especialista em retratos anime.",

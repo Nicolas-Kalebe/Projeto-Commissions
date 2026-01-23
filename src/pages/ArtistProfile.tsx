@@ -280,7 +280,7 @@ export function ArtistProfile({
           >
             <div className="text-sm font-semibold">Perfil do artista</div>
             <div className="flex items-start gap-4">
-              <Avatar className="size-20 border-4 border-background shadow-sm">
+              <Avatar className="size-25 border-4 border-background shadow-sm">
                 <AvatarImage src={artist.avatarUrl} alt={artist.nome} />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
@@ -290,6 +290,12 @@ export function ArtistProfile({
               </div>
             </div>
             <div className="flex w-full flex-wrap justify-between gap-2">
+              <Badge
+                variant="outline"
+                style={{ borderColor: `${profileTheme}88` }}
+              >
+                Ela/dela
+              </Badge>
               <Badge
                 variant="secondary"
                 style={{ backgroundColor: `${profileTheme}55` }}
