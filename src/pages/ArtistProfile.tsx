@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { arts, priceSheets, users } from "@/data"
 import { PriceSheetCard } from "@/components/profile/PriceSheetCard"
+import { Separator } from "@/components/ui/separator"
 import {
   Bookmark,
   Heart,
@@ -20,6 +21,7 @@ import {
   Star,
   Twitch,
   Twitter,
+  UserPlus,
   X,
   Youtube,
 } from "lucide-react"
@@ -57,6 +59,19 @@ export function ArtistProfile({
   const [showPriceTable, setShowPriceTable] = useState(false)
   const artist = users.find((user) => user.id === "art-1")
   const gallery = arts.filter((art) => art.artistId === "art-1")
+  const extendedGallery = [
+    ...gallery,
+    ...gallery.map((art, index) => ({
+      ...art,
+      id: `${art.id}-extra-a-${index}`,
+      titulo: `${art.titulo} (Estudo)`,
+    })),
+    ...gallery.map((art, index) => ({
+      ...art,
+      id: `${art.id}-extra-b-${index}`,
+      titulo: `${art.titulo} (Variacao)`,
+    })),
+  ]
   const following = 312
   const rating = 4.8
 
@@ -115,7 +130,7 @@ export function ArtistProfile({
     { name: "Manga", color: "#FFD1A8" },
   ]
 
-  const sortedGallery = [...gallery].sort((a, b) => {
+  const sortedGallery = [...extendedGallery].sort((a, b) => {
     if (portfolioSort === "populares") {
       return b.preco - a.preco
     }
@@ -135,7 +150,7 @@ export function ArtistProfile({
 
   return (
     <section
-      className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-8"
+      className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-"
       style={{ backgroundColor: profileTheme }}
     >
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
@@ -255,123 +270,139 @@ export function ArtistProfile({
             </div>
           )}
         </section>
-        <aside
-          className="space-y-4 rounded-xl border bg-card p-5"
-          style={{
-            borderColor: profileTheme,
-            boxShadow: `0 16px 40px -28px ${profileTheme}`,
-          }}
-        >
-          <div className="flex items-start gap-4">
-            <Avatar className="size-20 border-4 border-background shadow-sm">
-              <AvatarImage src={artist.avatarUrl} alt={artist.nome} />
-              <AvatarFallback>{initials}</AvatarFallback>
-            </Avatar>
-            <div className="space-y-2">
+        <aside className="self-start lg:sticky lg:top-24">
+          <section
+            className="space-y-4 rounded-xl border bg-card p-5 lg:-mt-3 lg:min-h-[calc(100svh-14em)]"
+            style={{
+              borderColor: themeIsWhite ? "#e5e7eb" : `${profileTheme}88`,
+              boxShadow: `0 16px 40px -28px ${profileTheme}`,
+            }}
+          >
+            <div className="text-sm font-semibold">Perfil do artista</div>
+            <div className="flex items-start gap-4">
+              <Avatar className="size-20 border-4 border-background shadow-sm">
+                <AvatarImage src={artist.avatarUrl} alt={artist.nome} />
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
               <div>
                 <h2 className="text-2xl font-semibold">{artist.nome}</h2>
                 <p className="text-sm text-muted-foreground">{artist.bio}</p>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Badge
-                  variant="secondary"
-                  style={{ backgroundColor: `${profileTheme}55` }}
-                >
-                  Ilustradora
-                </Badge>
-                <Badge
-                  variant="outline"
-                  style={{ borderColor: `${profileTheme}88` }}
-                >
-                  Entrega em 7 dias
-                </Badge>
-                <Badge
-                  variant="outline"
-                  style={{ borderColor: `${profileTheme}88` }}
-                >
-                  Ativo hoje
-                </Badge>
+            </div>
+            <div className="flex w-full flex-wrap justify-between gap-2">
+              <Badge
+                variant="secondary"
+                style={{ backgroundColor: `${profileTheme}55` }}
+              >
+                Ilustradora
+              </Badge>
+              <Badge
+                variant="outline"
+                style={{ borderColor: `${profileTheme}88` }}
+              >
+                Entrega em 7 dias
+              </Badge>
+              <Badge
+                variant="outline"
+                style={{ borderColor: `${profileTheme}88` }}
+              >
+                Ativo hoje
+              </Badge>
+            </div>
+            <Separator
+              style={{
+                backgroundColor: themeIsWhite ? "#e5e7eb" : `${profileTheme}66`,
+              }}
+            />
+            <div className="flex gap-2">
+              <Button className="flex-1 gap-2 px-4" style={followButtonStyles}>
+                <UserPlus className="h-4 w-4" />
+                Seguir
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 gap-2"
+                aria-label="Enviar DM"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Mensagem
+              </Button>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-baseline gap-2">
+                <span className="text-base font-semibold">
+                  {artist.seguidores.toLocaleString("pt-BR")}
+                </span>
+                <span className="text-muted-foreground">Seguidores</span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-base font-semibold">
+                  {following.toLocaleString("pt-BR")}
+                </span>
+                <span className="text-muted-foreground">Seguindo</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-base font-semibold">
+                  {rating.toFixed(1)}
+                </span>
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Star
+                      key={index}
+                      className={`h-3.5 w-2.5 ${
+                        index < Math.round(rating)
+                          ? "fill-foreground text-foreground"
+                          : "text-muted-foreground"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-muted-foreground">Avaliação</span>
               </div>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {socialLinks.map((link) => (
-              <Button
-                key={link.name}
-                asChild
-                variant="outline"
-                size="icon-sm"
-                aria-label={link.name}
-              >
-                <a href={link.href} target="_blank" rel="noreferrer">
-                  <link.icon className="h-4 w-4" />
-                </a>
-              </Button>
-            ))}
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Card
-              className="border-border/60 h-20 bg-background/90 p-0"
-              style={{ borderColor: `${profileTheme}55` }}
-            >
-              <CardContent className="flex h-full w-full flex-col items-center justify-center p-0 text-center">
-                <p className="text-xs uppercase text-muted-foreground">
-                  Seguidores
-                </p>
-                <p className="text-lg font-semibold">
-                  {artist.seguidores.toLocaleString("pt-BR")}
-                </p>
-              </CardContent>
-            </Card>
-            <Card
-              className="border-border/60 h-20 bg-background/90 p-0"
-              style={{ borderColor: `${profileTheme}55` }}
-            >
-              <CardContent className="flex h-full w-full flex-col items-center justify-center p-0 text-center">
-                <p className="text-xs uppercase text-muted-foreground">
-                  Seguindo
-                </p>
-                <p className="text-lg font-semibold">
-                  {following.toLocaleString("pt-BR")}
-                </p>
-              </CardContent>
-            </Card>
-            <Card
-              className="border-border/60 h-20 bg-background/90 p-0"
-              style={{ borderColor: `${profileTheme}55` }}
-            >
-              <CardContent className="flex h-full w-full flex-col items-center justify-center p-0 text-center">
-                <p className="text-xs uppercase text-muted-foreground">
-                  Avaliacao
-                </p>
-                <div className="flex items-center justify-center gap-2">
-                  <div className="flex items-center gap-0.5">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <Star
-                        key={index}
-                        className={`h-3.5 w-3.5 ${
-                          index < Math.round(rating)
-                            ? "fill-foreground text-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm font-semibold">
-                    {rating.toFixed(1)}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="flex gap-2">
-            <Button className="flex-1 px-4" style={followButtonStyles}>
-              Seguir artista
-            </Button>
-            <Button variant="outline" size="icon" aria-label="Enviar DM">
-              <MessageCircle className="h-4 w-4" />
-            </Button>
-          </div>
+            <Separator
+              style={{
+                backgroundColor: themeIsWhite ? "#e5e7eb" : `${profileTheme}66`,
+              }}
+            />
+            <div className="text-center text-xs font-semibold uppercase text-muted-foreground">
+              Redes do Artista
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              {socialLinks.map((link) => (
+                <Button
+                  key={link.name}
+                  asChild
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label={link.name}
+                >
+                  <a href={link.href} target="_blank" rel="noreferrer">
+                    <link.icon className="h-4 w-4" />
+                  </a>
+                </Button>
+              ))}
+            </div>
+            <Separator
+              style={{
+                backgroundColor: themeIsWhite ? "#e5e7eb" : `${profileTheme}66`,
+              }}
+            />
+            <div className="space-y-2 rounded-lg border bg-background/80 p-3 text-sm">
+              <div className="text-xs font-semibold uppercase text-muted-foreground">
+                Sobre o estilo
+              </div>
+              <p className="text-muted-foreground">
+                Traço leve com foco em expressões, paleta suave e detalhes
+                delicados para personagens e cenas.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline">Lineart suave</Badge>
+                <Badge variant="outline">Cores pasteis</Badge>
+                <Badge variant="outline">Chibi</Badge>
+              </div>
+            </div>
+          </section>
         </aside>
       </div>
 
@@ -383,7 +414,7 @@ export function ArtistProfile({
       >
     {/* Contador */}
     <div className="absolute left-1/2 top-4 z-50 -translate-x-1/2 text-xs text-white/80">
-      {lightboxIndex + 1} / {gallery.length}
+      {lightboxIndex + 1} / {sortedGallery.length}
     </div>
 
     {/* Botão fechar */}
@@ -413,7 +444,7 @@ export function ArtistProfile({
         onClick={(event) => {
           event.stopPropagation()
           setLightboxIndex((prev) =>
-            prev === 0 ? gallery.length - 1 : prev - 1
+            prev === 0 ? sortedGallery.length - 1 : prev - 1
           )
         }}
       >
@@ -431,8 +462,8 @@ export function ArtistProfile({
 
       {/* Imagem */}
       <img
-        src={gallery[lightboxIndex]?.imageUrl}
-        alt={gallery[lightboxIndex]?.titulo}
+        src={sortedGallery[lightboxIndex]?.imageUrl}
+        alt={sortedGallery[lightboxIndex]?.titulo}
         className="block"
         style={{
           maxHeight: "min(800px, 90vh)",
@@ -451,7 +482,7 @@ export function ArtistProfile({
         onClick={(event) => {
           event.stopPropagation()
           setLightboxIndex((prev) =>
-            prev === gallery.length - 1 ? 0 : prev + 1
+            prev === sortedGallery.length - 1 ? 0 : prev + 1
           )
         }}
       >
