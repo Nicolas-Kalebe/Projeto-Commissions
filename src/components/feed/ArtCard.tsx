@@ -20,13 +20,13 @@ export function ArtCard({ art, artist }: ArtCardProps) {
     .slice(0, 2)
 
   return (
-    <Card className="mb-4 overflow-hidden break-inside-avoid border-border/60 bg-card/95 shadow-sm">
-      <div className="relative">
+    <Card className="overflow-hidden border-border/60 bg-card/95 shadow-sm">
+      <div className="relative aspect-square w-full overflow-hidden">
         <img
           src={art.imageUrl}
           alt={art.titulo}
           className={cn(
-            "h-56 w-full object-cover transition",
+            "h-full w-full object-cover transition",
             art.nsfw && !revealed && "blur-md"
           )}
           loading="lazy"

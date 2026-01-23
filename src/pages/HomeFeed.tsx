@@ -32,16 +32,22 @@ export function HomeFeed({
       title: "Desconto no Premium",
       description: "Assine hoje e ganhe 20% no plano anual para artistas.",
       action: "Ver ofertas",
+      imageUrl:
+        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600&auto=format&fit=crop",
     },
     {
       title: "Artistas mais requisitados",
       description: "Descubra quem lidera os pedidos de comissoes esta semana.",
       action: "Explorar lista",
+      imageUrl:
+        "https://images.unsplash.com/photo-1496318447583-f524534e9ce1?q=80&w=1600&auto=format&fit=crop",
     },
     {
       title: "Ranking de artistas",
       description: "Acompanhe o top 10 com mais seguidores e avaliacoes.",
       action: "Ver ranking",
+      imageUrl:
+        "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1600&auto=format&fit=crop",
     },
   ]
 
@@ -51,19 +57,32 @@ export function HomeFeed({
         <CarouselContent>
           {banners.map((banner) => (
             <CarouselItem key={banner.title} className="md:basis-full">
-              <Card className="border-border/60 bg-card/95">
-                <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                      Destaque
-                    </p>
-                    <h2 className="text-xl font-semibold">{banner.title}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {banner.description}
-                    </p>
-                  </div>
-                  <Button variant="secondary">{banner.action}</Button>
-                </CardContent>
+              <Card className="overflow-hidden border-border/60 bg-card/95">
+                <div className="relative aspect-[16/2] w-full">
+                  <img
+                    src={banner.imageUrl}
+                    alt={banner.title}
+                    className="absolute inset-0 h-full w-full scale-110 object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+                  <CardContent className="relative flex h-full flex-col justify-center gap-4 p-6 md:p-10">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-white/70">
+                        Destaque
+                      </p>
+                      <h2 className="text-2xl font-semibold text-white">
+                        {banner.title}
+                      </h2>
+                      <p className="text-sm text-white/80">
+                        {banner.description}
+                      </p>
+                    </div>
+                    <div>
+                      <Button variant="secondary">{banner.action}</Button>
+                    </div>
+                  </CardContent>
+                </div>
               </Card>
             </CarouselItem>
           ))}
@@ -159,7 +178,7 @@ export function HomeFeed({
           </Sheet>
         </div>
       </div>
-      <div className="columns-1 gap-4 sm:columns-2 xl:columns-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         {arts.map((art) => {
           const artist = artistMap.get(art.artistId)
           if (!artist) return null
