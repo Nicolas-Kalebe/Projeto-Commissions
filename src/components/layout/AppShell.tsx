@@ -1,6 +1,12 @@
 import { useMemo, useState } from "react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -15,7 +21,6 @@ import { cn } from "@/lib/utils"
 import {
   Bell,
   Home,
-  PlusSquare,
   ShieldCheck,
   User,
 } from "lucide-react"
@@ -25,7 +30,6 @@ type NavKey = "inicio" | "dashboard" | "nova" | "notificacoes" | "perfil"
 const navItems: { key: NavKey; label: string; icon: React.ElementType }[] = [
   { key: "inicio", label: "Iní­cio", icon: Home },
   { key: "dashboard", label: "Dashboard", icon: ShieldCheck },
-  { key: "nova", label: "Nova Arte", icon: PlusSquare },
   { key: "notificacoes", label: "Notificações", icon: Bell },
   { key: "perfil", label: "Perfil", icon: User },
 ]
@@ -85,44 +89,96 @@ export function AppShell() {
       {active !== "perfil" && (
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.98_0.02_90),transparent)]" />
       )}
-      <div className="flex">
-        <aside className="hidden h-svh w-64 flex-col border-r bg-background/80 px-4 py-6 backdrop-blur lg:flex">
-          <div className="flex items-center gap-2 px-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <ShieldCheck className="size-5" />
+      <div className="flex min-h-svh flex-1 flex-col">
+        <header className="sticky top-0 z-20 h-14 border-b bg-background/80 px-6 py-2 backdrop-blur">
+          <div className="grid w-full grid-cols-1 items-center gap-3 lg:grid-cols-[1fr_minmax(0,640px)_1fr]">
+            <div className="flex items-center gap-3 overflow-x-auto lg:justify-start">
+              <div className="mr-2 hidden items-center gap-2 lg:flex">
+                <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <ShieldCheck className="size-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Atelie Seguro</p>
+                  <p className="text-xs text-muted-foreground">
+                    Comissoes protegidas
+                  </p>
+                </div>
+              </div>
+              {navItems
+                .filter((item) => item.key !== "perfil" && item.key !== "notificacoes")
+                .map((item) => {
+                const Icon = item.icon
+                const isActive = active === item.key
+                return (
+                  <Button
+                    key={item.key}
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "flex items-center gap-2 px-3",
+                      isActive && "bg-muted text-foreground"
+                    )}
+                    onClick={() => setActive(item.key)}
+                  >
+                    <Icon className="size-4" />
+                    {item.label}
+                  </Button>
+                )
+              })}
             </div>
-            <div>
-              <p className="text-sm font-semibold">Ateliê Seguro</p>
-              <p className="text-xs text-muted-foreground">Comissões protegidas</p>
+            <div className="flex w-full justify-center">
+              <div className="w-full max-w-xl">
+                <Input placeholder="Buscar estilos ou artistas" />
+              </div>
             </div>
-          </div>
-          <div className="mt-2 space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              return (
-                <Button
-                  key={item.key}
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start gap-2 py-1",
-                    active === item.key && "bg-muted text-foreground"
-                  )}
-                  onClick={() => setActive(item.key)}
+            <div className="flex items-center justify-end gap-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "size-9",
+                      active === "notificacoes" && "bg-muted text-foreground"
+                    )}
+                    aria-label="Notificações"
+                  >
+                    <Bell className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={10}
+                  showArrow
+                  className="w-80"
                 >
-                  <Icon className="size-4" />
-                  {item.label}
-                </Button>
-              )
-            })}
-          </div>
-        </aside>
-        <div className="flex min-h-svh flex-1 flex-col">
-          <header className="sticky top-0 z-20 flex h-16 items-center justify-center border-b bg-background/80 px-6 backdrop-blur">
-            <div className="w-full max-w-xl flex gap-4">
-              <Input placeholder="Buscar estilos ou artistas" />
-            </div>
-
-            <div className="absolute right-6 flex items-center gap-3">
+                  <DropdownMenuLabel>Notificações</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <div className="space-y-3 px-2 py-2 text-sm">
+                    {notifications.slice(0, 3).map((item) => (
+                      <div key={item.id} className="space-y-1">
+                        <p className="text-sm font-semibold">{item.titulo}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.descricao}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {item.horario}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="p-2">
+                    <Button
+                      variant="secondary"
+                      className="w-full"
+                      onClick={() => setActive("notificacoes")}
+                    >
+                      Ver todas
+                    </Button>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Avatar
                 className="size-9 cursor-pointer"
                 onClick={() => setActive("perfil")}
@@ -132,45 +188,21 @@ export function AppShell() {
                 <AvatarFallback>MS</AvatarFallback>
               </Avatar>
             </div>
-          </header>
+          </div>
+        </header>
 
-          <ScrollArea className="h-[calc(100svh-4rem)]">
-            {active === "inicio" ? (
-              <main className="w-full px-6 py-8">{homeContent}</main>
-            ) : active === "perfil" ? (
-              <main className="w-full px-0 py-0">{sectionContent}</main>
-            ) : (
-              <main className="mx-auto w-full max-w-6xl px-6 py-8">
-                {sectionContent}
-              </main>
-            )}
-          </ScrollArea>
-        </div>
+        <ScrollArea className="h-[calc(100svh-3.5rem)]">
+          {active === "inicio" ? (
+            <main className="w-full px-6 py-8">{homeContent}</main>
+          ) : active === "perfil" ? (
+            <main className="w-full px-0 py-0">{sectionContent}</main>
+          ) : (
+            <main className="mx-auto w-full max-w-6xl px-6 py-8">
+              {sectionContent}
+            </main>
+          )}
+        </ScrollArea>
       </div>
-
-      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background/90 backdrop-blur lg:hidden">
-        <div className="flex items-center justify-between px-2 py-2">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = active === item.key
-            return (
-              <Button
-                key={item.key}
-                variant="ghost"
-                size="icon-sm"
-                className={cn(
-                  "flex size-auto flex-col gap-1 rounded-lg px-3 py-2 text-xs",
-                  isActive && "bg-muted text-foreground"
-                )}
-                onClick={() => setActive(item.key)}
-              >
-                <Icon className="size-4" />
-                {item.label}
-              </Button>
-            )
-          })}
-        </div>
-      </nav>
 
       <CommissionModal
         open={commissionOpen}
