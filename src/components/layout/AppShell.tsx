@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 import {
   Bell,
   Home,
+  Mail,
   ShieldCheck,
   User,
 } from "lucide-react"
@@ -179,6 +180,14 @@ export function AppShell() {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-9 mr-2"
+                aria-label="Mensagens"
+              >
+                <Mail className="size-4" />
+              </Button>
               <Avatar
                 className="size-9 cursor-pointer"
                 onClick={() => setActive("perfil")}
