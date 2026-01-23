@@ -223,7 +223,7 @@ export function ArtistProfile({
                 <button
                   key={art.id}
                   type="button"
-                  className="group relative overflow-hidden rounded-xl border bg-card"
+                  className="group relative cursor-pointer overflow-hidden rounded-xl border bg-card"
                   style={{ borderColor: `${profileTheme}55` }}
                   onClick={() => {
                     setLightboxIndex(index)

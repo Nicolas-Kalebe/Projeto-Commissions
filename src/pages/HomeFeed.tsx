@@ -1,8 +1,9 @@
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Slider } from "@/components/ui/slider"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Carousel,
@@ -27,6 +28,8 @@ export function HomeFeed({
   priceRange,
   onPriceRangeChange,
 }: HomeFeedProps) {
+  const [selectedStyle, setSelectedStyle] = useState("Todos estilos")
+  const [styleMenuOpen, setStyleMenuOpen] = useState(false)
   const banners = [
     {
       title: "Desconto no Premium",
@@ -48,6 +51,38 @@ export function HomeFeed({
       action: "Ver ranking",
       imageUrl:
         "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1600&auto=format&fit=crop",
+    },
+  ]
+  const styleOptions = [
+    {
+      name: "Abstract",
+      imageUrl:
+        "https://images.unsplash.com/photo-1471879832106-c7ab9e0cee23?q=80&w=400&auto=format&fit=crop",
+    },
+    {
+      name: "Anime & Manga",
+      imageUrl:
+        "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=400&auto=format&fit=crop",
+    },
+    {
+      name: "Pixel Art",
+      imageUrl:
+        "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop",
+    },
+    {
+      name: "Realismo",
+      imageUrl:
+        "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=400&auto=format&fit=crop",
+    },
+    {
+      name: "Chibi",
+      imageUrl:
+        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=400&auto=format&fit=crop",
+    },
+    {
+      name: "Concept",
+      imageUrl:
+        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=400&auto=format&fit=crop",
     },
   ]
 
@@ -99,9 +134,8 @@ export function HomeFeed({
           <h1 className="text-2xl font-semibold">Feed de Artes</h1>
         </div>
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
-          <Input placeholder="Buscar estilos ou artistas" />
           <Select defaultValue="relevancia">
-            <SelectTrigger className="w-full sm:w-57">
+            <SelectTrigger className="w-full sm:w-36">
               <SelectValue placeholder="Ordenar por" />
             </SelectTrigger>
             <SelectContent>
@@ -110,6 +144,42 @@ export function HomeFeed({
               <SelectItem value="preco">Menor preço</SelectItem>
             </SelectContent>
           </Select>
+          <DropdownMenu open={styleMenuOpen} onOpenChange={setStyleMenuOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-center px-3 sm:w-36"
+              >
+                {selectedStyle}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-80 p-3" align="start">
+              <div className="grid grid-cols-2 gap-3">
+                {styleOptions.map((style) => (
+                  <button
+                    key={style.name}
+                    type="button"
+                    className="group relative aspect-square w-full cursor-pointer overflow-hidden rounded-lg border bg-muted text-white"
+                    onClick={() => {
+                      setSelectedStyle(style.name)
+                      setStyleMenuOpen(false)
+                    }}
+                  >
+                    <img
+                      src={style.imageUrl}
+                      alt={style.name}
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black/45" />
+                    <span className="relative z-10 flex h-full w-full items-center justify-center px-2 text-center text-xs font-semibold uppercase tracking-wide">
+                      {style.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline">Filtros</Button>
@@ -122,19 +192,6 @@ export function HomeFeed({
                 </SheetDescription>
               </SheetHeader>
               <div className="mt-6 space-y-4">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Estilo</p>
-                  <Select defaultValue="anime">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="anime">Anime</SelectItem>
-                      <SelectItem value="realismo">Realismo</SelectItem>
-                      <SelectItem value="pixel">Pixel Art</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Prazo</p>
                   <Select defaultValue="7dias">
