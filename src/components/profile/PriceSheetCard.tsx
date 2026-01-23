@@ -10,13 +10,25 @@ interface PriceSheetCardProps {
 export function PriceSheetCard({ sheet, onRequest }: PriceSheetCardProps) {
   return (
     <Card className="flex h-full flex-col border-border/60 bg-card/95 shadow-sm">
-      <CardHeader className="space-y-1">
+      <div className="overflow-hidden rounded-t-xl">
+        <div className="aspect-square w-full bg-muted/40">
+          {sheet.imageUrl ? (
+            <img
+              src={sheet.imageUrl}
+              alt={sheet.titulo}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          ) : null}
+        </div>
+      </div>
+      <CardHeader className="space-y-1 py-4">
         <p className="text-sm uppercase tracking-wide text-muted-foreground">
           Comissão
         </p>
         <h3 className="text-lg font-semibold">{sheet.titulo}</h3>
       </CardHeader>
-      <CardContent className="flex-1 space-y-3">
+      <CardContent className="flex-1 space-y-3 py-2">
         <p className="text-sm text-muted-foreground">{sheet.descricao}</p>
         <p className="text-2xl font-semibold">
           {sheet.preco.toLocaleString("pt-BR", {
@@ -25,7 +37,7 @@ export function PriceSheetCard({ sheet, onRequest }: PriceSheetCardProps) {
           })}
         </p>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="py-4">
         <Button className="w-full" onClick={() => onRequest(sheet.preco)}>
           Pedir Comissão
         </Button>

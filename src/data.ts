@@ -159,6 +159,86 @@ export const arts: Art[] = [
     nsfw: false,
     preco: 220,
   },
+  {
+    id: "artwork-13",
+    titulo: "Aurora Serena",
+    imageUrl:
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=900&auto=format&fit=crop",
+    artistId: "art-1",
+    tags: ["#Soft", "#Nature", "#Glow"],
+    nsfw: false,
+    preco: 160,
+  },
+  {
+    id: "artwork-14",
+    titulo: "Rosas de Nevoa",
+    imageUrl:
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1000&h=700&fit=crop&auto=format",
+    artistId: "art-1",
+    tags: ["#Mood", "#Light", "#Portrait"],
+    nsfw: false,
+    preco: 190,
+  },
+  {
+    id: "artwork-15",
+    titulo: "Brisa Azul",
+    imageUrl:
+      "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=900&auto=format&fit=crop",
+    artistId: "art-1",
+    tags: ["#Sky", "#Soft", "#Pastel"],
+    nsfw: false,
+    preco: 175,
+  },
+  {
+    id: "artwork-16",
+    titulo: "Silencio Claro",
+    imageUrl:
+      "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=900&auto=format&fit=crop",
+    artistId: "art-1",
+    tags: ["#Landscape", "#Calm", "#Light"],
+    nsfw: false,
+    preco: 210,
+  },
+  {
+    id: "artwork-17",
+    titulo: "Caminho Dourado",
+    imageUrl:
+      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=900&auto=format&fit=crop",
+    artistId: "art-1",
+    tags: ["#Golden", "#Warm", "#Trail"],
+    nsfw: false,
+    preco: 165,
+  },
+  {
+    id: "artwork-18",
+    titulo: "Maresia Suave",
+    imageUrl:
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=900&auto=format&fit=crop",
+    artistId: "art-1",
+    tags: ["#Sea", "#Blue", "#Soft"],
+    nsfw: false,
+    preco: 185,
+  },
+  {
+    id: "artwork-19",
+    titulo: "Brilho da Manha",
+    imageUrl:
+      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=900&auto=format&fit=crop",
+    artistId: "art-1",
+    tags: ["#Sunrise", "#Light", "#Dreamy"],
+    nsfw: false,
+    preco: 195,
+  },
+  {
+    id: "artwork-20",
+    titulo: "Jardim Silente",
+    imageUrl:
+      "https://images.unsplash.com/photo-1471879832106-c7ab9e0cee23?q=80&w=900&auto=format&fit=crop",
+    artistId: "art-1",
+    tags: ["#Garden", "#Soft", "#Detail"],
+    nsfw: false,
+    preco: 205,
+  },
 ]
 
 export const priceSheets: PriceSheet[] = [
@@ -167,18 +247,24 @@ export const priceSheets: PriceSheet[] = [
     titulo: "Headshot Anime",
     preco: 50,
     descricao: "Arte colorida apenas do rosto, com fundo simples.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?q=80&w=800&auto=format&fit=crop",
   },
   {
     id: "ps-2",
     titulo: "Meio Corpo",
     preco: 120,
     descricao: "Ilustração detalhada até o torso com luz cinematográfica.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=800&auto=format&fit=crop",
   },
   {
     id: "ps-3",
     titulo: "Cena Completa",
     preco: 250,
     descricao: "Personagem em ambiente completo com props e atmosfera.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1496318447583-f524534e9ce1?q=80&w=800&auto=format&fit=crop",
   },
 ]
 

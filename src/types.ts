@@ -25,6 +25,7 @@ export interface PriceSheet {
   titulo: string
   preco: number
   descricao: string
+  imageUrl?: string
 }
 
 export interface CommissionStatus {
