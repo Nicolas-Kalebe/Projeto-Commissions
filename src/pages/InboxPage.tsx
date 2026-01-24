@@ -315,7 +315,13 @@ export function InboxPage() {
                         <p className="text-sm font-semibold">
                           {user?.nome ?? "Usuario"}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p
+                          className={`text-xs ${
+                            conversation.unread > 0
+                              ? "font-semibold text-black dark:text-white"
+                              : "text-muted-foreground"
+                          }`}
+                        >
                           {conversation.lastMessage}
                         </p>
                       </div>
