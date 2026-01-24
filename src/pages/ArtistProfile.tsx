@@ -103,7 +103,7 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
   return (
     <section className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
-        <section className="space-y-4 rounded-xl border bg-card/80 p-4 md:p-5">
+        <section className="space-y-4 bg-card/80 p-4 md:p-5 dark:bg-[oklch(0.12_0_0)]">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-1 rounded-full border bg-background/80 p-1 text-lg font-bold">
               <Button

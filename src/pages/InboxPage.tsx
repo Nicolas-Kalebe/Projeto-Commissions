@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -157,6 +157,38 @@ const messages: Message[] = [
     time: "10:44",
     status: "enviado",
   },
+  {
+    id: "msg-6",
+    conversationId: "conv-1",
+    sender: "artista",
+    content: "Perfeito, estou enviando o arquivo em alta agora.",
+    time: "10:45",
+    status: "entregue",
+  },
+  {
+    id: "msg-7",
+    conversationId: "conv-1",
+    sender: "cliente",
+    content: "Recebi! Gostei muito do brilho, so queria a flor um pouco menor.",
+    time: "10:47",
+    status: "lido",
+  },
+  {
+    id: "msg-8",
+    conversationId: "conv-1",
+    sender: "artista",
+    content: "Beleza, ajusto a flor e te mando a versao final hoje.",
+    time: "10:49",
+    status: "lido",
+  },
+  {
+    id: "msg-9",
+    conversationId: "conv-1",
+    sender: "cliente",
+    content: "Fechado. Obrigado!",
+    time: "10:50",
+    status: "enviado",
+  },
 ]
 
 const statusMap = {
@@ -171,6 +203,7 @@ export function InboxPage() {
   const [inboxView, setInboxView] = useState<"all" | "unread">("all")
   const [replyTo, setReplyTo] = useState<Message | null>(null)
   const messageRef = useRef<HTMLTextAreaElement | null>(null)
+  const chatEndRef = useRef<HTMLDivElement | null>(null)
 
   const userMap = useMemo(
     () => new Map(users.map((user) => [user.id, user])),
@@ -203,6 +236,10 @@ export function InboxPage() {
   const activeMessages = messages.filter(
     (message) => message.conversationId === activeConversation?.id
   )
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ block: "end" })
+  }, [activeId, activeMessages.length])
 
   return (
     <section className="grid h-[calc(100svh-3.5rem-2rem)] gap-6 px-4 py-4 lg:grid-cols-[320px_minmax(0,1fr)]">
@@ -413,6 +450,7 @@ export function InboxPage() {
                 </div>
               )
             })}
+            <div ref={chatEndRef} />
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <Separator className="flex-1" />
               Artista esta digitando...
