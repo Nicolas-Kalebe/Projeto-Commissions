@@ -16,7 +16,7 @@ import { DashboardPage } from "@/pages/DashboardPage"
 import { HomeFeed } from "@/pages/HomeFeed"
 import { NewArtPage } from "@/pages/NewArtPage"
 import { NotificationsPage } from "@/pages/NotificationsPage"
-import { arts, moderationReports, notifications, users } from "@/data"
+import { arts, notifications, users } from "@/data"
 import { cn } from "@/lib/utils"
 import {
   Bell,
@@ -63,9 +63,7 @@ export function AppShell() {
 
   const sectionContent = (
     <div className="space-y-10 pb-24 lg:pb-10">
-      {active === "dashboard" && (
-        <DashboardPage moderationReports={moderationReports} />
-      )}
+      {active === "dashboard" && <DashboardPage />}
 
       {active === "nova" && <NewArtPage />}
 
