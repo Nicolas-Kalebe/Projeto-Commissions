@@ -1,4 +1,4 @@
-import { useRef, useState, type ElementType } from "react"
+import { useEffect, useRef, useState, type ElementType } from "react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -50,9 +50,22 @@ export function AppHeader({
   currentUser,
 }: AppHeaderProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [isDark, setIsDark] = useState(false)
   const profileMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(
     null
   )
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"))
+  }, [])
+
+  const handleThemeToggle = () => {
+    setIsDark((prev) => {
+      const next = !prev
+      document.documentElement.classList.toggle("dark", next)
+      return next
+    })
+  }
 
   // Função para abrir via hover
   const openProfileMenu = () => {
@@ -231,6 +244,9 @@ export function AppHeader({
               <DropdownMenuItem>Minhas compras</DropdownMenuItem>
               <DropdownMenuItem>Configuracoes</DropdownMenuItem>
               <DropdownMenuItem>Ajuda</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleThemeToggle}>
+                {isDark ? "Modo claro" : "Modo escuro"}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Sair</DropdownMenuItem>
             </DropdownMenuContent>

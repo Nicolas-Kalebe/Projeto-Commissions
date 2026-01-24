@@ -26,31 +26,11 @@ import {
   Youtube,
 } from "lucide-react"
 
-const isDarkColor = (hexColor: string) => {
-  const normalized = hexColor.replace("#", "")
-  if (normalized.length !== 6) {
-    return false
-  }
-
-  const r = Number.parseInt(normalized.slice(0, 2), 16)
-  const g = Number.parseInt(normalized.slice(2, 4), 16)
-  const b = Number.parseInt(normalized.slice(4, 6), 16)
-  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
-
-  return luminance < 0.6
-}
-
 interface ArtistProfileProps {
   onRequestCommission: (price: number) => void
-  profileTheme: string
-  onThemeChange: (color: string) => void
 }
 
-export function ArtistProfile({
-  onRequestCommission,
-  profileTheme,
-  onThemeChange,
-}: ArtistProfileProps) {
+export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [portfolioSort, setPortfolioSort] = useState<"recentes" | "populares">(
@@ -112,24 +92,6 @@ export function ArtistProfile({
     },
   ]
 
-  const themeOptions = [
-    { name: "Rosa", color: "#F8BBD0" },
-    { name: "Menta", color: "#B2DFDB" },
-    { name: "Lilas", color: "#D1C4E9" },
-    { name: "Damasco", color: "#FFCCBC" },
-    { name: "Branco", color: "#FFFFFF" },
-    { name: "Pessego", color: "#FFD7BA" },
-    { name: "Oceano", color: "#B3E5FC" },
-    { name: "Lima", color: "#DCEBB3" },
-    { name: "Areia", color: "#F3E5AB" },
-    { name: "Neve", color: "#E6EEFF" },
-    { name: "Aqua", color: "#B2F1E9" },
-    { name: "Lavanda", color: "#E5D0FF" },
-    { name: "Coral", color: "#FFC4B3" },
-    { name: "Nuvem", color: "#EAEAEA" },
-    { name: "Manga", color: "#FFD1A8" },
-  ]
-
   const sortedGallery = [...extendedGallery].sort((a, b) => {
     if (portfolioSort === "populares") {
       return b.preco - a.preco
@@ -137,30 +99,11 @@ export function ArtistProfile({
 
     return 0
   })
-  const themeIsDark = isDarkColor(profileTheme)
-  const themeTextColor = themeIsDark ? "#f8fafc" : "#1f2937"
-  const themeIsWhite = profileTheme.toLowerCase() === "#ffffff"
-  const followButtonStyles = themeIsWhite
-    ? undefined
-    : {
-        backgroundColor: profileTheme,
-        color: themeTextColor,
-        boxShadow: `0 10px 20px -14px ${profileTheme}`,
-      }
 
   return (
-    <section
-      className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-"
-      style={{ backgroundColor: profileTheme }}
-    >
+    <section className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
-        <section
-          className="space-y-4 rounded-xl border p-4 md:p-5"
-          style={{
-            backgroundColor: `${profileTheme}33`,
-            borderColor: `${profileTheme}66`,
-          }}
-        >
+        <section className="space-y-4 rounded-xl border bg-card/80 p-4 md:p-5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-1 rounded-full border bg-background/80 p-1 text-lg font-bold">
               <Button
@@ -224,7 +167,6 @@ export function ArtistProfile({
                   key={art.id}
                   type="button"
                   className="group relative cursor-pointer overflow-hidden rounded-xl border bg-card"
-                  style={{ borderColor: `${profileTheme}55` }}
                   onClick={() => {
                     setLightboxIndex(index)
                     setLightboxOpen(true)
@@ -272,11 +214,7 @@ export function ArtistProfile({
         </section>
         <aside className="self-start lg:sticky lg:top-24">
           <section
-            className="space-y-4 rounded-xl border bg-card p-5 lg:-mt-3 lg:min-h-[calc(100svh-14em)]"
-            style={{
-              borderColor: themeIsWhite ? "#e5e7eb" : `${profileTheme}88`,
-              boxShadow: `0 16px 40px -28px ${profileTheme}`,
-            }}
+            className="space-y-4 rounded-xl border bg-card p-5 shadow-sm lg:-mt-3 lg:min-h-[calc(100svh-14em)]"
           >
             <div className="text-sm font-semibold">Perfil do artista</div>
             <div className="flex items-start gap-4">
@@ -290,38 +228,22 @@ export function ArtistProfile({
               </div>
             </div>
             <div className="flex w-full flex-wrap justify-between gap-2">
-              <Badge
-                variant="outline"
-                style={{ borderColor: `${profileTheme}88` }}
-              >
+              <Badge variant="outline">
                 Ela/dela
               </Badge>
-              <Badge
-                variant="secondary"
-                style={{ backgroundColor: `${profileTheme}55` }}
-              >
+              <Badge variant="secondary">
                 Ilustradora
               </Badge>
-              <Badge
-                variant="outline"
-                style={{ borderColor: `${profileTheme}88` }}
-              >
+              <Badge variant="outline">
                 Entrega em 7 dias
               </Badge>
-              <Badge
-                variant="outline"
-                style={{ borderColor: `${profileTheme}88` }}
-              >
+              <Badge variant="outline">
                 Ativo hoje
               </Badge>
             </div>
-            <Separator
-              style={{
-                backgroundColor: themeIsWhite ? "#e5e7eb" : `${profileTheme}66`,
-              }}
-            />
+            <Separator />
             <div className="flex gap-2">
-              <Button className="flex-1 gap-2 px-4" style={followButtonStyles}>
+              <Button className="flex-1 gap-2 px-4">
                 <UserPlus className="h-4 w-4" />
                 Seguir
               </Button>
@@ -366,11 +288,7 @@ export function ArtistProfile({
                 <span className="text-muted-foreground">Avaliação</span>
               </div>
             </div>
-            <Separator
-              style={{
-                backgroundColor: themeIsWhite ? "#e5e7eb" : `${profileTheme}66`,
-              }}
-            />
+            <Separator />
             <div className="text-center text-xs font-semibold uppercase text-muted-foreground">
               Redes do Artista
             </div>
@@ -389,11 +307,7 @@ export function ArtistProfile({
                 </Button>
               ))}
             </div>
-            <Separator
-              style={{
-                backgroundColor: themeIsWhite ? "#e5e7eb" : `${profileTheme}66`,
-              }}
-            />
+            <Separator />
             <div className="space-y-2 rounded-lg border bg-background/80 p-3 text-sm">
               <div className="text-xs font-semibold uppercase text-muted-foreground">
                 Sobre o estilo
