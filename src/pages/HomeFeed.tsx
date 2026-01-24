@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Slider } from "@/components/ui/slider"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   type CarouselApi,
@@ -218,8 +219,9 @@ export function HomeFeed({
                     Ajuste o estilo, prazo e faixa de pre??o.
                   </SheetDescription>
                 </SheetHeader>
-                <div className="mt-6 space-y-4">
-                  <div className="space-y-2">
+                <ScrollArea className="mt-6 h-[calc(100svh-10rem)] pr-4">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
                     <p className="text-sm font-medium">Ordenar por</p>
                     <Select defaultValue="relevancia">
                       <SelectTrigger>
@@ -302,8 +304,9 @@ export function HomeFeed({
                       step={10}
                     />
                   </div>
-                  <Button className="w-full">Aplicar filtros</Button>
-                </div>
+                    <Button className="w-full">Aplicar filtros</Button>
+                  </div>
+                </ScrollArea>
               </SheetContent>
             </Sheet>
           </div>

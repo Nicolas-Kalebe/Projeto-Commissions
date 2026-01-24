@@ -96,17 +96,22 @@ export function AppHeader({
     <header className="sticky top-0 z-20 h-14 border-b bg-background/80 px-6 py-2 backdrop-blur">
       <div className="grid w-full grid-cols-1 items-center gap-3 lg:grid-cols-[1fr_minmax(0,640px)_1fr]">
         <div className="flex items-center gap-3 overflow-x-auto lg:justify-start">
-          <div className="mr-2 hidden items-center gap-2 lg:flex">
+          <button
+            type="button"
+            className="mr-2 hidden cursor-pointer items-center gap-2 rounded-lg px-2 py-1 transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:flex"
+            onClick={() => onNavChange("inicio")}
+            aria-label="Voltar ao inicio"
+          >
             <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <ShieldCheck className="size-5" />
             </div>
-            <div>
+            <div className="text-left">
               <p className="text-sm font-semibold">Atelie Seguro</p>
               <p className="text-xs text-muted-foreground">
                 Comissoes protegidas
               </p>
             </div>
-          </div>
+          </button>
           {navItems
             .filter(
               (item) => item.key !== "perfil" && item.key !== "notificacoes"
