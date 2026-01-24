@@ -1,16 +1,5 @@
-import { useMemo, useRef, useState } from "react"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+import { useMemo, useState } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArtistProfile } from "@/pages/ArtistProfile"
 import { CommissionModal } from "@/pages/CommissionModal"
 import { DashboardPage } from "@/pages/DashboardPage"
@@ -19,23 +8,7 @@ import { InboxPage } from "@/pages/InboxPage"
 import { NewArtPage } from "@/pages/NewArtPage"
 import { NotificationsPage } from "@/pages/NotificationsPage"
 import { arts, moderationReports, notifications, users } from "@/data"
-import { cn } from "@/lib/utils"
-import {
-  Bell,
-  Home,
-  Mail,
-  ShieldCheck,
-  User,
-} from "lucide-react"
-
-type NavKey = "inicio" | "dashboard" | "nova" | "notificacoes" | "perfil" | "inbox"
-const navItems: { key: NavKey; label: string; icon: React.ElementType }[] = [
-  { key: "inicio", label: "Inicio", icon: Home },
-  { key: "dashboard", label: "Dashboard", icon: ShieldCheck },
-  { key: "inbox", label: "Mensagens", icon: Mail },
-  { key: "notificacoes", label: "Notificacoes", icon: Bell },
-  { key: "perfil", label: "Perfil", icon: User },
-]
+import { AppHeader, type NavKey } from "@/components/layout/AppHeader"
 
 export function AppShell() {
   const [active, setActive] = useState<NavKey>("inicio")
@@ -43,10 +16,6 @@ export function AppShell() {
   const [selectedPrice, setSelectedPrice] = useState(100)
   const [priceRange, setPriceRange] = useState<[number, number]>([50, 300])
   const [profileTheme, setProfileTheme] = useState("#FFFFFF")
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
-  const profileMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  )
 
   const artistMap = useMemo(
     () => new Map(users.map((user) => [user.id, user])),
@@ -57,23 +26,6 @@ export function AppShell() {
     setSelectedPrice(price)
     setCommissionOpen(true)
   }
-  const openProfileMenu = () => {
-    if (profileMenuCloseTimer.current) {
-      clearTimeout(profileMenuCloseTimer.current)
-      profileMenuCloseTimer.current = null
-    }
-    setProfileMenuOpen(true)
-  }
-  const scheduleCloseProfileMenu = () => {
-    if (profileMenuCloseTimer.current) {
-      clearTimeout(profileMenuCloseTimer.current)
-    }
-    profileMenuCloseTimer.current = setTimeout(() => {
-      setProfileMenuOpen(false)
-      profileMenuCloseTimer.current = null
-    }, 220)
-  }
-
   const homeContent = (
     <HomeFeed
       arts={arts}
@@ -113,156 +65,12 @@ export function AppShell() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.98_0.02_90),transparent)]" />
       )}
       <div className="flex min-h-svh flex-1 flex-col">
-        <header className="sticky top-0 z-20 h-14 border-b bg-background/80 px-6 py-2 backdrop-blur">
-          <div className="grid w-full grid-cols-1 items-center gap-3 lg:grid-cols-[1fr_minmax(0,640px)_1fr]">
-            <div className="flex items-center gap-3 overflow-x-auto lg:justify-start">
-              <button
-                type="button"
-                className={cn(
-                  "mr-2 hidden cursor-pointer items-center gap-2 text-left transition hover:opacity-80 lg:flex",
-                  active === "inicio" && "text-foreground"
-                )}
-                onClick={() => setActive("inicio")}
-              >
-                <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <ShieldCheck className="size-5" />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-semibold">Atelie Seguro</p>
-                  <p className="text-xs text-muted-foreground">
-                    Comissoes protegidas
-                  </p>
-                </div>
-              </button>
-              {navItems
-                .filter((item) => item.key !== "perfil" && item.key !== "notificacoes")
-                .map((item) => {
-                const Icon = item.icon
-                const isActive = active === item.key
-                return (
-                  <Button
-                    key={item.key}
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      "flex items-center gap-2 px-3",
-                      isActive && "bg-muted text-foreground"
-                    )}
-                    onClick={() => setActive(item.key)}
-                  >
-                    <Icon className="size-4" />
-                    {item.label}
-                  </Button>
-                )
-              })}
-            </div>
-            {active !== "inicio" ? (
-              <div className="flex w-full justify-center">
-                <div className="w-full max-w-xl">
-                  <Input placeholder="Buscar estilos ou artistas" />
-                </div>
-              </div>
-            ) : (
-              <div />
-            )}
-            <div className="flex items-center justify-end gap-3">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                      "size-9",
-                      active === "notificacoes" && "bg-muted text-foreground"
-                    )}
-                    aria-label="Notificações"
-                  >
-                    <Bell className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  sideOffset={10}
-                  showArrow
-                  className="w-80"
-                >
-                  <DropdownMenuLabel>Notificações</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <div className="space-y-3 px-2 py-2 text-sm">
-                    {notifications.slice(0, 3).map((item) => (
-                      <div key={item.id} className="space-y-1">
-                        <p className="text-sm font-semibold">{item.titulo}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {item.descricao}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {item.horario}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  <DropdownMenuSeparator />
-                  <div className="p-2">
-                    <Button
-                      variant="secondary"
-                      className="w-full"
-                      onClick={() => setActive("notificacoes")}
-                    >
-                      Ver todas
-                    </Button>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "size-9 mr-2",
-                  active === "inbox" && "bg-muted text-foreground"
-                )}
-                aria-label="Mensagens"
-                onClick={() => setActive("inbox")}
-              >
-                <Mail className="size-4" />
-              </Button>
-              <DropdownMenu
-                open={profileMenuOpen}
-                onOpenChange={setProfileMenuOpen}
-              >
-                <DropdownMenuTrigger asChild>
-                  <div
-                    className="-m-2 inline-flex cursor-pointer items-center rounded-full p-2"
-                    onClick={() => setActive("perfil")}
-                    onPointerEnter={openProfileMenu}
-                    onPointerLeave={scheduleCloseProfileMenu}
-                    role="button"
-                  >
-                    <Avatar className="size-9">
-                      <AvatarImage src={users[2].avatarUrl} alt={users[2].nome} />
-                      <AvatarFallback>MS</AvatarFallback>
-                    </Avatar>
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  sideOffset={4}
-                  showArrow
-                  onPointerEnter={openProfileMenu}
-                  onPointerLeave={scheduleCloseProfileMenu}
-                  className="w-48"
-                >
-                  <DropdownMenuLabel>Conta</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Minhas compras</DropdownMenuItem>
-                  <DropdownMenuItem>Configuracoes</DropdownMenuItem>
-                  <DropdownMenuItem>Ajuda</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Sair</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </header>
+        <AppHeader
+          active={active}
+          onNavChange={setActive}
+          notifications={notifications}
+          currentUser={users[2]}
+        />
 
         <ScrollArea className="h-[calc(100svh-3.5rem)]">
           {active === "inicio" ? (
@@ -289,5 +97,6 @@ export function AppShell() {
     </div>
   )
 }
+
 
 
