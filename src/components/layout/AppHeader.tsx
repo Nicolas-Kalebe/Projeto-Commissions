@@ -17,6 +17,8 @@ import {
   Home,
   Mail,
   ShieldCheck,
+  ToggleLeft,
+  ToggleRight,
   User as UserIcon,
 } from "lucide-react"
 
@@ -245,7 +247,14 @@ export function AppHeader({
               <DropdownMenuItem>Configuracoes</DropdownMenuItem>
               <DropdownMenuItem>Ajuda</DropdownMenuItem>
               <DropdownMenuItem onClick={handleThemeToggle}>
-                {isDark ? "Modo claro" : "Modo escuro"}
+                <span className="flex w-full items-center justify-between">
+                  Modo escuro
+                  {isDark ? (
+                    <ToggleRight className="size-5" />
+                  ) : (
+                    <ToggleLeft className="size-5" />
+                  )}
+                </span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Sair</DropdownMenuItem>

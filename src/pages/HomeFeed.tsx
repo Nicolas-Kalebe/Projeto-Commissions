@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -38,6 +38,8 @@ export function HomeFeed({
   const [selectedStyle, setSelectedStyle] = useState("Todos estilos")
   const [activeCategory, setActiveCategory] = useState("categorias")
   const [bannerApi, setBannerApi] = useState<CarouselApi | null>(null)
+  const bannerAutoResumeAtRef = useRef(0)
+  const bannerAutoResumeDelayMs = 10000
   const banners = [
     {
       title: "Desconto no Premium",
@@ -130,10 +132,21 @@ export function HomeFeed({
   useEffect(() => {
     if (!bannerApi) return
     const intervalId = window.setInterval(() => {
+      if (Date.now() < bannerAutoResumeAtRef.current) return
       bannerApi.scrollNext()
     }, 4000)
     return () => window.clearInterval(intervalId)
   }, [bannerApi])
+
+  const handleBannerPrev = () => {
+    bannerAutoResumeAtRef.current = Date.now() + bannerAutoResumeDelayMs
+    bannerApi?.scrollPrev()
+  }
+
+  const handleBannerNext = () => {
+    bannerAutoResumeAtRef.current = Date.now() + bannerAutoResumeDelayMs
+    bannerApi?.scrollNext()
+  }
 
   return (
     <section className="space-y-6">
@@ -179,11 +192,13 @@ export function HomeFeed({
           variant="secondary"
           size="icon"
           className="left-4 top-1/2 -translate-y-1/2 rounded-full opacity-0 transition group-hover:opacity-100"
+          onClick={handleBannerPrev}
         />
         <CarouselNext
           variant="secondary"
           size="icon"
           className="right-4 top-1/2 -translate-y-1/2 rounded-full opacity-0 transition group-hover:opacity-100"
+          onClick={handleBannerNext}
         />
       </Carousel>
 
