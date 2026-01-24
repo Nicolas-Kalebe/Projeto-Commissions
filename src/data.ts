@@ -10,10 +10,10 @@
 export const users: User[] = [
   {
     id: "art-1",
-    nome: "Luna Azevedo",
+    nome: "Nicolas Kalebe",
     role: "artista",
     avatarUrl:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=300&auto=format&fit=crop",
+      "/nicolas.jpg",
     bio: "Ilustradora digital focada em fantasia suave e personagens expressivos.",
     seguidores: 12840,
     destaque: "Especialista em retratos anime.",

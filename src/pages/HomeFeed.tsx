@@ -14,8 +14,6 @@ import {
 } from "@/components/ui/carousel"
 import {
   InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group"
 import { ArtCard } from "@/components/feed/ArtCard"
@@ -198,21 +196,21 @@ export function HomeFeed({
               Feed de Artes
             </h1>
           </div>
-          <div className="w-full max-w-[50vw]">
+          <div className="min-w-0 flex-1">
             <Sheet>
-              <InputGroup>
-                <InputGroupInput placeholder="Buscar estilos ou artistas" />
-                <InputGroupAddon align="inline-end">
-                  <SheetTrigger asChild>
-                    <InputGroupButton variant="secondary" className="gap-2">
-                      <span className="material-symbols-rounded text-[16px] leading-none">
-                        tune
-                      </span>
-                      Filtros
-                    </InputGroupButton>
-                  </SheetTrigger>
-                </InputGroupAddon>
-              </InputGroup>
+              <div className="flex w-full items-center gap-3">
+                <InputGroup className="h-10 flex-1">
+                  <InputGroupInput placeholder="Buscar estilos ou artistas" />
+                </InputGroup>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="lg" className="gap-2">
+                    <span className="material-symbols-rounded text-[16px] leading-none">
+                      tune
+                    </span>
+                    Filtros
+                  </Button>
+                </SheetTrigger>
+              </div>
               <SheetContent side="right">
                 <SheetHeader>
                   <SheetTitle>Filtros avan??ados</SheetTitle>
