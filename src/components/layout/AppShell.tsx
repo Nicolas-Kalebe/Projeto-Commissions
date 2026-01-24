@@ -9,6 +9,24 @@ import { NewArtPage } from "@/pages/NewArtPage"
 import { NotificationsPage } from "@/pages/NotificationsPage"
 import { arts, moderationReports, notifications, users } from "@/data"
 import { AppHeader, type NavKey } from "@/components/layout/AppHeader"
+import { arts, notifications, users } from "@/data"
+import { cn } from "@/lib/utils"
+import {
+  Bell,
+  Home,
+  Mail,
+  ShieldCheck,
+  User,
+} from "lucide-react"
+
+type NavKey = "inicio" | "dashboard" | "nova" | "notificacoes" | "perfil" | "inbox"
+const navItems: { key: NavKey; label: string; icon: React.ElementType }[] = [
+  { key: "inicio", label: "Inicio", icon: Home },
+  { key: "dashboard", label: "Dashboard", icon: ShieldCheck },
+  { key: "inbox", label: "Mensagens", icon: Mail },
+  { key: "notificacoes", label: "Notificacoes", icon: Bell },
+  { key: "perfil", label: "Perfil", icon: User },
+]
 
 export function AppShell() {
   const [active, setActive] = useState<NavKey>("inicio")
@@ -37,9 +55,7 @@ export function AppShell() {
 
   const sectionContent = (
     <div className="space-y-10 pb-24 lg:pb-10">
-      {active === "dashboard" && (
-        <DashboardPage moderationReports={moderationReports} />
-      )}
+      {active === "dashboard" && <DashboardPage />}
 
       {active === "nova" && <NewArtPage />}
 

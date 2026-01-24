@@ -1,100 +1,97 @@
-import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import type { ModerationReport } from "@/types"
+import { Input } from "@/components/ui/input"
+import { Separator } from "@/components/ui/separator"
+import { users } from "@/data"
 
-type DashboardPageProps = {
-  moderationReports: ModerationReport[]
-}
+const projectItems = [
+  "Comissao retrato cyberpunk",
+  "Pacote banners Twitch",
+  "Mascote para startup",
+  "Ilustracao editorial",
+  "Identidade visual",
+  "Capa de album",
+]
 
-export function DashboardPage({ moderationReports }: DashboardPageProps) {
+export function DashboardPage() {
+  const user = users[0]
+
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Painel interno
-          </p>
-          <h2 className="text-xl font-semibold">Painel Administrativo</h2>
+    <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
+      <aside className="space-y-4 lg:border-r lg:pr-6">
+        <div className="flex items-center gap-2">
+          <Avatar className="size-9">
+            <AvatarImage src={user.avatarUrl} alt={user.nome} />
+            <AvatarFallback>{user.nome.slice(0, 2)}</AvatarFallback>
+          </Avatar>
+          <Button variant="ghost" className="px-2 text-sm font-semibold">
+            {user.nome}
+          </Button>
         </div>
-        <Button variant="outline" size="sm">
-          Ver relatÃ‡Ã¼rios
-        </Button>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {[
-          { label: "Volume Transacionado", value: "R$ 82.450,00" },
-          { label: "Receita (Taxas)", value: "R$ 8.245,00" },
-          { label: "Disputas Abertas", value: "12" },
-        ].map((metric) => (
-          <Card key={metric.label} className="border-border/60 bg-card/95">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {metric.label}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pb-6">
-              <p className="text-2xl font-semibold">{metric.value}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-muted-foreground">
+              Projetos
+            </p>
+            <Button size="sm" variant="secondary">
+              Novo
+            </Button>
+          </div>
+          <Input placeholder="Buscar projetos..." />
+          <div className="space-y-1">
+            {projectItems.map((project) => (
+              <Button
+                key={project}
+                variant="ghost"
+                className="w-full justify-start cursor-pointer"
+              >
+                {project}
+              </Button>
+            ))}
+          </div>
+          <Button variant="ghost" className="px-2 text-xs text-muted-foreground">
+            Ver mais
+          </Button>
+        </div>
+      </aside>
 
-      <Card className="border-border/60 bg-card/95">
-        <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Lista de ModeraÃ‡ÃµÃ‡Å“o
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ConteÃ‡Â§do</TableHead>
-                <TableHead>Motivo</TableHead>
-                <TableHead>Autor</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">AÃ‡ÃµÃ‡Ã¦es</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {moderationReports.map((report) => (
-                <TableRow key={report.id}>
-                  <TableCell>{report.conteudo}</TableCell>
-                  <TableCell>{report.motivo}</TableCell>
-                  <TableCell>{report.autor}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={report.status === "novo" ? "default" : "outline"}
-                    >
-                      {report.status === "novo" ? "Novo" : "Revisado"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="sm">
-                        Ignorar
-                      </Button>
-                      <Button variant="destructive" size="sm">
-                        Banir
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-xl font-semibold">Dashboard</h1>
+          <div className="rounded-lg border border-border/60 bg-background/60 px-4 py-3">
+            <p className="text-sm text-muted-foreground">
+              Pergunte algo ou escolha um projeto para comecar.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {["Tarefas", "Criar briefing", "Relatorios", "Arquivos", "Feedback"].map(
+            (item) => (
+              <Button key={item} variant="outline" size="sm">
+                {item}
+              </Button>
+            )
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <Separator />
+          <div className="rounded-lg border border-border/60 bg-background/60 p-4">
+            <p className="text-sm font-semibold">Atualizacoes recentes</p>
+            <p className="text-xs text-muted-foreground">
+              Sem atividade nas ultimas 24 horas.
+            </p>
+          </div>
+          <div className="rounded-lg border border-border/60 bg-background/60 p-4">
+            <p className="text-sm font-semibold">Resumo do projeto</p>
+            <p className="text-xs text-muted-foreground">
+              Selecione um projeto a esquerda para visualizar detalhes.
+            </p>
+          </div>
+        </div>
+      </div>
     </section>
   )
 }
