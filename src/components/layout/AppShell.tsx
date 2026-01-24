@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
+  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -14,6 +15,7 @@ import { ArtistProfile } from "@/pages/ArtistProfile"
 import { CommissionModal } from "@/pages/CommissionModal"
 import { DashboardPage } from "@/pages/DashboardPage"
 import { HomeFeed } from "@/pages/HomeFeed"
+import { InboxPage } from "@/pages/InboxPage"
 import { NewArtPage } from "@/pages/NewArtPage"
 import { NotificationsPage } from "@/pages/NotificationsPage"
 import { arts, moderationReports, notifications, users } from "@/data"
@@ -26,12 +28,12 @@ import {
   User,
 } from "lucide-react"
 
-type NavKey = "inicio" | "dashboard" | "nova" | "notificacoes" | "perfil"
-
+type NavKey = "inicio" | "dashboard" | "nova" | "notificacoes" | "perfil" | "inbox"
 const navItems: { key: NavKey; label: string; icon: React.ElementType }[] = [
-  { key: "inicio", label: "Iní­cio", icon: Home },
+  { key: "inicio", label: "Inicio", icon: Home },
   { key: "dashboard", label: "Dashboard", icon: ShieldCheck },
-  { key: "notificacoes", label: "Notificações", icon: Bell },
+  { key: "inbox", label: "Mensagens", icon: Mail },
+  { key: "notificacoes", label: "Notificacoes", icon: Bell },
   { key: "perfil", label: "Perfil", icon: User },
 ]
 
@@ -41,6 +43,10 @@ export function AppShell() {
   const [selectedPrice, setSelectedPrice] = useState(100)
   const [priceRange, setPriceRange] = useState<[number, number]>([50, 300])
   const [profileTheme, setProfileTheme] = useState("#FFFFFF")
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const profileMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  )
 
   const artistMap = useMemo(
     () => new Map(users.map((user) => [user.id, user])),
@@ -50,6 +56,22 @@ export function AppShell() {
   const handleRequestCommission = (price: number) => {
     setSelectedPrice(price)
     setCommissionOpen(true)
+  }
+  const openProfileMenu = () => {
+    if (profileMenuCloseTimer.current) {
+      clearTimeout(profileMenuCloseTimer.current)
+      profileMenuCloseTimer.current = null
+    }
+    setProfileMenuOpen(true)
+  }
+  const scheduleCloseProfileMenu = () => {
+    if (profileMenuCloseTimer.current) {
+      clearTimeout(profileMenuCloseTimer.current)
+    }
+    profileMenuCloseTimer.current = setTimeout(() => {
+      setProfileMenuOpen(false)
+      profileMenuCloseTimer.current = null
+    }, 220)
   }
 
   const homeContent = (
@@ -194,19 +216,50 @@ export function AppShell() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-9 mr-2"
+                className={cn(
+                  "size-9 mr-2",
+                  active === "inbox" && "bg-muted text-foreground"
+                )}
                 aria-label="Mensagens"
+                onClick={() => setActive("inbox")}
               >
                 <Mail className="size-4" />
               </Button>
-              <Avatar
-                className="size-9 cursor-pointer"
-                onClick={() => setActive("perfil")}
-                role="button"
+              <DropdownMenu
+                open={profileMenuOpen}
+                onOpenChange={setProfileMenuOpen}
               >
-                <AvatarImage src={users[2].avatarUrl} alt={users[2].nome} />
-                <AvatarFallback>MS</AvatarFallback>
-              </Avatar>
+                <DropdownMenuTrigger asChild>
+                  <div
+                    className="-m-2 inline-flex cursor-pointer items-center rounded-full p-2"
+                    onClick={() => setActive("perfil")}
+                    onPointerEnter={openProfileMenu}
+                    onPointerLeave={scheduleCloseProfileMenu}
+                    role="button"
+                  >
+                    <Avatar className="size-9">
+                      <AvatarImage src={users[2].avatarUrl} alt={users[2].nome} />
+                      <AvatarFallback>MS</AvatarFallback>
+                    </Avatar>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={4}
+                  showArrow
+                  onPointerEnter={openProfileMenu}
+                  onPointerLeave={scheduleCloseProfileMenu}
+                  className="w-48"
+                >
+                  <DropdownMenuLabel>Conta</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>Minhas compras</DropdownMenuItem>
+                  <DropdownMenuItem>Configuracoes</DropdownMenuItem>
+                  <DropdownMenuItem>Ajuda</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>Sair</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>
@@ -216,6 +269,10 @@ export function AppShell() {
             <main className="w-full px-6 py-8">{homeContent}</main>
           ) : active === "perfil" ? (
             <main className="w-full px-0 py-0">{sectionContent}</main>
+          ) : active === "inbox" ? (
+            <main className="w-full h-full px-0 py-0">
+              <InboxPage />
+            </main>
           ) : (
             <main className="mx-auto w-full max-w-6xl px-6 py-8">
               {sectionContent}
