@@ -15,7 +15,6 @@ export function AppShell() {
   const [commissionOpen, setCommissionOpen] = useState(false)
   const [selectedPrice, setSelectedPrice] = useState(100)
   const [priceRange, setPriceRange] = useState<[number, number]>([50, 300])
-  const [profileTheme, setProfileTheme] = useState("#FFFFFF")
 
   const artistMap = useMemo(
     () => new Map(users.map((user) => [user.id, user])),
@@ -48,19 +47,14 @@ export function AppShell() {
       {active === "perfil" && (
         <ArtistProfile
           onRequestCommission={handleRequestCommission}
-          profileTheme={profileTheme}
-          onThemeChange={setProfileTheme}
         />
       )}
     </div>
   )
   return (
-    <div
-      className="min-h-svh bg-background text-foreground"
-      style={active === "perfil" ? { backgroundColor: profileTheme } : undefined}
-    >
+    <div className="min-h-svh bg-background text-foreground">
       {active !== "perfil" && (
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.98_0.02_90),transparent)]" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.98_0.02_90),transparent)] dark:bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.18_0_0),transparent)]" />
       )}
       <div className="flex min-h-svh flex-1 flex-col">
         <AppHeader
