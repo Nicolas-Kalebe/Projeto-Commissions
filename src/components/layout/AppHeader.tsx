@@ -53,17 +53,17 @@ export function AppHeader({
   const profileMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(
     null
   )
-  const profileMenuIntent = useRef<"hover" | "click" | null>(null)
 
+  // Função para abrir via hover
   const openProfileMenu = () => {
     if (profileMenuCloseTimer.current) {
       clearTimeout(profileMenuCloseTimer.current)
       profileMenuCloseTimer.current = null
     }
-    profileMenuIntent.current = "hover"
     setProfileMenuOpen(true)
   }
 
+  // Função para agendar o fechamento (UX melhor para não fechar instantaneamente)
   const scheduleCloseProfileMenu = () => {
     if (profileMenuCloseTimer.current) {
       clearTimeout(profileMenuCloseTimer.current)
@@ -74,22 +74,12 @@ export function AppHeader({
     }, 200)
   }
 
-  const handleProfileClick = () => {
-    if(profileMenuIntent.current === "click"){
+  // Lógica do clique: navega para o perfil e fecha o menu
+  const handleProfileClick = (_e: React.MouseEvent) => {
+    // Previne comportamento padrão do trigger se necessário
+    // e garante a navegação
     setProfileMenuOpen(false)
     onNavChange("perfil")
-    }
-  }
-
-  const handleProfileMenuChange = (open: boolean) => {
-    if (!open) {
-      setProfileMenuOpen(false)
-      return
-    }
-    if (profileMenuIntent.current === "hover") {
-      setProfileMenuOpen(true)
-    }
-    profileMenuIntent.current = null
   }
 
   return (
@@ -202,9 +192,12 @@ export function AppHeader({
           >
             <Mail className="size-4" />
           </Button>
+
+          {/* --- CORREÇÃO APLICADA AQUI --- */}
           <DropdownMenu
             open={profileMenuOpen}
-            onOpenChange={handleProfileMenuChange}
+            onOpenChange={setProfileMenuOpen}
+            modal={false} // IMPORTANTE: Impede o piscar/conflito de foco
           >
             <DropdownMenuTrigger asChild>
               <button
@@ -213,9 +206,6 @@ export function AppHeader({
                 onClick={handleProfileClick}
                 onPointerEnter={openProfileMenu}
                 onPointerLeave={scheduleCloseProfileMenu}
-                onPointerDown={() => {
-                  profileMenuIntent.current = "click"
-                }}
                 aria-label="Perfil"
               >
                 <Avatar className="size-9">
@@ -224,12 +214,16 @@ export function AppHeader({
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
+            
             <DropdownMenuContent
               align="end"
               sideOffset={4}
               showArrow
+              // Mantemos os eventos aqui para não fechar quando o mouse for para o menu
               onPointerEnter={openProfileMenu}
               onPointerLeave={scheduleCloseProfileMenu}
+              // Fecha ao clicar em um item
+              onClick={() => setProfileMenuOpen(false)}
               className="w-48"
             >
               <DropdownMenuLabel>Conta</DropdownMenuLabel>
