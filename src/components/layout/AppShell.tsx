@@ -8,28 +8,10 @@ import { InboxPage } from "@/pages/InboxPage"
 import { NewArtPage } from "@/pages/NewArtPage"
 import { NotificationsPage } from "@/pages/NotificationsPage"
 import { arts, moderationReports, notifications, users } from "@/data"
-import { AppHeader, type NavKey } from "@/components/layout/AppHeader"
-import { arts, notifications, users } from "@/data"
-import { cn } from "@/lib/utils"
-import {
-  Bell,
-  Home,
-  Mail,
-  ShieldCheck,
-  User,
-} from "lucide-react"
-
-type NavKey = "inicio" | "dashboard" | "nova" | "notificacoes" | "perfil" | "inbox"
-const navItems: { key: NavKey; label: string; icon: React.ElementType }[] = [
-  { key: "inicio", label: "Inicio", icon: Home },
-  { key: "dashboard", label: "Dashboard", icon: ShieldCheck },
-  { key: "inbox", label: "Mensagens", icon: Mail },
-  { key: "notificacoes", label: "Notificacoes", icon: Bell },
-  { key: "perfil", label: "Perfil", icon: User },
-]
+import { AppHeader, type NavKey as AppNavKey } from "@/components/layout/AppHeader"
 
 export function AppShell() {
-  const [active, setActive] = useState<NavKey>("inicio")
+  const [active, setActive] = useState<AppNavKey>("inicio")
   const [commissionOpen, setCommissionOpen] = useState(false)
   const [selectedPrice, setSelectedPrice] = useState(100)
   const [priceRange, setPriceRange] = useState<[number, number]>([50, 300])

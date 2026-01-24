@@ -270,14 +270,14 @@ export function HomeFeed({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="7dias">At?????????????????? 7 dias</SelectItem>
-                        <SelectItem value="15dias">At?????????????????? 15 dias</SelectItem>
-                        <SelectItem value="30dias">At?????????????????? 30 dias</SelectItem>
+                        <SelectItem value="7dias">Até 7 dias</SelectItem>
+                        <SelectItem value="15dias">Até 15 dias</SelectItem>
+                        <SelectItem value="30dias">Até 30 dias</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Faixa de pre??????????????????o</p>
+                    <p className="text-sm font-medium">Faixa de preço</p>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>
                         R${" "}
