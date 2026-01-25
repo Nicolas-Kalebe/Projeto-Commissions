@@ -83,7 +83,7 @@ export function NotificationsPage({ notifications }: NotificationsPageProps) {
       <div className="space-y-8">
         {Object.entries(groupedNotifications).map(([group, items]) => (
           <div key={group} className="space-y-4">
-            <h2 className="text-sm font-medium text-muted-foreground sticky top-0 bg-background/95 backdrop-blur py-2 z-10">
+            <h2 className="text-sm font-medium text-muted-foreground sticky top-0 py-2 z-10">
               {group}
             </h2>
             <div className="space-y-2">
