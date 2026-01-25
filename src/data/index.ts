@@ -316,23 +316,74 @@ export const moderationReports: ModerationReport[] = [
 ]
 
 export const notifications: NotificationItem[] = [
+  // Hoje
   {
     id: "not-1",
     titulo: "Nova proposta recebida",
     descricao: "Marina Souza enviou detalhes para uma comissão.",
-    horario: "Agora",
+    data: new Date().toISOString(), // Hoje
+    lida: false,
+    tipo: "pedido",
   },
   {
     id: "not-2",
     titulo: "Pagamento confirmado",
     descricao: "Seu pedido #2345 teve o pagamento validado.",
-    horario: "Há 2h",
+    data: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 horas atrás
+    lida: false,
+    tipo: "sistema",
   },
   {
     id: "not-3",
-    titulo: "Atualização do artista",
-    descricao: "Luna Azevedo enviou rascunho para revisão.",
-    horario: "Há 1d",
+    titulo: "Novo seguidor",
+    descricao: "Pedro Silva começou a te seguir.",
+    data: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 horas atrás
+    lida: true,
+    tipo: "social",
+  },
+  // Ontem
+  {
+    id: "not-4",
+    titulo: "Atualização de status",
+    descricao: "O artista iniciou o rascunho do seu pedido.",
+    data: new Date(Date.now() - 1000 * 60 * 60 * 25).toISOString(), // Ontem
+    lida: true,
+    tipo: "pedido",
+  },
+  {
+    id: "not-5",
+    titulo: "Comentário na sua arte",
+    descricao: "Ana Clara comentou: 'Ficou incrível!'",
+    data: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString(), // Ontem
+    lida: true,
+    tipo: "social",
+  },
+  // Essa Semana (3 dias atrás)
+  {
+    id: "not-6",
+    titulo: "Promoção de Outono",
+    descricao: "Aproveite 20% de desconto em comissões selecionadas.",
+    data: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 dias atrás
+    lida: true,
+    tipo: "sistema",
+  },
+  // Semana Passada (8 dias atrás)
+  {
+    id: "not-7",
+    titulo: "Pedido Concluído",
+    descricao: "Sua arte #9981 está pronta para download.",
+    data: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8).toISOString(), // 8 dias atrás
+    lida: true,
+    tipo: "pedido",
+  },
+  // Mês Passado (35 dias atrás)
+  {
+    id: "not-8",
+    titulo: "Bem-vindo!",
+    descricao: "Obrigado por se juntar à nossa plataforma.",
+    data: new Date(Date.now() - 1000 * 60 * 60 * 24 * 35).toISOString(), // 35 dias atrás
+    lida: true,
+    tipo: "sistema",
   },
 ]
 

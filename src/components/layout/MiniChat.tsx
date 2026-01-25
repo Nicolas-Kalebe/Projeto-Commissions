@@ -2,7 +2,6 @@ import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { conversations, users } from "@/data"
 import {
@@ -82,7 +81,7 @@ export function MiniChat({ onClose }: MiniChatProps) {
                         </div>
                     </div>
 
-                    <ScrollArea className="flex-1">
+                    <div className="min-h-0 flex-1 overflow-y-auto custom-scroll">
                         <div className="flex flex-col">
                             {filteredConversations.map((conversation) => {
                                 const user = userMap.get(conversation.userId)
@@ -120,7 +119,7 @@ export function MiniChat({ onClose }: MiniChatProps) {
                                 )
                             })}
                         </div>
-                    </ScrollArea>
+                    </div>
                 </div>
             </div>
         </Card>

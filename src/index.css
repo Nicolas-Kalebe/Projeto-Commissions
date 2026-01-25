@@ -116,13 +116,21 @@
 }
 
 @layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
     font-family: "Inter", ui-sans-serif, system-ui, -apple-system,
       "Segoe UI", sans-serif;
+    overflow: hidden;
   }
 }
 
@@ -157,4 +165,56 @@
 
 .categories-carousel-item {
   padding-left: 0;
+}
+
+@layer utilities {
+  * {
+    scrollbar-width: auto;
+    scrollbar-color: var(--muted-foreground) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: #e2e8f0;
+    border: 3px solid transparent;
+    border-radius: 99px;
+  }
+
+  .dark *::-webkit-scrollbar-thumb {
+    background-color: #64748b;
+  }
+
+  *::-webkit-scrollbar-button {
+    display: block;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 14px;
+    width: 14px;
+  }
+
+  *::-webkit-scrollbar-button:hover {
+    background-color: var(--accent);
+  }
+
+  *::-webkit-scrollbar-button:vertical:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m18 15-6-6-6 6'/%3E%3C/svg%3E");
+  }
+
+  *::-webkit-scrollbar-button:vertical:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+
+  .custom-scroll {
+    overflow-y: auto;
+  }
 }

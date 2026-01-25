@@ -20,7 +20,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { categoryFilters } from "@/data"
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 type FilterSidebarProps = {
     isOpen: boolean
@@ -130,7 +129,7 @@ export function FilterSidebar({ isOpen, onClose, onApply }: FilterSidebarProps) 
                             onChange={(e) => setCategorySearch(e.target.value)}
                             className="h-8 text-sm"
                         />
-                        <ScrollArea className="flex-1 pr-3 -mr-3">
+                        <div className="min-h-0 flex-1 overflow-y-auto custom-scroll pr-3 -mr-3">
                             <div className="grid grid-cols-2 gap-3 gap-x-4 pt-2 pb-4 px-1">
                                 {filteredCategories.map((category) => {
                                     const isSelected = selectedCategories.includes(category.key)
@@ -160,7 +159,7 @@ export function FilterSidebar({ isOpen, onClose, onApply }: FilterSidebarProps) 
                                     </p>
                                 )}
                             </div>
-                        </ScrollArea>
+                        </div>
                     </div>
                 </div>
 
