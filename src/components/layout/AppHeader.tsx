@@ -34,7 +34,7 @@ export type NavKey =
   | "inbox"
 
 const navItems: { key: NavKey; label: string; icon: ElementType; path: string }[] = [
-  { key: "inicio", label: "Inicio", icon: Home, path: "/" },
+  { key: "inicio", label: "Inicio", icon: Home, path: "/inicio" },
   { key: "dashboard", label: "Dashboard", icon: ShieldCheck, path: "/dashboard" },
   { key: "inbox", label: "Mensagens", icon: Mail, path: "/inbox" },
   { key: "notificacoes", label: "Notificacoes", icon: Bell, path: "/notificacoes" },
@@ -103,8 +103,8 @@ export function AppHeader({
   }
 
   const isLinkActive = (path: string) => {
-    if (path === '/' && location.pathname === '/') return true
-    if (path !== '/' && location.pathname.startsWith(path)) return true
+    if (path === '/inicio' && location.pathname === '/inicio') return true
+    if (path !== '/' && path !== '/inicio' && location.pathname.startsWith(path)) return true
     return false
   }
 
@@ -121,7 +121,7 @@ export function AppHeader({
       <div className="grid w-full grid-cols-1 items-center gap-3 lg:grid-cols-[1fr_minmax(0,640px)_1fr]">
         <div className="flex items-center gap-3 overflow-x-auto lg:justify-start">
           <Link
-            to="/"
+            to="/inicio"
             className="mr-2 hidden cursor-pointer items-center gap-2 rounded-lg px-2 py-1 transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:flex"
             aria-label="Voltar ao inicio"
           >

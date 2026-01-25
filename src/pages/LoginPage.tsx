@@ -20,7 +20,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         setTimeout(() => {
             onLogin()
             setLoadingProvider(null)
-            navigate('/') // Redirect to home on success
+            navigate('/inicio') // Redirect to home on success
         }, 1500)
     }
 
