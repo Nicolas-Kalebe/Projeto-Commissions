@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { FeedBanner } from "@/components/feed/FeedBanner"
 // import { FeedCategories } from "@/components/feed/FeedCategories"
 import { FeedGrid } from "@/components/feed/FeedGrid"
@@ -15,15 +15,19 @@ import { FeedCategories } from "@/components/feed/FeedCategories"
 type HomeFeedProps = {
   arts: Art[]
   artistMap: Map<string, User>
+  scrollContainerRef?: React.RefObject<HTMLDivElement>
 }
 
 export function HomeFeed({
   arts,
   artistMap,
+  scrollContainerRef,
 }: HomeFeedProps) {
   const [activeCategory] = useState("categorias")
   const [showNsfw, setShowNsfw] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [showStickyTools, setShowStickyTools] = useState(false)
+  const lastScrollTop = useRef(0)
 
   const activeFilter = categoryFilters.find(
     (filter) => filter.key === activeCategory
@@ -76,8 +80,81 @@ export function HomeFeed({
     setIsFilterOpen(false)
   }
 
+  useEffect(() => {
+    const container = scrollContainerRef?.current
+    if (!container) return
+
+    const onScroll = () => {
+      const currentScroll = container.scrollTop
+      const delta = currentScroll - lastScrollTop.current
+      const scrollingDown = delta > 6
+      const scrollingUp = delta < -6
+
+      if (currentScroll < 180) {
+        setShowStickyTools(false)
+      } else if (scrollingUp) {
+        setShowStickyTools(true)
+      } else if (scrollingDown) {
+        setShowStickyTools(false)
+      }
+
+      lastScrollTop.current = currentScroll
+    }
+
+    container.addEventListener("scroll", onScroll, { passive: true })
+    return () => container.removeEventListener("scroll", onScroll)
+  }, [scrollContainerRef])
   return (
     <section className="space-y-8">
+      <div className="sticky top-0 z-30 h-0">
+        <div
+          className={`relative rounded-lg border bg-background/95 p-3 shadow-sm backdrop-blur transition-all ${
+            showStickyTools
+              ? "translate-y-0 opacity-100"
+              : "-translate-y-3 opacity-0 pointer-events-none"
+          }`}
+        >
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[220px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Buscar artes, artistas, tags..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Button
+              variant="outline"
+              className="shrink-0"
+              onClick={() => setIsFilterOpen(true)}
+            >
+              <SlidersHorizontal className="size-4 mr-2" />
+              Filtros
+            </Button>
+            <div className="flex shrink-0 items-center gap-2 rounded-lg border bg-card px-3 py-2 shadow-sm">
+              <Switch
+                id="nsfw-sticky"
+                checked={showNsfw}
+                onCheckedChange={setShowNsfw}
+              />
+              <Label
+                htmlFor="nsfw-sticky"
+                className="flex items-center gap-2 text-xs font-medium cursor-pointer"
+              >
+                {showNsfw ? (
+                  <Eye className="size-3.5" />
+                ) : (
+                  <EyeOff className="size-3.5" />
+                )}
+                {showNsfw ? "NSFW Visível" : "NSFW Oculto"}
+              </Label>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <FeedBanner />
 
       <div className="flex items-center gap-4 flex-wrap">
@@ -198,4 +275,7 @@ export function HomeFeed({
     </section>
   )
 }
+
+
+
 
