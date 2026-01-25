@@ -25,10 +25,14 @@ export function ArtCard({ art, artist, showNsfw }: ArtCardProps) {
   }
 
   const isBlurred = art.nsfw && !showNsfw
+  const isSponsored = art.patrocinado
 
   return (
     <Card
-      className="group overflow-hidden border-border/60 bg-card/50 transition hover:border-primary/50 hover:shadow-md cursor-pointer"
+      className={`group overflow-hidden border bg-card/50 transition hover:shadow-md cursor-pointer ${isSponsored
+          ? "border-yellow-500/50 hover:border-yellow-500 shadow-yellow-500/10"
+          : "border-border/60 hover:border-primary/50"
+        }`}
       onClick={handleCardClick}
     >
       <div className="relative aspect-square w-full overflow-hidden">
@@ -40,11 +44,21 @@ export function ArtCard({ art, artist, showNsfw }: ArtCardProps) {
             loading="lazy"
           />
         </div>
-        {art.nsfw && (
-          <div className="absolute right-2 top-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm z-10">
-            NSFW
-          </div>
-        )}
+
+        <div className="absolute right-2 top-2 flex flex-col gap-1 z-10">
+          {isSponsored && (
+            <div className="rounded bg-yellow-500 px-1.5 py-0.5 text-[10px] font-bold text-black backdrop-blur-sm shadow-sm flex items-center gap-1">
+              <span>♛</span> Patrocinado
+            </div>
+          )}
+
+          {art.nsfw && (
+            <div className="self-end rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+              NSFW
+            </div>
+          )}
+        </div>
+
       </div>
       <CardContent className="p-3">
         <div className="flex items-start justify-between gap-2">
@@ -61,7 +75,7 @@ export function ArtCard({ art, artist, showNsfw }: ArtCardProps) {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm font-semibold">
+            <p className={`text-sm font-semibold ${isSponsored ? "text-yellow-600 dark:text-yellow-400" : ""}`}>
               {art.preco.toLocaleString("pt-BR", {
                 style: "currency",
                 currency: "BRL",

@@ -20,21 +20,21 @@ export function FeedBanner() {
             description: "Assine hoje e ganhe 20% no plano anual para artistas.",
             action: "Ver ofertas",
             imageUrl:
-                "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600&auto=format&fit=crop",
+                "/mock_arts/anime_neon.png",
         },
         {
             title: "Artistas mais requisitados",
             description: "Descubra quem lidera os pedidos de comissoes esta semana.",
             action: "Explorar lista",
             imageUrl:
-                "https://images.unsplash.com/photo-1496318447583-f524534e9ce1?q=80&w=1600&auto=format&fit=crop",
+                "/mock_arts/fantasy_landscape.png",
         },
         {
             title: "Ranking de artistas",
             description: "Acompanhe o top 10 com mais seguidores e avaliacoes.",
             action: "Ver ranking",
             imageUrl:
-                "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1600&auto=format&fit=crop",
+                "/mock_arts/pixel_city.png",
         },
     ]
 

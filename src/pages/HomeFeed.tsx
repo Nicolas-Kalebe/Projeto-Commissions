@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { FeedBanner } from "@/components/feed/FeedBanner"
-import { FeedCategories } from "@/components/feed/FeedCategories"
+// import { FeedCategories } from "@/components/feed/FeedCategories"
 import { FeedGrid } from "@/components/feed/FeedGrid"
 import { FilterSidebar } from "@/components/feed/FilterSidebar"
 import type { Art, User } from "@/types"
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Search, SlidersHorizontal } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { FeedCategories } from "@/components/feed/FeedCategories"
 
 type HomeFeedProps = {
   arts: Art[]
@@ -20,7 +21,7 @@ export function HomeFeed({
   arts,
   artistMap,
 }: HomeFeedProps) {
-  const [activeCategory, setActiveCategory] = useState("categorias")
+  const [activeCategory] = useState("categorias")
   const [showNsfw, setShowNsfw] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
@@ -44,6 +45,29 @@ export function HomeFeed({
     )
   }
 
+  // Separate sponsored and regular arts
+  const sponsoredArts = filteredArts.filter(art => art.patrocinado);
+  const regularArts = filteredArts.filter(art => !art.patrocinado);
+
+  // --- New Sections Logic ---
+  const mostAccessedArts = regularArts.slice(0, 6);
+
+  const fantasyArts = regularArts.filter(art =>
+    art.tags.some(t => ["#Fantasy", "#Nature", "#Magic", "#Landscape"].includes(t))
+  ).slice(0, 10);
+
+  const portraitArts = regularArts.filter(art =>
+    art.tags.some(t => ["#Portrait", "#Character", "#Anime", "#Realism", "#Sensual"].includes(t))
+  ).slice(0, 10);
+
+  const sciFiArts = regularArts.filter(art =>
+    art.tags.some(t => ["#SciFi", "#Cyber", "#Space", "#Abstract", "#Matte"].includes(t))
+  ).slice(0, 10);
+
+  const pixelArts = regularArts.filter(art =>
+    art.tags.some(t => ["#PixelArt", "#Retro", "#8bit"].includes(t))
+  ).slice(0, 10);
+
   // Filter Modal State
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const handleApplyFilters = (filters: any) => {
@@ -53,7 +77,7 @@ export function HomeFeed({
   }
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-8">
       <FeedBanner />
 
       <div className="flex items-center gap-4 flex-wrap">
@@ -101,10 +125,70 @@ export function HomeFeed({
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <FeedCategories activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
+        <FeedCategories activeCategory={activeCategory} onCategoryChange={() => { }} />
       </div>
 
-      <FeedGrid arts={filteredArts} artistMap={artistMap} showNsfw={showNsfw} />
+      {sponsoredArts.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">👑</span>
+            <h2 className="text-xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-400 bg-clip-text text-transparent">
+              Destaques Patrocinados
+            </h2>
+          </div>
+          <FeedGrid arts={sponsoredArts} artistMap={artistMap} showNsfw={showNsfw} />
+        </div>
+      )}
+
+      {mostAccessedArts.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 border-b pb-2">
+            <span className="text-2xl">🔥</span>
+            <h2 className="text-xl font-bold">Mais acessados da semana</h2>
+          </div>
+          <FeedGrid arts={mostAccessedArts} artistMap={artistMap} showNsfw={showNsfw} />
+        </div>
+      )}
+
+      {fantasyArts.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 border-b pb-2">
+            <span className="text-2xl">🌲</span>
+            <h2 className="text-xl font-bold">Mundos Fantásticos</h2>
+          </div>
+          <FeedGrid arts={fantasyArts} artistMap={artistMap} showNsfw={showNsfw} />
+        </div>
+      )}
+
+      {portraitArts.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 border-b pb-2">
+            <span className="text-2xl">👤</span>
+            <h2 className="text-xl font-bold">Retratos & Personagens</h2>
+          </div>
+          <FeedGrid arts={portraitArts} artistMap={artistMap} showNsfw={showNsfw} />
+        </div>
+      )}
+
+      {sciFiArts.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 border-b pb-2">
+            <span className="text-2xl">🚀</span>
+            <h2 className="text-xl font-bold">Universo Sci-Fi & Cyber</h2>
+          </div>
+          <FeedGrid arts={sciFiArts} artistMap={artistMap} showNsfw={showNsfw} />
+        </div>
+      )}
+
+      {pixelArts.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 border-b pb-2">
+            <span className="text-2xl">👾</span>
+            <h2 className="text-xl font-bold">Pixel Art & Retro</h2>
+          </div>
+          <FeedGrid arts={pixelArts} artistMap={artistMap} showNsfw={showNsfw} />
+        </div>
+      )}
 
       <FilterSidebar
         isOpen={isFilterOpen}
