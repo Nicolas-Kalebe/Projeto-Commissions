@@ -42,9 +42,28 @@ export interface ModerationReport {
   status: "novo" | "revisado"
 }
 
-export interface NotificationItem {
+export type NotificationItem = {
   id: string
   titulo: string
   descricao: string
   horario: string
+}
+
+export type Conversation = {
+  id: string
+  userId: string
+  lastMessage: string
+  time: string
+  unread: number
+  status: "online" | "offline" | "ocupado"
+  label?: string
+}
+
+export type Message = {
+  id: string
+  conversationId: string
+  sender: "cliente" | "artista"
+  content: string
+  time: string
+  status?: "enviado" | "entregue" | "lido"
 }

@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
-import { users } from "@/data"
+import { users, conversations, messages } from "@/data"
+import type { Message } from "@/types"
 import {
   Check,
   FileText,
@@ -18,177 +19,6 @@ import {
   Send,
   Smile,
 } from "lucide-react"
-
-type Conversation = {
-  id: string
-  userId: string
-  lastMessage: string
-  time: string
-  unread: number
-  status: "online" | "offline" | "ocupado"
-  label?: string
-}
-
-type Message = {
-  id: string
-  conversationId: string
-  sender: "cliente" | "artista"
-  content: string
-  time: string
-  status?: "enviado" | "entregue" | "lido"
-}
-
-const conversations: Conversation[] = [
-  {
-    id: "conv-1",
-    userId: "art-1",
-    lastMessage: "Acabei o rascunho, posso enviar agora.",
-    time: "10:42",
-    unread: 2,
-    status: "online",
-    label: "Comissao #2841",
-  },
-  {
-    id: "conv-2",
-    userId: "cli-1",
-    lastMessage: "Preciso ajustar a paleta, consigo hoje.",
-    time: "Ontem",
-    unread: 0,
-    status: "ocupado",
-    label: "Briefing atualizado",
-  },
-  {
-    id: "conv-3",
-    userId: "art-2",
-    lastMessage: "Enviei o arquivo final em alta.",
-    time: "Seg",
-    unread: 1,
-    status: "offline",
-    label: "Entrega final",
-  },
-  {
-    id: "conv-4",
-    userId: "art-1",
-    lastMessage: "Consigo revisar o lineart hoje a noite.",
-    time: "09:12",
-    unread: 0,
-    status: "online",
-    label: "Ajuste de pose",
-  },
-  {
-    id: "conv-5",
-    userId: "cli-1",
-    lastMessage: "Pode adicionar brilho extra nos olhos?",
-    time: "Ontem",
-    unread: 3,
-    status: "ocupado",
-    label: "Detalhes finais",
-  },
-  {
-    id: "conv-6",
-    userId: "art-2",
-    lastMessage: "Vou te enviar a versao com fundo escuro.",
-    time: "Qui",
-    unread: 0,
-    status: "offline",
-    label: "Variacoes",
-  },
-  {
-    id: "conv-7",
-    userId: "art-1",
-    lastMessage: "Tenho agenda livre para nova comissao.",
-    time: "Ter",
-    unread: 1,
-    status: "online",
-    label: "Novo pedido",
-  },
-  {
-    id: "conv-8",
-    userId: "cli-1",
-    lastMessage: "Fechado, pode seguir com a entrega.",
-    time: "Seg",
-    unread: 0,
-    status: "offline",
-    label: "Aprovado",
-  },
-]
-
-const messages: Message[] = [
-  {
-    id: "msg-1",
-    conversationId: "conv-1",
-    sender: "artista",
-    content: "Oi! Tudo certo com o briefing que voce enviou?",
-    time: "09:58",
-    status: "lido",
-  },
-  {
-    id: "msg-2",
-    conversationId: "conv-1",
-    sender: "cliente",
-    content:
-      "Sim! Quero manter o fundo mais claro e adicionar flores neon.",
-    time: "10:05",
-    status: "lido",
-  },
-  {
-    id: "msg-3",
-    conversationId: "conv-1",
-    sender: "artista",
-    content:
-      "Perfeito. Vou enviar o rascunho ainda hoje para sua aprovacao.",
-    time: "10:16",
-    status: "lido",
-  },
-  {
-    id: "msg-4",
-    conversationId: "conv-1",
-    sender: "artista",
-    content: "Acabei o rascunho, posso enviar agora.",
-    time: "10:42",
-    status: "entregue",
-  },
-  {
-    id: "msg-5",
-    conversationId: "conv-1",
-    sender: "cliente",
-    content: "Pode sim! Estou online.",
-    time: "10:44",
-    status: "enviado",
-  },
-  {
-    id: "msg-6",
-    conversationId: "conv-1",
-    sender: "artista",
-    content: "Perfeito, estou enviando o arquivo em alta agora.",
-    time: "10:45",
-    status: "entregue",
-  },
-  {
-    id: "msg-7",
-    conversationId: "conv-1",
-    sender: "cliente",
-    content: "Recebi! Gostei muito do brilho, so queria a flor um pouco menor.",
-    time: "10:47",
-    status: "lido",
-  },
-  {
-    id: "msg-8",
-    conversationId: "conv-1",
-    sender: "artista",
-    content: "Beleza, ajusto a flor e te mando a versao final hoje.",
-    time: "10:49",
-    status: "lido",
-  },
-  {
-    id: "msg-9",
-    conversationId: "conv-1",
-    sender: "cliente",
-    content: "Fechado. Obrigado!",
-    time: "10:50",
-    status: "enviado",
-  },
-]
 
 const statusMap = {
   online: { label: "Online", color: "bg-emerald-500" },
@@ -292,8 +122,8 @@ export function InboxPage() {
                   type="button"
                   onClick={() => setActiveId(conversation.id)}
                   className={`w-full rounded-xl border px-3 py-3 text-left transition ${isActive
-                      ? "border-primary/50 bg-primary/5"
-                      : "border-transparent hover:border-border/70 hover:bg-muted/40"
+                    ? "border-primary/50 bg-primary/5"
+                    : "border-transparent hover:border-border/70 hover:bg-muted/40"
                     }`}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -315,8 +145,8 @@ export function InboxPage() {
                         </p>
                         <p
                           className={`text-xs ${conversation.unread > 0
-                              ? "font-semibold text-black dark:text-white"
-                              : "text-muted-foreground"
+                            ? "font-semibold text-black dark:text-white"
+                            : "text-muted-foreground"
                             }`}
                         >
                           {conversation.lastMessage}
@@ -418,8 +248,8 @@ export function InboxPage() {
                     </Button>
                     <div
                       className={`rounded-2xl px-4 py-3 text-sm shadow-sm ${isSender
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted/60 text-foreground"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted/60 text-foreground"
                         } ${replyTo?.id === message.id
                           ? "ring-2 ring-primary/40"
                           : ""
