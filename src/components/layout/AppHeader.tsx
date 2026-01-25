@@ -20,6 +20,7 @@ import {
   ToggleLeft,
   ToggleRight,
   User as UserIcon,
+  LogOut,
 } from "lucide-react"
 
 export type NavKey =
@@ -43,6 +44,9 @@ type AppHeaderProps = {
   onNavChange: (key: NavKey) => void
   notifications: NotificationItem[]
   currentUser: User
+  isAuthenticated: boolean
+  onLoginClick: () => void
+  onLogout: () => void
 }
 
 export function AppHeader({
@@ -50,6 +54,9 @@ export function AppHeader({
   onNavChange,
   notifications,
   currentUser,
+  isAuthenticated,
+  onLoginClick,
+  onLogout,
 }: AppHeaderProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [isDark, setIsDark] = useState(false)
@@ -132,7 +139,7 @@ export function AppHeader({
                   className={cn(
                     "relative flex items-center gap-2 px-3",
                     isActive &&
-                      "text-foreground after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-6 after:-translate-x-1/2 after:rounded-full after:bg-foreground"
+                    "text-foreground after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-6 after:-translate-x-1/2 after:rounded-full after:bg-foreground"
                   )}
                   onClick={() => onNavChange(item.key)}
                 >
@@ -208,58 +215,67 @@ export function AppHeader({
             <Mail className="size-4" />
           </Button>
 
-          {/* --- CORREÇÃO APLICADA AQUI --- */}
-          <DropdownMenu
-            open={profileMenuOpen}
-            onOpenChange={setProfileMenuOpen}
-            modal={false} // IMPORTANTE: Impede o piscar/conflito de foco
-          >
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="-m-2 inline-flex cursor-pointer items-center rounded-full p-2"
-                onClick={handleProfileClick}
+
+          {!isAuthenticated ? (
+            <Button onClick={onLoginClick} variant="default" size="sm">
+              Entrar
+            </Button>
+          ) : (
+            <DropdownMenu
+              open={profileMenuOpen}
+              onOpenChange={setProfileMenuOpen}
+              modal={false} // IMPORTANTE: Impede o piscar/conflito de foco
+            >
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="-m-2 inline-flex cursor-pointer items-center rounded-full p-2 transition-colors hover:bg-muted/80"
+                  onClick={handleProfileClick}
+                  onPointerEnter={openProfileMenu}
+                  onPointerLeave={scheduleCloseProfileMenu}
+                  aria-label="Perfil"
+                >
+                  <Avatar className="size-9">
+                    <AvatarImage src={currentUser.avatarUrl} alt={currentUser.nome} />
+                    <AvatarFallback>MS</AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                align="end"
+                sideOffset={4}
+                showArrow
+                // Mantemos os eventos aqui para não fechar quando o mouse for para o menu
                 onPointerEnter={openProfileMenu}
                 onPointerLeave={scheduleCloseProfileMenu}
-                aria-label="Perfil"
+                // Fecha ao clicar em um item
+                onClick={() => setProfileMenuOpen(false)}
+                className="w-48"
               >
-                <Avatar className="size-9">
-                  <AvatarImage src={currentUser.avatarUrl} alt={currentUser.nome} />
-                  <AvatarFallback>MS</AvatarFallback>
-                </Avatar>
-              </button>
-            </DropdownMenuTrigger>
-            
-            <DropdownMenuContent
-              align="end"
-              sideOffset={4}
-              showArrow
-              // Mantemos os eventos aqui para não fechar quando o mouse for para o menu
-              onPointerEnter={openProfileMenu}
-              onPointerLeave={scheduleCloseProfileMenu}
-              // Fecha ao clicar em um item
-              onClick={() => setProfileMenuOpen(false)}
-              className="w-48"
-            >
-              <DropdownMenuLabel>Conta</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Minhas compras</DropdownMenuItem>
-              <DropdownMenuItem>Configuracoes</DropdownMenuItem>
-              <DropdownMenuItem>Ajuda</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleThemeToggle}>
-                <span className="flex w-full items-center justify-between">
-                  Modo escuro
-                  {isDark ? (
-                    <ToggleRight className="size-5" />
-                  ) : (
-                    <ToggleLeft className="size-5" />
-                  )}
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Sair</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuLabel>Conta</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer hover:bg-accent hover:text-accent-foreground">Minhas compras</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer hover:bg-accent hover:text-accent-foreground">Configuracoes</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer hover:bg-accent hover:text-accent-foreground">Ajuda</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleThemeToggle} className="cursor-pointer hover:bg-accent hover:text-accent-foreground">
+                  <span className="flex w-full items-center justify-between">
+                    Modo escuro
+                    {isDark ? (
+                      <ToggleRight className="size-5" />
+                    ) : (
+                      <ToggleLeft className="size-5" />
+                    )}
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onLogout} className="cursor-pointer hover:bg-accent hover:text-accent-foreground">
+                  <LogOut className="mr-2 size-4" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </header>

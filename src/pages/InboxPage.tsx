@@ -9,7 +9,6 @@ import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { users } from "@/data"
 import {
-  Bell,
   Check,
   FileText,
   Image,
@@ -292,11 +291,10 @@ export function InboxPage() {
                   key={conversation.id}
                   type="button"
                   onClick={() => setActiveId(conversation.id)}
-                  className={`w-full rounded-xl border px-3 py-3 text-left transition ${
-                    isActive
+                  className={`w-full rounded-xl border px-3 py-3 text-left transition ${isActive
                       ? "border-primary/50 bg-primary/5"
                       : "border-transparent hover:border-border/70 hover:bg-muted/40"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
@@ -316,11 +314,10 @@ export function InboxPage() {
                           {user?.nome ?? "Usuario"}
                         </p>
                         <p
-                          className={`text-xs ${
-                            conversation.unread > 0
+                          className={`text-xs ${conversation.unread > 0
                               ? "font-semibold text-black dark:text-white"
                               : "text-muted-foreground"
-                          }`}
+                            }`}
                         >
                           {conversation.lastMessage}
                         </p>
@@ -412,30 +409,26 @@ export function InboxPage() {
                       type="button"
                       variant="secondary"
                       size="icon"
-                      className={`absolute -top-3 ${
-                        isSender ? "-left-3" : "-right-3"
-                      } size-7 opacity-0 shadow-sm transition hover:scale-105 group-hover:opacity-100`}
+                      className={`absolute -top-3 ${isSender ? "-left-3" : "-right-3"
+                        } size-7 opacity-0 shadow-sm transition hover:scale-105 group-hover:opacity-100`}
                       onClick={() => setReplyTo(message)}
                       aria-label="Responder mensagem"
                     >
                       <Reply className="size-3.5" />
                     </Button>
                     <div
-                      className={`rounded-2xl px-4 py-3 text-sm shadow-sm ${
-                        isSender
+                      className={`rounded-2xl px-4 py-3 text-sm shadow-sm ${isSender
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted/60 text-foreground"
-                      } ${
-                        replyTo?.id === message.id
+                        } ${replyTo?.id === message.id
                           ? "ring-2 ring-primary/40"
                           : ""
-                      }`}
+                        }`}
                     >
                       <p>{message.content}</p>
                       <div
-                        className={`mt-2 flex items-center justify-end gap-2 text-[11px] ${
-                          isSender ? "text-primary-foreground/70" : "text-muted-foreground"
-                        }`}
+                        className={`mt-2 flex items-center justify-end gap-2 text-[11px] ${isSender ? "text-primary-foreground/70" : "text-muted-foreground"
+                          }`}
                       >
                         <span>{message.time}</span>
                         {message.status && (

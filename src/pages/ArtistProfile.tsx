@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import {
   Select,
@@ -277,11 +277,10 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
                   {Array.from({ length: 5 }).map((_, index) => (
                     <Star
                       key={index}
-                      className={`h-3.5 w-2.5 ${
-                        index < Math.round(rating)
+                      className={`h-3.5 w-2.5 ${index < Math.round(rating)
                           ? "fill-foreground text-foreground"
                           : "text-muted-foreground"
-                      }`}
+                        }`}
                     />
                   ))}
                 </div>
@@ -327,99 +326,99 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
       </div>
 
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-      <DialogContent
-        className="fixed left-1/2 top-1/2 flex w-[96vw] max-w-none -translate-x-1/2 -translate-y-1/2 justify-center border-0 bg-transparent p-0 shadow-none [&>button]:hidden"
-        onPointerDownOutside={() => setLightboxOpen(false)}
-        onClick={() => setLightboxOpen(false)}
-      >
-    {/* Contador */}
-    <div className="absolute left-1/2 top-4 z-50 -translate-x-1/2 text-xs text-white/80">
-      {lightboxIndex + 1} / {sortedGallery.length}
-    </div>
-
-    {/* Botão fechar */}
-    <Button
-      variant="secondary"
-      size="icon"
-      className="absolute right-4 top-4 z-50"
-      onClick={() => setLightboxOpen(false)}
-    >
-      <X className="h-4 w-4" />
-      <span className="sr-only">Fechar</span>
-    </Button>
-
-    {/* Área da imagem */}
-    <div
-      className="relative flex items-center justify-center"
-      style={{
-        width: "min(2000px, 96vw)",
-        height: "min(800px, 90vh)",
-      }}
-    >
-      {/* Anterior */}
-      <Button
-        variant="secondary"
-        size="icon"
-        className="absolute left-0 top-1/2 z-50 -translate-y-1/2 translate-x-3"
-        onClick={(event) => {
-          event.stopPropagation()
-          setLightboxIndex((prev) =>
-            prev === 0 ? sortedGallery.length - 1 : prev - 1
-          )
-        }}
-      >
-        <span className="sr-only">Anterior</span>
-        <svg
-          viewBox="0 0 24 24"
-          className="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
+        <DialogContent
+          className="fixed left-1/2 top-1/2 flex w-[96vw] max-w-none -translate-x-1/2 -translate-y-1/2 justify-center border-0 bg-transparent p-0 shadow-none [&>button]:hidden"
+          onPointerDownOutside={() => setLightboxOpen(false)}
+          onClick={() => setLightboxOpen(false)}
         >
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </Button>
+          {/* Contador */}
+          <div className="absolute left-1/2 top-4 z-50 -translate-x-1/2 text-xs text-white/80">
+            {lightboxIndex + 1} / {sortedGallery.length}
+          </div>
 
-      {/* Imagem */}
-      <img
-        src={sortedGallery[lightboxIndex]?.imageUrl}
-        alt={sortedGallery[lightboxIndex]?.titulo}
-        className="block"
-        style={{
-          maxHeight: "min(800px, 90vh)",
-          maxWidth: "min(2000px, 96vw)",
-          height: "auto",
-          width: "auto",
-        }}
-        onClick={(event) => event.stopPropagation()}
-      />
+          {/* Botão fechar */}
+          <Button
+            variant="secondary"
+            size="icon"
+            className="absolute right-4 top-4 z-50"
+            onClick={() => setLightboxOpen(false)}
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Fechar</span>
+          </Button>
 
-      {/* Próximo */}
-      <Button
-        variant="secondary"
-        size="icon"
-        className="absolute right-0 top-1/2 z-50 -translate-y-1/2 -translate-x-3"
-        onClick={(event) => {
-          event.stopPropagation()
-          setLightboxIndex((prev) =>
-            prev === sortedGallery.length - 1 ? 0 : prev + 1
-          )
-        }}
-      >
-        <span className="sr-only">Próximo</span>
-        <svg
-          viewBox="0 0 24 24"
-          className="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path d="M9 18l6-6-6-6" />
-        </svg>
-      </Button>
-    </div>
-  </DialogContent>
-</Dialog>
+          {/* Área da imagem */}
+          <div
+            className="relative flex items-center justify-center"
+            style={{
+              width: "min(2000px, 96vw)",
+              height: "min(800px, 90vh)",
+            }}
+          >
+            {/* Anterior */}
+            <Button
+              variant="secondary"
+              size="icon"
+              className="absolute left-0 top-1/2 z-50 -translate-y-1/2 translate-x-3"
+              onClick={(event) => {
+                event.stopPropagation()
+                setLightboxIndex((prev) =>
+                  prev === 0 ? sortedGallery.length - 1 : prev - 1
+                )
+              }}
+            >
+              <span className="sr-only">Anterior</span>
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </Button>
+
+            {/* Imagem */}
+            <img
+              src={sortedGallery[lightboxIndex]?.imageUrl}
+              alt={sortedGallery[lightboxIndex]?.titulo}
+              className="block"
+              style={{
+                maxHeight: "min(800px, 90vh)",
+                maxWidth: "min(2000px, 96vw)",
+                height: "auto",
+                width: "auto",
+              }}
+              onClick={(event) => event.stopPropagation()}
+            />
+
+            {/* Próximo */}
+            <Button
+              variant="secondary"
+              size="icon"
+              className="absolute right-0 top-1/2 z-50 -translate-y-1/2 -translate-x-3"
+              onClick={(event) => {
+                event.stopPropagation()
+                setLightboxIndex((prev) =>
+                  prev === sortedGallery.length - 1 ? 0 : prev + 1
+                )
+              }}
+            >
+              <span className="sr-only">Próximo</span>
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </section>
   )

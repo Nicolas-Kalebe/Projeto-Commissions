@@ -7,11 +7,21 @@ import { HomeFeed } from "@/pages/HomeFeed"
 import { InboxPage } from "@/pages/InboxPage"
 import { NewArtPage } from "@/pages/NewArtPage"
 import { NotificationsPage } from "@/pages/NotificationsPage"
-import { arts, moderationReports, notifications, users } from "@/data"
-import { AppHeader, type NavKey as AppNavKey } from "@/components/layout/AppHeader"
+import { LoginPage } from "@/pages/LoginPage"
+import { arts, notifications, users } from "@/data"
+import { AppHeader, type NavKey as AppHeaderNavKey } from "@/components/layout/AppHeader"
 
-export function AppShell() {
-  const [active, setActive] = useState<AppNavKey>("inicio")
+// Extend NavKey to include "login" for internal routing
+type NavKey = AppHeaderNavKey | "login"
+
+interface AppShellProps {
+  isAuthenticated: boolean
+  onLogin: () => void
+  onLogout: () => void
+}
+
+export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) {
+  const [active, setActive] = useState<NavKey>("inicio")
   const [commissionOpen, setCommissionOpen] = useState(false)
   const [selectedPrice, setSelectedPrice] = useState(100)
   const [priceRange, setPriceRange] = useState<[number, number]>([50, 300])
@@ -22,9 +32,26 @@ export function AppShell() {
   )
 
   const handleRequestCommission = (price: number) => {
+    if (!isAuthenticated) {
+      setActive("login")
+      return
+    }
     setSelectedPrice(price)
     setCommissionOpen(true)
   }
+
+  // Handle successful login from LoginPage
+  const handleLoginSuccess = () => {
+    onLogin()
+    setActive("inicio")
+  }
+
+  // Handle logout
+  const handleLogoutSuccess = () => {
+    onLogout()
+    setActive("inicio")
+  }
+
   const homeContent = (
     <HomeFeed
       arts={arts}
@@ -53,31 +80,45 @@ export function AppShell() {
   )
   return (
     <div className="min-h-svh bg-background text-foreground">
-      {active !== "perfil" && (
+      {active !== "perfil" && active !== "login" && (
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.98_0.02_90),transparent)] dark:bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.18_0_0),transparent)]" />
       )}
       <div className="flex min-h-svh flex-1 flex-col">
-        <AppHeader
-          active={active}
-          onNavChange={setActive}
-          notifications={notifications}
-          currentUser={users[2]}
-        />
+        {active !== "login" && (
+          <AppHeader
+            active={active as AppHeaderNavKey}
+            onNavChange={(key) => {
+              // Protect routes
+              if (!isAuthenticated && (key === "dashboard" || key === "nova" || key === "notificacoes" || key === "inbox")) {
+                setActive("login")
+                return
+              }
+              setActive(key)
+            }}
+            notifications={notifications}
+            currentUser={users[2]}
+            isAuthenticated={isAuthenticated}
+            onLoginClick={() => setActive("login")}
+            onLogout={handleLogoutSuccess}
+          />
+        )}
 
         <ScrollArea className="h-[calc(100svh-3.5rem)]">
           {active === "inicio" ? (
             <main className="w-full px-6 py-8">{homeContent}</main>
+          ) : active === "login" ? (
+            <LoginPage onLogin={handleLoginSuccess} />
           ) : active === "perfil" ? (
             <main className="w-full px-0 py-0">{sectionContent}</main>
           ) : active === "inbox" ? (
             <main className="w-full h-full px-0 py-0">
               <InboxPage />
             </main>
-          ) : (
+          ) : active === "dashboard" || active === "nova" || active === "notificacoes" ? (
             <main className="mx-auto w-full max-w-6xl px-6 py-8">
               {sectionContent}
             </main>
-          )}
+          ) : null}
         </ScrollArea>
       </div>
 
