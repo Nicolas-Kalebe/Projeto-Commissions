@@ -46,7 +46,7 @@ export function ArtDetailsPage() {
                 Voltar
             </Button>
 
-            <div className="grid gap-8 md:grid-cols-[1.5fr_1fr] lg:gap-12">
+            <div className="grid gap-8 md:grid-cols-[1.5fr_1fr] lg:gap-4">
                 {/* Left Column: Image */}
                 <div className="h-full overflow-hidden rounded-xl border bg-muted/20 shadow-sm relative min-h-[400px]">
                     <img
