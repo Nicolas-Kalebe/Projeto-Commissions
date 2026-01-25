@@ -1,42 +1,11 @@
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import type { NotificationItem, NotificationType } from "@/types"
-import { format, isToday, isYesterday, subDays, isAfter } from "date-fns"
-import { ptBR } from "date-fns/locale"
-import { Bell, Box, Heart, Info, MessageSquare, ShoppingBag, User } from "lucide-react"
+import { Bell, Heart, Info, ShoppingBag } from "lucide-react"
 import { useMemo, useState } from "react"
+import { formatDate, getGroupTitle, getIcon } from "@/lib/notifications"
 
 type NotificationsPageProps = {
   notifications: NotificationItem[]
-}
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return format(date, "HH:mm", { locale: ptBR })
-}
-
-const getIcon = (type: NotificationType) => {
-  switch (type) {
-    case "pedido":
-      return <ShoppingBag className="h-4 w-4 text-primary" />
-    case "sistema":
-      return <Info className="h-4 w-4 text-blue-500" />
-    case "social":
-      return <Heart className="h-4 w-4 text-rose-500" />
-    default:
-      return <Bell className="h-4 w-4" />
-  }
-}
-
-const getGroupTitle = (dateString: string) => {
-  const date = new Date(dateString)
-  if (isToday(date)) return "Hoje"
-  if (isYesterday(date)) return "Ontem"
-  if (isAfter(date, subDays(new Date(), 7))) return "Últimos 7 dias"
-  if (isAfter(date, subDays(new Date(), 30))) return "Mês atual"
-  return format(date, "MMMM yyyy", { locale: ptBR })
 }
 
 export function NotificationsPage({ notifications }: NotificationsPageProps) {
