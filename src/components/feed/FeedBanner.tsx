@@ -63,7 +63,7 @@ export function FeedBanner() {
             setApi={setBannerApi}
             className="group w-full"
         >
-            <CarouselContent>
+            <CarouselContent viewportClassName="rounded-xl">
                 {banners.map((banner) => (
                     <CarouselItem key={banner.title} className="md:basis-full">
                         <Card className="overflow-hidden border-border/60 bg-card/95">

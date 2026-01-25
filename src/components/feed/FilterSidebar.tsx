@@ -131,22 +131,23 @@ export function FilterSidebar({ isOpen, onClose, onApply }: FilterSidebarProps) 
                             className="h-8 text-sm"
                         />
                         <ScrollArea className="flex-1 pr-3 -mr-3">
-                            <div className="grid gap-3 pt-2 pb-4 px-1">
+                            <div className="grid grid-cols-2 gap-3 gap-x-4 pt-2 pb-4 px-1">
                                 {filteredCategories.map((category) => {
                                     const isSelected = selectedCategories.includes(category.key)
                                     return (
                                         <div
                                             key={category.key}
-                                            className="flex items-center space-x-2"
+                                            className="flex items-start space-x-2"
                                         >
                                             <Checkbox
                                                 id={category.key}
                                                 checked={isSelected}
                                                 onCheckedChange={() => toggleCategory(category.key)}
+                                                className="mt-0.5"
                                             />
                                             <Label
                                                 htmlFor={category.key}
-                                                className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer w-full py-1"
+                                                className="text-sm font-normal leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer w-full"
                                             >
                                                 {category.label}
                                             </Label>
@@ -154,7 +155,7 @@ export function FilterSidebar({ isOpen, onClose, onApply }: FilterSidebarProps) 
                                     )
                                 })}
                                 {filteredCategories.length === 0 && (
-                                    <p className="text-sm text-muted-foreground italic w-full text-center py-4">
+                                    <p className="text-sm text-muted-foreground italic w-full text-center py-4 col-span-2">
                                         Nenhuma categoria encontrada.
                                     </p>
                                 )}
