@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ElementType } from "react"
+import { useEffect, useState, type ElementType } from "react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -8,7 +8,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import type { NotificationItem, User } from "@/types"
 import { cn } from "@/lib/utils"
@@ -21,7 +20,6 @@ import {
   ToggleRight,
   User as UserIcon,
   LogOut,
-  Search,
 } from "lucide-react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 
@@ -56,9 +54,6 @@ export function AppHeader({
 }: AppHeaderProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [isDark, setIsDark] = useState(false)
-  const profileMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  )
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -74,30 +69,8 @@ export function AppHeader({
     })
   }
 
-  // Função para abrir via hover
-  const openProfileMenu = () => {
-    if (profileMenuCloseTimer.current) {
-      clearTimeout(profileMenuCloseTimer.current)
-      profileMenuCloseTimer.current = null
-    }
-    setProfileMenuOpen(true)
-  }
-
-  // Função para agendar o fechamento (UX melhor para não fechar instantaneamente)
-  const scheduleCloseProfileMenu = () => {
-    if (profileMenuCloseTimer.current) {
-      clearTimeout(profileMenuCloseTimer.current)
-    }
-    profileMenuCloseTimer.current = setTimeout(() => {
-      setProfileMenuOpen(false)
-      profileMenuCloseTimer.current = null
-    }, 200)
-  }
-
-  // Lógica do clique: navega para o perfil e fecha o menu
-  const handleProfileClick = (_e: React.MouseEvent) => {
-    // Previne comportamento padrão do trigger se necessário
-    // e garante a navegação
+  // Navega para a página de perfil
+  const handleProfileNavigate = () => {
     setProfileMenuOpen(false)
     navigate('/perfil')
   }
@@ -118,7 +91,7 @@ export function AppHeader({
 
   return (
     <header className="sticky top-0 z-20 h-14 border-b bg-background/80 px-6 py-2 backdrop-blur">
-      <div className="grid w-full grid-cols-1 items-center gap-3 lg:grid-cols-[1fr_minmax(0,640px)_1fr]">
+      <div className="flex w-full items-center justify-between gap-3">
         <div className="flex items-center gap-3 overflow-x-auto lg:justify-start">
           <Link
             to="/inicio"
@@ -146,22 +119,20 @@ export function AppHeader({
                   size="sm"
                   className={cn(
                     "relative flex items-center gap-2 px-3",
-                    isActive &&
-                    "text-foreground after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-6 after:-translate-x-1/2 after:rounded-full after:bg-foreground"
+                    isActive && "text-foreground"
                   )}
                   onClick={() => handleNavClick(item.path)}
                 >
                   <Icon className="size-4" />
-                  {item.label}
+                  <span className="relative">
+                    {item.label}
+                    {isActive && (
+                      <span className="absolute -bottom-1.5 left-0 h-0.5 w-full rounded-full bg-foreground" />
+                    )}
+                  </span>
                 </Button>
               )
             })}
-        </div>
-        <div className="flex w-full justify-center">
-          <div className="w-full max-w-xl relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar estilos ou artistas" className="pl-9" />
-          </div>
         </div>
         <div className="flex items-center justify-end gap-3">
           <DropdownMenu>
@@ -239,9 +210,6 @@ export function AppHeader({
                 <button
                   type="button"
                   className="-m-2 inline-flex cursor-pointer items-center rounded-full p-2 transition-colors hover:bg-muted/80"
-                  onClick={handleProfileClick}
-                  onPointerEnter={openProfileMenu}
-                  onPointerLeave={scheduleCloseProfileMenu}
                   aria-label="Perfil"
                 >
                   <Avatar className="size-9">
@@ -255,14 +223,9 @@ export function AppHeader({
                 align="end"
                 sideOffset={4}
                 showArrow
-                // Mantemos os eventos aqui para não fechar quando o mouse for para o menu
-                onPointerEnter={openProfileMenu}
-                onPointerLeave={scheduleCloseProfileMenu}
-                // Fecha ao clicar em um item
-                onClick={() => setProfileMenuOpen(false)}
                 className="w-48"
               >
-                <DropdownMenuLabel>Conta</DropdownMenuLabel>
+                <DropdownMenuItem onClick={handleProfileNavigate} className="cursor-pointer hover:bg-accent hover:text-accent-foreground font-semibold">Conta</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer hover:bg-accent hover:text-accent-foreground">Minhas compras</DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer hover:bg-accent hover:text-accent-foreground">Configuracoes</DropdownMenuItem>

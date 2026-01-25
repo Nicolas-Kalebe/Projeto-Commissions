@@ -6,7 +6,9 @@ import type { Art, User } from "@/types"
 import { categoryFilters } from "@/data"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, Search, SlidersHorizontal } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 type HomeFeedProps = {
   arts: Art[]
@@ -19,22 +21,33 @@ export function HomeFeed({
 }: HomeFeedProps) {
   const [activeCategory, setActiveCategory] = useState("categorias")
   const [showNsfw, setShowNsfw] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
   const activeFilter = categoryFilters.find(
     (filter) => filter.key === activeCategory
   )
-  const filteredArts =
+
+  // Filter by category and search
+  let filteredArts =
     activeCategory === "categorias" || !activeFilter?.tags
       ? arts
       : arts.filter((art) =>
         art.tags.some((tag) => activeFilter.tags?.includes(tag))
       )
 
+  // Apply search filter
+  if (searchQuery.trim()) {
+    filteredArts = filteredArts.filter((art) =>
+      art.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      art.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+  }
+
   return (
     <section className="space-y-6">
       <FeedBanner />
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4 flex-wrap">
         <div>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             Destaques do dia
@@ -42,6 +55,26 @@ export function HomeFeed({
           <h1 className="whitespace-nowrap text-2xl font-semibold">
             Feed de Artes
           </h1>
+        </div>
+
+        <div className="flex items-center gap-2 flex-1">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar artes, artistas, tags..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Button
+            variant="outline"
+            className="shrink-0"
+          >
+            <SlidersHorizontal className="size-4 mr-2" />
+            Filtros
+          </Button>
         </div>
 
         <div className="flex shrink-0 items-center gap-2 rounded-lg border bg-card p-2 px-3 shadow-sm">
