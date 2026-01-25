@@ -1,5 +1,4 @@
 import { useMemo, useRef, useEffect } from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArtistProfile } from "@/pages/ArtistProfile"
 import { CommissionModal } from "@/pages/CommissionModal"
 import { DashboardPage } from "@/pages/DashboardPage"
@@ -72,7 +71,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
           />
         )}
 
-        <ScrollArea className="h-[calc(100svh-3.5rem)]" viewportRef={viewportRef}>
+        <div className="h-[calc(100svh-3.5rem)] overflow-y-auto" ref={viewportRef}>
           <Routes>
             <Route path="/" element={<Navigate to="/inicio" replace />} />
 
@@ -147,7 +146,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </ScrollArea>
+        </div>
       </div>
 
       <CommissionModal

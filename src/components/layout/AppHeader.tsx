@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, type ElementType } from "react"
+import { useEffect, useState, useRef, useMemo, type ElementType } from "react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -22,6 +22,7 @@ import {
   LogOut,
 } from "lucide-react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
+import { getGroupTitle, getIcon, formatDate } from "@/lib/notifications"
 
 export type NavKey =
   | "inicio"
@@ -63,6 +64,23 @@ export function AppHeader({
   const location = useLocation()
   const navigate = useNavigate()
   const chatRef = useRef<HTMLDivElement>(null)
+
+  const groupedNotifications = useMemo(() => {
+    // Sort by date first
+    const sorted = [...notifications].sort(
+      (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
+    )
+
+    const groups: Record<string, NotificationItem[]> = {}
+
+    sorted.forEach((notification) => {
+      const group = getGroupTitle(notification.data)
+      if (!groups[group]) groups[group] = []
+      groups[group].push(notification)
+    })
+
+    return groups
+  }, [notifications])
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"))
@@ -204,26 +222,58 @@ export function AppHeader({
               showArrow
               className="w-80"
             >
-              <DropdownMenuLabel>Notificacoes</DropdownMenuLabel>
+              <DropdownMenuLabel>Notificações</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <div className="space-y-3 px-2 py-2 text-sm">
-                {notifications.slice(0, 3).map((item) => (
-                  <div key={item.id} className="space-y-1">
-                    <p className="text-sm font-semibold">{item.titulo}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {item.descricao}
+              <div className="max-h-[350px] custom-scroll">
+                <div className="px-2 py-2 text-sm">
+                  {Object.entries(groupedNotifications).length === 0 ? (
+                    <p className="py-4 text-center text-xs text-muted-foreground">
+                      Nenhuma notificação nova
                     </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {item.horario}
-                    </p>
-                  </div>
-                ))}
+                  ) : (
+                    Object.entries(groupedNotifications).map(([group, items]) => (
+                      <div key={group} className="mb-3 last:mb-0">
+                        <p className="mb-2 px-2 text-xs font-semibold text-muted-foreground">
+                          {group}
+                        </p>
+                        <div className="space-y-1">
+                          {items.slice(0, 5).map((item) => ( // Showing max 5 items per group in dropdown to keep it sane
+                            <div
+                              key={item.id}
+                              className="flex items-start gap-3 rounded-md p-2 hover:bg-muted/50 transition-colors cursor-pointer"
+                              onClick={() => navigate("/notificacoes")}
+                            >
+                              <div className="mt-0.5 rounded-full bg-secondary p-1.5 shrink-0">
+                                {getIcon(item.tipo)}
+                              </div>
+                              <div className="flex-1 space-y-1">
+                                <p className="text-xs font-medium leading-none">
+                                  {item.titulo}
+                                </p>
+                                <p className="line-clamp-2 text-[10px] text-muted-foreground">
+                                  {item.descricao}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground/70">
+                                  {formatDate(item.data)}
+                                </p>
+                              </div>
+                              {!item.lida && (
+                                <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
               <DropdownMenuSeparator />
               <div className="p-2">
                 <Button
                   variant="secondary"
-                  className="w-full"
+                  className="w-full text-xs"
+                  size="sm"
                   onClick={() => navigate("/notificacoes")}
                 >
                   Ver todas

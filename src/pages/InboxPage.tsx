@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { users, conversations, messages } from "@/data"
@@ -113,7 +112,7 @@ export function InboxPage() {
             />
           </div>
         </div>
-        <ScrollArea className="flex-1">
+        <div className="min-h-0 flex-1 overflow-y-auto custom-scroll">
           <div className="space-y-2 p-3">
             {filtered.map((conversation) => {
               const user = userMap.get(conversation.userId)
@@ -179,7 +178,7 @@ export function InboxPage() {
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
       </Card>
 
       <Card className="flex h-full flex-col overflow-hidden border-border/70 bg-card/95">
@@ -223,7 +222,7 @@ export function InboxPage() {
             </Button>
           </div>
         </div>
-        <ScrollArea className="flex-1">
+        <div className="min-h-0 flex-1 overflow-y-auto custom-scroll">
           <div className="space-y-6 px-4 py-6">
             <div className="flex justify-center">
               <Badge variant="secondary" className="px-3 py-1 text-xs">
@@ -289,7 +288,7 @@ export function InboxPage() {
               <Separator className="flex-1" />
             </div>
           </div>
-        </ScrollArea>
+        </div>
         <div className="border-t bg-card/80 px-4 py-4">
           <div className="flex flex-wrap items-center gap-2 pb-3">
             <Button variant="outline" size="sm" className="h-7 px-3 text-xs">

@@ -18,7 +18,7 @@ export function FeedCategories({ activeCategory, onCategoryChange }: FeedCategor
     return (
         <div className="space-y-4">
             <div className="group categories-full-bleed mx-auto w-full max-w-6xl overflow-hidden">
-                <Carousel opts={{ align: "start" }} className="w-full">
+                <Carousel opts={{ align: "start", slidesToScroll: 'auto' }} className="w-full">
                     <CarouselContent className="categories-carousel-content gap-3">
                         {categoryFilters.map((filter) => {
                             const isActive = activeCategory === filter.key
@@ -48,12 +48,14 @@ export function FeedCategories({ activeCategory, onCategoryChange }: FeedCategor
                         })}
                     </CarouselContent>
                     <CarouselPrevious
+                        variant="ghost"
                         size="icon-sm"
-                        className="left-0 top-1/2 -translate-y-1/2 opacity-0 transition group-hover:opacity-100 group-hover:pointer-events-auto pointer-events-none disabled:opacity-0"
+                        className="left-0 top-1/2 -translate-y-1/2 rounded-full border border-black/20 bg-black/60 text-white shadow-sm opacity-0 transition hover:bg-black/70 hover:text-white group-hover:opacity-100 group-hover:pointer-events-auto pointer-events-none disabled:opacity-0 dark:border-white/20 dark:bg-white/70 dark:text-black dark:hover:bg-white/80 dark:hover:text-black"
                     />
                     <CarouselNext
+                        variant="ghost"
                         size="icon-sm"
-                        className="right-0 top-1/2 -translate-y-1/2 opacity-0 transition group-hover:opacity-100 group-hover:pointer-events-auto pointer-events-none disabled:opacity-0"
+                        className="right-0 top-1/2 -translate-y-1/2 rounded-full border border-black/20 bg-black/60 text-white shadow-sm opacity-0 transition hover:bg-black/70 hover:text-white group-hover:opacity-100 group-hover:pointer-events-auto pointer-events-none disabled:opacity-0 dark:border-white/20 dark:bg-white/70 dark:text-black dark:hover:bg-white/80 dark:hover:text-black"
                     />
                 </Carousel>
             </div>
