@@ -18,23 +18,10 @@ const ScrollArea = React.forwardRef<
   >
     <ScrollAreaPrimitive.Viewport
       ref={viewportRef}
-      className="h-full w-full rounded-[inherit]"
+      className="custom-scroll h-full w-full rounded-[inherit]"
     >
       {children}
     </ScrollAreaPrimitive.Viewport>
-    <ScrollAreaPrimitive.Scrollbar
-      orientation="vertical"
-      className="flex touch-none select-none p-0.5 transition-colors"
-    >
-      <ScrollAreaPrimitive.Thumb className="relative flex-1 rounded-full bg-border" />
-    </ScrollAreaPrimitive.Scrollbar>
-    <ScrollAreaPrimitive.Scrollbar
-      orientation="horizontal"
-      className="flex touch-none select-none p-0.5 transition-colors"
-    >
-      <ScrollAreaPrimitive.Thumb className="relative flex-1 rounded-full bg-border" />
-    </ScrollAreaPrimitive.Scrollbar>
-    <ScrollAreaPrimitive.Corner />
   </ScrollAreaPrimitive.Root>
 ))
 ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName

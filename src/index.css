@@ -116,6 +116,12 @@
 }
 
 @layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
@@ -124,6 +130,7 @@
     @apply bg-background text-foreground;
     font-family: "Inter", ui-sans-serif, system-ui, -apple-system,
       "Segoe UI", sans-serif;
+    overflow: hidden;
   }
 }
 
@@ -161,37 +168,32 @@
 }
 
 @layer utilities {
-  .custom-scroll {
-    overflow-y: auto;
+  * {
     scrollbar-width: auto;
-    /* Firefox fallback */
     scrollbar-color: var(--muted-foreground) var(--muted);
-    /* Firefox */
   }
 
-  .custom-scroll::-webkit-scrollbar {
+  *::-webkit-scrollbar {
     width: 14px;
+    height: 14px;
     background: var(--muted);
   }
 
-  .custom-scroll::-webkit-scrollbar-track {
+  *::-webkit-scrollbar-track {
     background: var(--muted);
   }
 
-  .custom-scroll::-webkit-scrollbar-thumb {
+  *::-webkit-scrollbar-thumb {
     background-color: #e2e8f0;
-    /* slate-200 (lighter) */
     border: 3px solid var(--muted);
-    /* Padding effect */
     border-radius: 99px;
   }
 
-  .dark .custom-scroll::-webkit-scrollbar-thumb {
+  .dark *::-webkit-scrollbar-thumb {
     background-color: #64748b;
-    /* slate-500 (lighter than previous) */
   }
 
-  .custom-scroll::-webkit-scrollbar-button {
+  *::-webkit-scrollbar-button {
     display: block;
     background-color: var(--muted);
     background-repeat: no-repeat;
@@ -200,17 +202,19 @@
     width: 14px;
   }
 
-  .custom-scroll::-webkit-scrollbar-button:hover {
+  *::-webkit-scrollbar-button:hover {
     background-color: var(--accent);
   }
 
-  /* Up Arrow */
-  .custom-scroll::-webkit-scrollbar-button:vertical:decrement {
+  *::-webkit-scrollbar-button:vertical:decrement {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m18 15-6-6-6 6'/%3E%3C/svg%3E");
   }
 
-  /* Down Arrow */
-  .custom-scroll::-webkit-scrollbar-button:vertical:increment {
+  *::-webkit-scrollbar-button:vertical:increment {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+
+  .custom-scroll {
+    overflow-y: auto;
   }
 }
