@@ -58,6 +58,7 @@ export function AppHeader({
 }: AppHeaderProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [isChatOpen, setIsChatOpen] = useState(false)
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [isDark, setIsDark] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
@@ -85,6 +86,32 @@ export function AppHeader({
       document.documentElement.classList.toggle("dark", next)
       return next
     })
+  }
+
+  // Funções de controle de popup (exclusividade)
+  const toggleChat = () => {
+    const newState = !isChatOpen
+    setIsChatOpen(newState)
+    if (newState) {
+      setIsNotificationsOpen(false)
+      setProfileMenuOpen(false)
+    }
+  }
+
+  const handleNotificationsOpenChange = (open: boolean) => {
+    setIsNotificationsOpen(open)
+    if (open) {
+      setIsChatOpen(false)
+      setProfileMenuOpen(false)
+    }
+  }
+
+  const handleProfileOpenChange = (open: boolean) => {
+    setProfileMenuOpen(open)
+    if (open) {
+      setIsChatOpen(false)
+      setIsNotificationsOpen(false)
+    }
   }
 
   // Navega para a página de perfil
@@ -157,14 +184,14 @@ export function AppHeader({
 
         <div className="flex items-center justify-end gap-3">
           {/* ... (Dropdown Notificacoes) */}
-          <DropdownMenu>
+          <DropdownMenu open={isNotificationsOpen} onOpenChange={handleNotificationsOpenChange} modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className={cn(
                   "size-9",
-                  location.pathname === "/notificacoes" && "bg-muted text-foreground"
+                  (isNotificationsOpen || location.pathname === "/notificacoes") && "bg-muted text-foreground"
                 )}
                 aria-label="Notificacoes"
               >
@@ -214,7 +241,7 @@ export function AppHeader({
                 (isChatOpen || location.pathname === "/inbox") && "bg-muted text-foreground"
               )}
               aria-label="Mensagens"
-              onClick={() => setIsChatOpen(!isChatOpen)}
+              onClick={toggleChat}
             >
               <Mail className="size-4" />
             </Button>
@@ -233,7 +260,7 @@ export function AppHeader({
           ) : (
             <DropdownMenu
               open={profileMenuOpen}
-              onOpenChange={setProfileMenuOpen}
+              onOpenChange={handleProfileOpenChange}
               modal={false} // IMPORTANTE: Impede o piscar/conflito de foco
             >
               <DropdownMenuTrigger asChild>
