@@ -170,22 +170,22 @@
 @layer utilities {
   * {
     scrollbar-width: auto;
-    scrollbar-color: var(--muted-foreground) var(--muted);
+    scrollbar-color: var(--muted-foreground) transparent;
   }
 
   *::-webkit-scrollbar {
     width: 14px;
     height: 14px;
-    background: var(--muted);
+    background: transparent;
   }
 
   *::-webkit-scrollbar-track {
-    background: var(--muted);
+    background: transparent;
   }
 
   *::-webkit-scrollbar-thumb {
     background-color: #e2e8f0;
-    border: 3px solid var(--muted);
+    border: 3px solid transparent;
     border-radius: 99px;
   }
 
@@ -195,7 +195,7 @@
 
   *::-webkit-scrollbar-button {
     display: block;
-    background-color: var(--muted);
+    background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     height: 14px;
