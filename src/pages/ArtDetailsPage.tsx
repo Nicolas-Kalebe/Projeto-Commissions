@@ -46,18 +46,86 @@ export function ArtDetailsPage() {
                 Voltar
             </Button>
 
-            <div className="grid gap-8 md:grid-cols-[1.5fr_1fr] lg:gap-12">
+            <div className="grid gap-8 md:grid-cols-[1.5fr_1fr] lg:gap-4">
                 {/* Left Column: Image */}
-                <div className="space-y-4">
-                    <div className="overflow-hidden rounded-xl border bg-muted/20 shadow-sm">
-                        <div className="relative aspect-[4/3] w-full">
-                            <img
-                                src={art.imageUrl}
-                                alt={art.titulo}
-                                className="absolute inset-0 h-full w-full object-contain"
-                            />
+                <div className="h-full overflow-hidden rounded-xl border bg-muted/20 shadow-sm relative min-h-[400px]">
+                    <img
+                        src={art.imageUrl}
+                        alt={art.titulo}
+                        className="absolute inset-0 h-full w-full object-contain"
+                    />
+                </div>
+
+                {/* Right Column: Details */}
+                <div className="flex flex-col gap-6 h-full">
+
+
+                    <div className="rounded-xl border bg-card p-6 shadow-sm h-full flex flex-col">
+                        <div className="mb-6">
+                            <h1 className="text-3xl font-bold md:text-4xl">{art.titulo}</h1>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                {art.tags.map((tag) => (
+                                    <Badge key={tag} variant="secondary" className="text-xs">
+                                        {tag}
+                                    </Badge>
+                                ))}
+                            </div>
                         </div>
+
+                        <Separator className="mb-6" />
+
+                        {artist && (
+                            <>
+                                <div className="flex items-center gap-4 mb-6">
+                                    <Avatar className="size-12 border">
+                                        <AvatarImage src={artist.avatarUrl} alt={artist.nome} />
+                                        <AvatarFallback>{artist.nome[0]}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium leading-none text-muted-foreground">
+                                            Criado por
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-lg font-semibold">{artist.nome}</p>
+                                            {artist.role === "artista" && (
+                                                <Badge variant="outline" className="text-[10px] h-5 px-1.5">
+                                                    PRO
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <Button variant="outline">Ver perfil</Button>
+                                </div>
+                                <Separator className="mb-6" />
+                            </>
+                        )}
+
+                        <div className="mb-4">
+                            <p className="text-sm font-medium text-muted-foreground">Preço base</p>
+                            <p className="text-3xl font-bold text-primary">R$ {art.preco}</p>
+                        </div>
+
+
+                        <div className="space-y-3">
+                            <Button className="w-full" size="lg">
+                                Encomendar Arte Similar
+                            </Button>
+                            <Button variant="secondary" className="w-full">
+                                Enviar Mensagem
+                            </Button>
+                        </div>
+                        <p className="mt-4 text-center text-xs text-muted-foreground">
+                            Proteção garantida. O pagamento só é liberado após a aprovação.
+                        </p>
+
+
                     </div>
+
+
+                </div>
+
+                {/* Row 2 Col 1: Buttons and About Section */}
+                <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                         <div className="flex gap-2">
                             <Button variant="outline" size="sm" className="gap-2">
@@ -76,63 +144,8 @@ export function ArtDetailsPage() {
                             </Badge>
                         )}
                     </div>
-                </div>
-
-                {/* Right Column: Details */}
-                <div className="flex flex-col gap-6">
-                    <div>
-                        <h1 className="text-3xl font-bold md:text-4xl">{art.titulo}</h1>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                            {art.tags.map((tag) => (
-                                <Badge key={tag} variant="secondary" className="text-xs">
-                                    {tag}
-                                </Badge>
-                            ))}
-                        </div>
-                    </div>
 
                     <Separator />
-
-                    {artist && (
-                        <div className="flex items-center gap-4">
-                            <Avatar className="size-12 border">
-                                <AvatarImage src={artist.avatarUrl} alt={artist.nome} />
-                                <AvatarFallback>{artist.nome[0]}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                                <p className="text-sm font-medium leading-none text-muted-foreground">
-                                    Criado por
-                                </p>
-                                <div className="flex items-center gap-2">
-                                    <p className="text-lg font-semibold">{artist.nome}</p>
-                                    {artist.role === "artista" && (
-                                        <Badge variant="outline" className="text-[10px] h-5 px-1.5">
-                                            PRO
-                                        </Badge>
-                                    )}
-                                </div>
-                            </div>
-                            <Button variant="outline">Ver perfil</Button>
-                        </div>
-                    )}
-
-                    <div className="rounded-xl border bg-card p-6 shadow-sm">
-                        <div className="mb-4">
-                            <p className="text-sm font-medium text-muted-foreground">Preço base</p>
-                            <p className="text-3xl font-bold text-primary">R$ {art.preco}</p>
-                        </div>
-                        <div className="space-y-3">
-                            <Button className="w-full" size="lg">
-                                Encomendar Arte Similar
-                            </Button>
-                            <Button variant="secondary" className="w-full">
-                                Enviar Mensagem
-                            </Button>
-                        </div>
-                        <p className="mt-4 text-center text-xs text-muted-foreground">
-                            Proteção garantida. O pagamento só é liberado após a aprovação.
-                        </p>
-                    </div>
 
                     <div className="space-y-2">
                         <h3 className="font-semibold">Sobre a arte</h3>
