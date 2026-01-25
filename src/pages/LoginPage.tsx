@@ -7,8 +7,11 @@ interface LoginPageProps {
     onLogin: () => void
 }
 
+import { useNavigate } from "react-router-dom"
+
 export function LoginPage({ onLogin }: LoginPageProps) {
     const [loadingProvider, setLoadingProvider] = useState<string | null>(null)
+    const navigate = useNavigate()
 
     const handleLogin = (provider: string) => {
         setLoadingProvider(provider)
@@ -17,6 +20,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         setTimeout(() => {
             onLogin()
             setLoadingProvider(null)
+            navigate('/') // Redirect to home on success
         }, 1500)
     }
 

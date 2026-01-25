@@ -8,6 +8,7 @@ import {
     Twitter,
     Youtube,
 } from "lucide-react"
+import { Link } from "react-router-dom"
 
 export function AppFooter() {
     return (
@@ -48,33 +49,33 @@ export function AppFooter() {
                     <div className="flex flex-col gap-4">
                         <h3 className="text-sm font-semibold">Produto</h3>
                         <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                            <a href="#" className="hover:text-foreground">Funcionalidades</a>
-                            <a href="#" className="hover:text-foreground">Preços</a>
-                            <a href="#" className="hover:text-foreground">Para Artistas</a>
-                            <a href="#" className="hover:text-foreground">Para Clientes</a>
-                            <a href="#" className="hover:text-foreground">Roadmap</a>
+                            <Link to="#" className="hover:text-foreground">Funcionalidades</Link>
+                            <Link to="#" className="hover:text-foreground">Preços</Link>
+                            <Link to="#" className="hover:text-foreground">Para Artistas</Link>
+                            <Link to="#" className="hover:text-foreground">Para Clientes</Link>
+                            <Link to="#" className="hover:text-foreground">Roadmap</Link>
                         </div>
                     </div>
 
                     <div className="flex flex-col gap-4">
                         <h3 className="text-sm font-semibold">Empresa</h3>
                         <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                            <a href="#" className="hover:text-foreground">Sobre nós</a>
-                            <a href="#" className="hover:text-foreground">Carreiras</a>
-                            <a href="#" className="hover:text-foreground">Blog</a>
-                            <a href="#" className="hover:text-foreground">Contato</a>
-                            <a href="#" className="hover:text-foreground">Parceiros</a>
+                            <Link to="#" className="hover:text-foreground">Sobre nós</Link>
+                            <Link to="#" className="hover:text-foreground">Carreiras</Link>
+                            <Link to="#" className="hover:text-foreground">Blog</Link>
+                            <Link to="#" className="hover:text-foreground">Contato</Link>
+                            <Link to="#" className="hover:text-foreground">Parceiros</Link>
                         </div>
                     </div>
 
                     <div className="flex flex-col gap-4">
                         <h3 className="text-sm font-semibold">Legal & Suporte</h3>
                         <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                            <a href="#" className="hover:text-foreground">Termos de uso</a>
-                            <a href="#" className="hover:text-foreground">Privacidade</a>
-                            <a href="#" className="hover:text-foreground">Diretrizes</a>
-                            <a href="#" className="hover:text-foreground">Central de Ajuda</a>
-                            <a href="#" className="hover:text-foreground">Status</a>
+                            <Link to="#" className="hover:text-foreground">Termos de uso</Link>
+                            <Link to="#" className="hover:text-foreground">Privacidade</Link>
+                            <Link to="#" className="hover:text-foreground">Diretrizes</Link>
+                            <Link to="#" className="hover:text-foreground">Central de Ajuda</Link>
+                            <Link to="#" className="hover:text-foreground">Status</Link>
                         </div>
                     </div>
                 </div>

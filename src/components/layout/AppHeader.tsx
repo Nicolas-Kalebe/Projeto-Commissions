@@ -23,6 +23,7 @@ import {
   LogOut,
   Search,
 } from "lucide-react"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 
 export type NavKey =
   | "inicio"
@@ -32,31 +33,25 @@ export type NavKey =
   | "perfil"
   | "inbox"
 
-const navItems: { key: NavKey; label: string; icon: ElementType }[] = [
-  { key: "inicio", label: "Inicio", icon: Home },
-  { key: "dashboard", label: "Dashboard", icon: ShieldCheck },
-  { key: "inbox", label: "Mensagens", icon: Mail },
-  { key: "notificacoes", label: "Notificacoes", icon: Bell },
-  { key: "perfil", label: "Perfil", icon: UserIcon },
+const navItems: { key: NavKey; label: string; icon: ElementType; path: string }[] = [
+  { key: "inicio", label: "Inicio", icon: Home, path: "/" },
+  { key: "dashboard", label: "Dashboard", icon: ShieldCheck, path: "/dashboard" },
+  { key: "inbox", label: "Mensagens", icon: Mail, path: "/inbox" },
+  { key: "notificacoes", label: "Notificacoes", icon: Bell, path: "/notificacoes" },
+  { key: "perfil", label: "Perfil", icon: UserIcon, path: "/perfil" },
 ]
 
 type AppHeaderProps = {
-  active: NavKey
-  onNavChange: (key: NavKey) => void
   notifications: NotificationItem[]
   currentUser: User
   isAuthenticated: boolean
-  onLoginClick: () => void
   onLogout: () => void
 }
 
 export function AppHeader({
-  active,
-  onNavChange,
   notifications,
   currentUser,
   isAuthenticated,
-  onLoginClick,
   onLogout,
 }: AppHeaderProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
@@ -64,6 +59,8 @@ export function AppHeader({
   const profileMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(
     null
   )
+  const location = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"))
@@ -102,17 +99,30 @@ export function AppHeader({
     // Previne comportamento padrão do trigger se necessário
     // e garante a navegação
     setProfileMenuOpen(false)
-    onNavChange("perfil")
+    navigate('/perfil')
+  }
+
+  const isLinkActive = (path: string) => {
+    if (path === '/' && location.pathname === '/') return true
+    if (path !== '/' && location.pathname.startsWith(path)) return true
+    return false
+  }
+
+  const handleLoginClick = () => {
+    navigate('/login')
+  }
+
+  const handleNavClick = (path: string) => {
+    navigate(path)
   }
 
   return (
     <header className="sticky top-0 z-20 h-14 border-b bg-background/80 px-6 py-2 backdrop-blur">
       <div className="grid w-full grid-cols-1 items-center gap-3 lg:grid-cols-[1fr_minmax(0,640px)_1fr]">
         <div className="flex items-center gap-3 overflow-x-auto lg:justify-start">
-          <button
-            type="button"
+          <Link
+            to="/"
             className="mr-2 hidden cursor-pointer items-center gap-2 rounded-lg px-2 py-1 transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:flex"
-            onClick={() => onNavChange("inicio")}
             aria-label="Voltar ao inicio"
           >
             <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -121,14 +131,14 @@ export function AppHeader({
             <div className="text-left">
               <p className="text-sm font-semibold">Projeto Comissões</p>
             </div>
-          </button>
+          </Link>
           {navItems
             .filter(
               (item) => item.key !== "perfil" && item.key !== "notificacoes"
             )
             .map((item) => {
               const Icon = item.icon
-              const isActive = active === item.key
+              const isActive = isLinkActive(item.path)
               return (
                 <Button
                   key={item.key}
@@ -139,7 +149,7 @@ export function AppHeader({
                     isActive &&
                     "text-foreground after:absolute after:bottom-0 after:left-1/2 after:h-0.5 after:w-6 after:-translate-x-1/2 after:rounded-full after:bg-foreground"
                   )}
-                  onClick={() => onNavChange(item.key)}
+                  onClick={() => handleNavClick(item.path)}
                 >
                   <Icon className="size-4" />
                   {item.label}
@@ -161,7 +171,7 @@ export function AppHeader({
                 size="icon"
                 className={cn(
                   "size-9",
-                  active === "notificacoes" && "bg-muted text-foreground"
+                  location.pathname === "/notificacoes" && "bg-muted text-foreground"
                 )}
                 aria-label="Notificacoes"
               >
@@ -194,7 +204,7 @@ export function AppHeader({
                 <Button
                   variant="secondary"
                   className="w-full"
-                  onClick={() => onNavChange("notificacoes")}
+                  onClick={() => navigate("/notificacoes")}
                 >
                   Ver todas
                 </Button>
@@ -206,17 +216,17 @@ export function AppHeader({
             size="icon"
             className={cn(
               "size-9 mr-2",
-              active === "inbox" && "bg-muted text-foreground"
+              location.pathname === "/inbox" && "bg-muted text-foreground"
             )}
             aria-label="Mensagens"
-            onClick={() => onNavChange("inbox")}
+            onClick={() => navigate("/inbox")}
           >
             <Mail className="size-4" />
           </Button>
 
 
           {!isAuthenticated ? (
-            <Button onClick={onLoginClick} variant="default" size="sm">
+            <Button onClick={handleLoginClick} variant="default" size="sm">
               Entrar
             </Button>
           ) : (
