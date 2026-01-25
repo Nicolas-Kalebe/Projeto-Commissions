@@ -1,4 +1,4 @@
-import { useEffect, useState, type ElementType } from "react"
+import { useEffect, useState, useRef, type ElementType } from "react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -46,6 +46,10 @@ type AppHeaderProps = {
   onLogout: () => void
 }
 
+import { MiniChat } from "./MiniChat"
+
+// ... imports anteriores
+
 export function AppHeader({
   notifications,
   currentUser,
@@ -53,12 +57,26 @@ export function AppHeader({
   onLogout,
 }: AppHeaderProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false)
   const [isDark, setIsDark] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
+  const chatRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"))
+
+    // Fecha o chat ao clicar fora
+    const handleClickOutside = (event: MouseEvent) => {
+      if (chatRef.current && !chatRef.current.contains(event.target as Node)) {
+        setIsChatOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
   }, [])
 
   const handleThemeToggle = () => {
@@ -92,6 +110,8 @@ export function AppHeader({
   return (
     <header className="sticky top-0 z-20 h-14 border-b bg-background/80 px-6 py-2 backdrop-blur">
       <div className="flex w-full items-center justify-between gap-3">
+        {/* ... (Logo e Nav) */}
+
         <div className="flex items-center gap-3 overflow-x-auto lg:justify-start">
           <Link
             to="/inicio"
@@ -107,7 +127,7 @@ export function AppHeader({
           </Link>
           {navItems
             .filter(
-              (item) => item.key !== "perfil" && item.key !== "notificacoes"
+              (item) => item.key !== "perfil" && item.key !== "notificacoes" && item.key !== "inbox"
             )
             .map((item) => {
               const Icon = item.icon
@@ -134,7 +154,9 @@ export function AppHeader({
               )
             })}
         </div>
+
         <div className="flex items-center justify-end gap-3">
+          {/* ... (Dropdown Notificacoes) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -182,19 +204,27 @@ export function AppHeader({
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "size-9 mr-2",
-              location.pathname === "/inbox" && "bg-muted text-foreground"
-            )}
-            aria-label="Mensagens"
-            onClick={() => navigate("/inbox")}
-          >
-            <Mail className="size-4" />
-          </Button>
 
+          <div className="relative" ref={chatRef}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "size-9 mr-2",
+                (isChatOpen || location.pathname === "/inbox") && "bg-muted text-foreground"
+              )}
+              aria-label="Mensagens"
+              onClick={() => setIsChatOpen(!isChatOpen)}
+            >
+              <Mail className="size-4" />
+            </Button>
+
+            {isChatOpen && (
+              <div className="absolute right-0 top-12 z-50 animate-in fade-in zoom-in-95 duration-200">
+                <MiniChat onClose={() => setIsChatOpen(false)} />
+              </div>
+            )}
+          </div>
 
           {!isAuthenticated ? (
             <Button onClick={handleLoginClick} variant="default" size="sm">

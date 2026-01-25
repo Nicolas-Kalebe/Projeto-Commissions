@@ -26,9 +26,12 @@ const statusMap = {
   ocupado: { label: "Ocupado", color: "bg-amber-500" },
 }
 
+import { useLocation } from "react-router-dom"
+
 export function InboxPage() {
+  const location = useLocation()
   const [search, setSearch] = useState("")
-  const [activeId, setActiveId] = useState(conversations[0]?.id ?? "")
+  const [activeId, setActiveId] = useState(location.state?.conversationId ?? conversations[0]?.id ?? "")
   const [inboxView, setInboxView] = useState<"all" | "unread">("all")
   const [replyTo, setReplyTo] = useState<Message | null>(null)
   const messageRef = useRef<HTMLTextAreaElement | null>(null)
