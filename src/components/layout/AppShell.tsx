@@ -10,6 +10,7 @@ import { NotificationsPage } from "@/pages/NotificationsPage"
 import { LoginPage } from "@/pages/LoginPage"
 import { arts, notifications, users } from "@/data"
 import { AppHeader, type NavKey as AppHeaderNavKey } from "@/components/layout/AppHeader"
+import { AppFooter } from "@/components/layout/AppFooter"
 
 // Extend NavKey to include "login" for internal routing
 type NavKey = AppHeaderNavKey | "login"
@@ -24,7 +25,6 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
   const [active, setActive] = useState<NavKey>("inicio")
   const [commissionOpen, setCommissionOpen] = useState(false)
   const [selectedPrice, setSelectedPrice] = useState(100)
-  const [priceRange, setPriceRange] = useState<[number, number]>([50, 300])
 
   const artistMap = useMemo(
     () => new Map(users.map((user) => [user.id, user])),
@@ -56,8 +56,6 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
     <HomeFeed
       arts={arts}
       artistMap={artistMap}
-      priceRange={priceRange}
-      onPriceRangeChange={setPriceRange}
     />
   )
 
@@ -105,7 +103,10 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
 
         <ScrollArea className="h-[calc(100svh-3.5rem)]">
           {active === "inicio" ? (
-            <main className="w-full px-6 py-8">{homeContent}</main>
+            <>
+              <main className="w-full px-6 py-8">{homeContent}</main>
+              <AppFooter />
+            </>
           ) : active === "login" ? (
             <LoginPage onLogin={handleLoginSuccess} />
           ) : active === "perfil" ? (
@@ -115,9 +116,12 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
               <InboxPage />
             </main>
           ) : active === "dashboard" || active === "nova" || active === "notificacoes" ? (
-            <main className="mx-auto w-full max-w-6xl px-6 py-8">
-              {sectionContent}
-            </main>
+            <>
+              <main className="mx-auto w-full max-w-6xl px-6 py-8">
+                {sectionContent}
+              </main>
+              <AppFooter />
+            </>
           ) : null}
         </ScrollArea>
       </div>

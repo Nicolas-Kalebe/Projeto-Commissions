@@ -21,6 +21,7 @@ import {
   ToggleRight,
   User as UserIcon,
   LogOut,
+  Search,
 } from "lucide-react"
 
 export type NavKey =
@@ -118,10 +119,7 @@ export function AppHeader({
               <ShieldCheck className="size-5" />
             </div>
             <div className="text-left">
-              <p className="text-sm font-semibold">Atelie Seguro</p>
-              <p className="text-xs text-muted-foreground">
-                Comissoes protegidas
-              </p>
+              <p className="text-sm font-semibold">Projeto Comissões</p>
             </div>
           </button>
           {navItems
@@ -150,8 +148,9 @@ export function AppHeader({
             })}
         </div>
         <div className="flex w-full justify-center">
-          <div className="w-full max-w-xl">
-            <Input placeholder="Buscar estilos ou artistas" />
+          <div className="w-full max-w-xl relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar estilos ou artistas" className="pl-9" />
           </div>
         </div>
         <div className="flex items-center justify-end gap-3">

@@ -1,9 +1,5 @@
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Slider } from "@/components/ui/slider"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   type CarouselApi,
@@ -13,10 +9,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import {
-  InputGroup,
-  InputGroupInput,
-} from "@/components/ui/input-group"
 import { ArtCard } from "@/components/feed/ArtCard"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { Art, User } from "@/types"
@@ -25,17 +17,12 @@ import { cn } from "@/lib/utils"
 type HomeFeedProps = {
   arts: Art[]
   artistMap: Map<string, User>
-  priceRange: [number, number]
-  onPriceRangeChange: (range: [number, number]) => void
 }
 
 export function HomeFeed({
   arts,
   artistMap,
-  priceRange,
-  onPriceRangeChange,
 }: HomeFeedProps) {
-  const [selectedStyle, setSelectedStyle] = useState("Todos estilos")
   const [activeCategory, setActiveCategory] = useState("categorias")
   const [bannerApi, setBannerApi] = useState<CarouselApi | null>(null)
   const bannerAutoResumeAtRef = useRef(0)
@@ -61,38 +48,6 @@ export function HomeFeed({
       action: "Ver ranking",
       imageUrl:
         "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1600&auto=format&fit=crop",
-    },
-  ]
-  const styleOptions = [
-    {
-      name: "Abstract",
-      imageUrl:
-        "https://images.unsplash.com/photo-1471879832106-c7ab9e0cee23?q=80&w=400&auto=format&fit=crop",
-    },
-    {
-      name: "Anime & Manga",
-      imageUrl:
-        "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=400&auto=format&fit=crop",
-    },
-    {
-      name: "Pixel Art",
-      imageUrl:
-        "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=400&auto=format&fit=crop",
-    },
-    {
-      name: "Realismo",
-      imageUrl:
-        "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=400&auto=format&fit=crop",
-    },
-    {
-      name: "Chibi",
-      imageUrl:
-        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=400&auto=format&fit=crop",
-    },
-    {
-      name: "Concept",
-      imageUrl:
-        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=400&auto=format&fit=crop",
     },
   ]
   const categoryFilters = [
@@ -126,8 +81,8 @@ export function HomeFeed({
     activeCategory === "categorias" || !activeFilter?.tags
       ? arts
       : arts.filter((art) =>
-          art.tags.some((tag) => activeFilter.tags?.includes(tag))
-        )
+        art.tags.some((tag) => activeFilter.tags?.includes(tag))
+      )
 
   useEffect(() => {
     if (!bannerApi) return
@@ -212,119 +167,6 @@ export function HomeFeed({
               Feed de Artes
             </h1>
           </div>
-          <div className="min-w-0 flex-1">
-            <Sheet>
-              <div className="flex w-full items-center gap-3">
-                <InputGroup className="h-10 flex-1">
-                  <InputGroupInput placeholder="Buscar estilos ou artistas" />
-                </InputGroup>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="lg" className="gap-2">
-                    <span className="material-symbols-rounded text-[16px] leading-none">
-                      tune
-                    </span>
-                    Filtros
-                  </Button>
-                </SheetTrigger>
-              </div>
-              <SheetContent side="right">
-                <SheetHeader>
-                  <SheetTitle>Filtros avan??ados</SheetTitle>
-                  <SheetDescription>
-                    Ajuste o estilo, prazo e faixa de pre??o.
-                  </SheetDescription>
-                </SheetHeader>
-                <ScrollArea className="mt-6 h-[calc(100svh-10rem)] pr-4">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                    <p className="text-sm font-medium">Ordenar por</p>
-                    <Select defaultValue="relevancia">
-                      <SelectTrigger>
-                        <SelectValue placeholder="Ordenar por" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="relevancia">Relev????ncia</SelectItem>
-                        <SelectItem value="recentes">Mais recentes</SelectItem>
-                        <SelectItem value="preco">Menor pre????o</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Estilo</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {styleOptions.map((style) => (
-                        <button
-                          key={style.name}
-                          type="button"
-                          className={cn(
-                            "group relative aspect-square w-full cursor-pointer overflow-hidden rounded-lg border bg-muted text-white",
-                            selectedStyle === style.name &&
-                              "ring-2 ring-primary/40"
-                          )}
-                          onClick={() => setSelectedStyle(style.name)}
-                        >
-                          <img
-                            src={style.imageUrl}
-                            alt={style.name}
-                            className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 bg-black/45" />
-                          <span className="relative z-10 flex h-full w-full items-center justify-center px-2 text-center text-xs font-semibold uppercase tracking-wide">
-                            {style.name}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Selecionado: {selectedStyle}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Prazo</p>
-                    <Select defaultValue="7dias">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="7dias">Até 7 dias</SelectItem>
-                        <SelectItem value="15dias">Até 15 dias</SelectItem>
-                        <SelectItem value="30dias">Até 30 dias</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Faixa de preço</p>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>
-                        R${" "}
-                        {priceRange[0].toLocaleString("pt-BR", {
-                          minimumFractionDigits: 0,
-                        })}
-                      </span>
-                      <span>
-                        R${" "}
-                        {priceRange[1].toLocaleString("pt-BR", {
-                          minimumFractionDigits: 0,
-                        })}
-                      </span>
-                    </div>
-                    <Slider
-                      value={priceRange}
-                      onValueChange={(value) =>
-                        onPriceRangeChange([value[0], value[1]])
-                      }
-                      min={50}
-                      max={300}
-                      step={10}
-                    />
-                  </div>
-                    <Button className="w-full">Aplicar filtros</Button>
-                  </div>
-                </ScrollArea>
-              </SheetContent>
-            </Sheet>
-          </div>
         </div>
         <div className="group categories-full-bleed mx-auto w-full max-w-6xl overflow-hidden">
           <Carousel opts={{ align: "start" }} className="w-full">
@@ -370,20 +212,20 @@ export function HomeFeed({
       {filteredArts.length === 0 ? (
         <div className="flex min-h-[40vh] items-center justify-center">
           <Alert className="border-0 bg-transparent p-0 text-center text-muted-foreground">
-          <div className="flex flex-col items-center gap-3">
-            <span
-              className="material-symbols-rounded text-muted-foreground"
-              style={{
-                fontVariationSettings: "'wght' 200",
-                fontSize: "36px",
-              }}
-            >
-              warning
-            </span>
-            <AlertDescription className="text-lg font-medium">
-              Ainda não há publicações para essa categoria.
-            </AlertDescription>
-          </div>
+            <div className="flex flex-col items-center gap-3">
+              <span
+                className="material-symbols-rounded text-muted-foreground"
+                style={{
+                  fontVariationSettings: "'wght' 200",
+                  fontSize: "36px",
+                }}
+              >
+                warning
+              </span>
+              <AlertDescription className="text-lg font-medium">
+                Ainda não há publicações para essa categoria.
+              </AlertDescription>
+            </div>
           </Alert>
         </div>
       ) : (
