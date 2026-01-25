@@ -108,11 +108,10 @@ export function HomeFeed({
     <section className="space-y-8">
       <div className="sticky top-0 z-30 h-0">
         <div
-          className={`relative rounded-lg border bg-background/95 p-3 shadow-sm backdrop-blur transition-all ${
-            showStickyTools
-              ? "translate-y-0 opacity-100"
-              : "-translate-y-3 opacity-0 pointer-events-none"
-          }`}
+          className={`relative rounded-lg border bg-background/95 p-3 shadow-sm backdrop-blur transition-all ${showStickyTools
+            ? "translate-y-0 opacity-100"
+            : "-translate-y-3 opacity-0 pointer-events-none"
+            }`}
         >
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[220px]">
@@ -208,9 +207,8 @@ export function HomeFeed({
       {sponsoredArts.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <span className="text-xl">👑</span>
-            <h2 className="text-xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-400 bg-clip-text text-transparent">
-              Destaques Patrocinados
+            <h2 className="text-xl font-bold">
+              Anúncios Impulsionados
             </h2>
           </div>
           <FeedGrid arts={sponsoredArts} artistMap={artistMap} showNsfw={showNsfw} />
@@ -220,7 +218,6 @@ export function HomeFeed({
       {mostAccessedArts.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 border-b pb-2">
-            <span className="text-2xl">🔥</span>
             <h2 className="text-xl font-bold">Mais acessados da semana</h2>
           </div>
           <FeedGrid arts={mostAccessedArts} artistMap={artistMap} showNsfw={showNsfw} />
@@ -230,7 +227,6 @@ export function HomeFeed({
       {fantasyArts.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 border-b pb-2">
-            <span className="text-2xl">🌲</span>
             <h2 className="text-xl font-bold">Mundos Fantásticos</h2>
           </div>
           <FeedGrid arts={fantasyArts} artistMap={artistMap} showNsfw={showNsfw} />
@@ -240,7 +236,6 @@ export function HomeFeed({
       {portraitArts.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 border-b pb-2">
-            <span className="text-2xl">👤</span>
             <h2 className="text-xl font-bold">Retratos & Personagens</h2>
           </div>
           <FeedGrid arts={portraitArts} artistMap={artistMap} showNsfw={showNsfw} />
@@ -250,7 +245,6 @@ export function HomeFeed({
       {sciFiArts.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 border-b pb-2">
-            <span className="text-2xl">🚀</span>
             <h2 className="text-xl font-bold">Universo Sci-Fi & Cyber</h2>
           </div>
           <FeedGrid arts={sciFiArts} artistMap={artistMap} showNsfw={showNsfw} />
@@ -260,7 +254,6 @@ export function HomeFeed({
       {pixelArts.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 border-b pb-2">
-            <span className="text-2xl">👾</span>
             <h2 className="text-xl font-bold">Pixel Art & Retro</h2>
           </div>
           <FeedGrid arts={pixelArts} artistMap={artistMap} showNsfw={showNsfw} />
