@@ -42,11 +42,15 @@ export interface ModerationReport {
   status: "novo" | "revisado"
 }
 
+export type NotificationType = "pedido" | "sistema" | "social"
+
 export type NotificationItem = {
   id: string
   titulo: string
   descricao: string
-  horario: string
+  data: string // ISO string
+  lida: boolean
+  tipo: NotificationType
 }
 
 export type Conversation = {
