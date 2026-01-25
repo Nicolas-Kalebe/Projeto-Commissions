@@ -2,6 +2,7 @@ import { useState } from "react"
 import { FeedBanner } from "@/components/feed/FeedBanner"
 import { FeedCategories } from "@/components/feed/FeedCategories"
 import { FeedGrid } from "@/components/feed/FeedGrid"
+import { FilterSidebar } from "@/components/feed/FilterSidebar"
 import type { Art, User } from "@/types"
 import { categoryFilters } from "@/data"
 import { Switch } from "@/components/ui/switch"
@@ -43,6 +44,14 @@ export function HomeFeed({
     )
   }
 
+  // Filter Modal State
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const handleApplyFilters = (filters: any) => {
+    // Aqui você aplicaria a lógica real de filtragem com os dados
+    console.log("Filtros aplicados:", filters)
+    setIsFilterOpen(false)
+  }
+
   return (
     <section className="space-y-6">
       <FeedBanner />
@@ -71,6 +80,7 @@ export function HomeFeed({
           <Button
             variant="outline"
             className="shrink-0"
+            onClick={() => setIsFilterOpen(true)}
           >
             <SlidersHorizontal className="size-4 mr-2" />
             Filtros
@@ -95,6 +105,12 @@ export function HomeFeed({
       </div>
 
       <FeedGrid arts={filteredArts} artistMap={artistMap} showNsfw={showNsfw} />
+
+      <FilterSidebar
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onApply={handleApplyFilters}
+      />
     </section>
   )
 }
