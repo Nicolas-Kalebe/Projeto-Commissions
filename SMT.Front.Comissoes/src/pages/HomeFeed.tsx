@@ -15,7 +15,7 @@ import { FeedCategories } from "@/components/feed/FeedCategories"
 type HomeFeedProps = {
   arts: Art[]
   artistMap: Map<string, User>
-  scrollContainerRef?: React.RefObject<HTMLDivElement>
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>
 }
 
 export function HomeFeed({

@@ -1,6 +1,15 @@
+# Root-level ignores shared by backend and frontend
 node_modules/
-dist/
-.env
-.env.local
-.vscode/
-.DS_Store
+npm-debug.log*
+
+# Frontend build/output and editor files
+SMT.Front.Comissoes/dist/
+SMT.Front.Comissoes/.env
+SMT.Front.Comissoes/.env.local
+SMT.Front.Comissoes/.vscode/
+SMT.Front.Comissoes/.DS_Store
+
+# .NET artifacts
+SMT.Back.Comissoes/bin/
+SMT.Back.Comissoes/obj/
+.vs/
