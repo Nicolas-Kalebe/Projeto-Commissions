@@ -85,7 +85,11 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
             <Route path="/inicio" element={
               <>
                 <main className="w-full px-6 py-8">
-                  <HomeFeed arts={arts} artistMap={artistMap} />
+                  <HomeFeed
+                    arts={arts}
+                    artistMap={artistMap}
+                    scrollContainerRef={viewportRef}
+                  />
                 </main>
                 <AppFooter />
               </>
