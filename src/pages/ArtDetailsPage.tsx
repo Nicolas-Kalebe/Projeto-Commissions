@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Heart, Share2, AlertTriangle } from "lucide-react"
+import { ArrowLeft, Bookmark, Share2, AlertTriangle } from "lucide-react"
 import { useMemo } from "react"
 
 export function ArtDetailsPage() {
@@ -61,7 +61,7 @@ export function ArtDetailsPage() {
                     <div className="flex items-center justify-between">
                         <div className="flex gap-2">
                             <Button variant="outline" size="sm" className="gap-2">
-                                <Heart className="size-4" />
+                                <Bookmark className="size-4" />
                                 Salvar
                             </Button>
                             <Button variant="outline" size="sm" className="gap-2">

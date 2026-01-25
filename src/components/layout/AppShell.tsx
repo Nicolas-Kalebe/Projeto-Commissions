@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo, useRef, useEffect } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArtistProfile } from "@/pages/ArtistProfile"
 import { CommissionModal } from "@/pages/CommissionModal"
@@ -25,6 +25,11 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
   const [commissionOpen, setCommissionOpen] = useState(false)
   const [selectedPrice, setSelectedPrice] = useState(100)
   const location = useLocation()
+  const viewportRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    viewportRef.current?.scrollTo(0, 0)
+  }, [location.pathname])
 
   // Determine if we should show the radial background
   const showBackground = location.pathname !== '/perfil' && location.pathname !== '/login'
@@ -67,7 +72,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
           />
         )}
 
-        <ScrollArea className="h-[calc(100svh-3.5rem)]">
+        <ScrollArea className="h-[calc(100svh-3.5rem)]" viewportRef={viewportRef}>
           <Routes>
             <Route path="/" element={<Navigate to="/inicio" replace />} />
 
