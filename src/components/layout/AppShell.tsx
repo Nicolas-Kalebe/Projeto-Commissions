@@ -9,6 +9,7 @@ import { NewArtPage } from "@/pages/NewArtPage"
 import { NotificationsPage } from "@/pages/NotificationsPage"
 import { LoginPage } from "@/pages/LoginPage"
 import { arts, notifications, users } from "@/data"
+import { ArtDetailsPage } from "@/pages/ArtDetailsPage"
 import { AppHeader } from "@/components/layout/AppHeader"
 import { AppFooter } from "@/components/layout/AppFooter"
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
@@ -69,6 +70,13 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
         <ScrollArea className="h-[calc(100svh-3.5rem)]">
           <Routes>
             <Route path="/" element={<Navigate to="/inicio" replace />} />
+
+            <Route path="/art/:id" element={
+              <>
+                <ArtDetailsPage />
+                <AppFooter />
+              </>
+            } />
 
             <Route path="/inicio" element={
               <>

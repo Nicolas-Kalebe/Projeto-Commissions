@@ -17,16 +17,6 @@ export function FeedCategories({ activeCategory, onCategoryChange }: FeedCategor
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center gap-6">
-                <div className="shrink-0">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                        Destaques do dia
-                    </p>
-                    <h1 className="whitespace-nowrap text-2xl font-semibold">
-                        Feed de Artes
-                    </h1>
-                </div>
-            </div>
             <div className="group categories-full-bleed mx-auto w-full max-w-6xl overflow-hidden">
                 <Carousel opts={{ align: "start" }} className="w-full">
                     <CarouselContent className="categories-carousel-content gap-3">
