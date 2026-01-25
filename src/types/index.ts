@@ -18,6 +18,7 @@ export interface Art {
   tags: string[]
   nsfw: boolean
   preco: number
+  patrocinado?: boolean
 }
 
 export interface PriceSheet {
