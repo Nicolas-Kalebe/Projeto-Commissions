@@ -7,6 +7,7 @@ import { InboxPage } from "@/pages/InboxPage"
 import { NewArtPage } from "@/pages/NewArtPage"
 import { NotificationsPage } from "@/pages/NotificationsPage"
 import { LoginPage } from "@/pages/LoginPage"
+import { MyPurchasesPage } from "@/pages/MyPurchasesPage"
 import { arts, notifications, users } from "@/data"
 import { ArtDetailsPage } from "@/pages/ArtDetailsPage"
 import { AppHeader } from "@/components/layout/AppHeader"
@@ -130,6 +131,17 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
                 <>
                   <main className="mx-auto w-full max-w-6xl px-6 py-8">
                     <NotificationsPage notifications={notifications} />
+                  </main>
+                  <AppFooter />
+                </>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/compras" element={
+              <ProtectedRoute>
+                <>
+                  <main className="mx-auto w-full max-w-6xl px-6 py-8">
+                    <MyPurchasesPage />
                   </main>
                   <AppFooter />
                 </>

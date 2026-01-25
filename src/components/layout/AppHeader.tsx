@@ -334,7 +334,12 @@ export function AppHeader({
               >
                 <DropdownMenuItem onClick={handleProfileNavigate} className="cursor-pointer hover:bg-accent hover:text-accent-foreground font-semibold">Conta</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer hover:bg-accent hover:text-accent-foreground">Minhas compras</DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => navigate("/compras")}
+                  className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                >
+                  Minhas compras
+                </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer hover:bg-accent hover:text-accent-foreground">Configuracoes</DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer hover:bg-accent hover:text-accent-foreground">Ajuda</DropdownMenuItem>
                 <DropdownMenuItem onClick={handleThemeToggle} className="cursor-pointer hover:bg-accent hover:text-accent-foreground">
