@@ -1,11 +1,51 @@
+using Microsoft.EntityFrameworkCore;
+using SMT.Back.Comissoes.Data;
+using Serilog;
+using SMT.Back.Comissoes.Services.Interfaces;
+using SMT.Back.Comissoes.Services;
+using SMT.Back.Comissoes.Repositories.Interfaces;
+using SMT.Back.Comissoes.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, loggerConfiguration) =>
+    loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .WriteTo.Console());
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("A conexao com o banco de dados nao foi configurada. Defina ConnectionStrings:DefaultConnection.");
+}
+
+builder.Services.AddDbContext<DbContextClass>(options =>
+    options.UseNpgsql(connectionString));
+
 var app = builder.Build();
+
+try
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<DbContextClass>();
+    dbContext.Database.Migrate();
+}
+catch (Exception ex)
+{
+    throw new InvalidOperationException("Falha ao aplicar as migracoes do banco de dados.", ex);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -15,5 +55,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthorization();
+
+app.MapControllers();
 
 app.Run();
