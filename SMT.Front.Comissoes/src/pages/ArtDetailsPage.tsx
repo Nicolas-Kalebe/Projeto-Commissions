@@ -10,7 +10,6 @@ import { useMemo } from "react"
 export function ArtDetailsPage() {
     const { id: slugId } = useParams()
     const navigate = useNavigate()
-    //teste
     // Extract the real ID (artwork-X) from the slug (artwork-X-title-slug)
     const realId = useMemo(() => {
         // IDs are always in the format "artwork-" followed by numbers
