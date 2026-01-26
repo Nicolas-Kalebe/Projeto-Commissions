@@ -7,7 +7,7 @@ using SMT.Back.Comissoes.Services.Interfaces;
 
 namespace SMT.Back.Comissoes.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class UsuarioController : ControllerBase
