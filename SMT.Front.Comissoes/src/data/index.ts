@@ -10,10 +10,10 @@
 export const users: User[] = [
   {
     id: "art-1",
-    nome: "Nicolas Kalebe",
+    nome: localStorage.getItem("google_name") ?? "Usuário",
     role: "artista",
     avatarUrl:
-      "/nicolas.jpg",
+      localStorage.getItem("google_photo") ?? "",
     bio: "Ilustradora digital focada em fantasia suave e personagens expressivos.",
     seguidores: 12840,
     destaque: "Especialista em retratos anime.",

@@ -2,8 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using SMT.Back.Comissoes.DTO.Input;
+using SMT.Back.Comissoes.Models;
 using SMT.Back.Comissoes.Models.Entity;
 using SMT.Back.Comissoes.Services.Interfaces;
+using SMT.Back.Comissoes.Utils;
+using System.Net;
 
 namespace SMT.Back.Comissoes.Controllers
 {
@@ -23,7 +26,13 @@ namespace SMT.Back.Comissoes.Controllers
         {
             await _usuarioService.CadastrarUsuario(usuarioInput);
             Log.Information($"Usuário cadastrado com sucesso: Nome de Perfil: {usuarioInput.NomePerfil}, Email {usuarioInput.Email}");
-            return Ok();
+            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
+            {
+                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
+                StatusHttp = (int)HttpStatusCode.OK,
+                Mensagem = "Usuário cadastrado com sucesso.",
+            }
+            );
         }
     }
 }

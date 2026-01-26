@@ -51,6 +51,7 @@ import { MiniChat } from "./MiniChat"
 
 // ... imports anteriores
 
+
 export function AppHeader({
   notifications,
   currentUser,
@@ -64,6 +65,7 @@ export function AppHeader({
   const location = useLocation()
   const navigate = useNavigate()
   const chatRef = useRef<HTMLDivElement>(null)
+  const googlePhoto = localStorage.getItem("google_photo")
 
   const groupedNotifications = useMemo(() => {
     // Sort by date first
@@ -152,6 +154,23 @@ export function AppHeader({
     navigate(path)
   }
 
+const handleLogout = () => {
+  // 1. Acessa o objeto global do Google carregado pelo script no index.html
+  const google = (window as any).google;
+
+  // 2. Desativa o login automático 
+  // Isso garante que o usuário não entre em um loop de login infinito 
+  // ao ser redirecionado para a página de login.
+  google?.accounts?.id?.disableAutoSelect();
+
+  // 3. Limpa os dados do seu banco de dados local (navegador)
+  localStorage.removeItem("google_email");
+  localStorage.removeItem("google_photo");
+
+  // 4. Notifica o seu sistema que o usuário deslogou
+  // Geralmente isso limpa o estado (User Context) e redireciona para o login
+  onLogout();
+};
   return (
     <header className="sticky top-0 z-20 h-14 border-b bg-background/80 px-6 py-2 backdrop-blur">
       <div className="flex w-full items-center justify-between gap-3">
@@ -320,7 +339,7 @@ export function AppHeader({
                   aria-label="Perfil"
                 >
                   <Avatar className="size-9">
-                    <AvatarImage src={currentUser.avatarUrl} alt={currentUser.nome} />
+                    <AvatarImage src={googlePhoto || currentUser.avatarUrl} alt={currentUser.nome} />
                     <AvatarFallback>MS</AvatarFallback>
                   </Avatar>
                 </button>
@@ -353,7 +372,7 @@ export function AppHeader({
                   </span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={onLogout} className="cursor-pointer hover:bg-accent hover:text-accent-foreground">
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer hover:bg-accent hover:text-accent-foreground">
                   <LogOut className="mr-2 size-4" />
                   Sair
                 </DropdownMenuItem>
