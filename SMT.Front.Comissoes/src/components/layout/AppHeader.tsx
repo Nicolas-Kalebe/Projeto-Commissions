@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { getGroupTitle, getIcon, formatDate } from "@/lib/notifications"
+import { MiniChat } from "./MiniChat"
 
 export type NavKey =
   | "inicio"
@@ -46,11 +47,6 @@ type AppHeaderProps = {
   isAuthenticated: boolean
   onLogout: () => void
 }
-
-import { MiniChat } from "./MiniChat"
-
-// ... imports anteriores
-
 
 export function AppHeader({
   notifications,
