@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useEffect } from "react"
+import { API_ROUTES } from "@/constants/apiRoutes"
 
 interface LoginPageProps {
     onLogin: () => void
@@ -55,8 +56,13 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         google.accounts.id.initialize({
             client_id: clientId,
             use_fedcm_for_prompt: false, // Ajuda a silenciar aquele erro 403
-            callback: (response: GoogleCredentialResponse) => {
+            callback: async (response: GoogleCredentialResponse) => {
                 if (response?.credential) {
+                    await fetch(API_ROUTES.Auth.validarTokenGoogle, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ tokenGoogle: response.credential }),
+                    })
                     const payload = decodeJwtPayload(response.credential);
                     if (payload?.email) localStorage.setItem("google_email", payload.email);
                     if (payload?.picture) localStorage.setItem("google_photo", payload.picture);

@@ -17,9 +17,17 @@ Log.Logger = new LoggerConfiguration()
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevCors", policy =>
+        policy.WithOrigins("http://localhost:5173", "https://localhost:5173", "http://127.0.0.1:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
 
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -53,6 +61,8 @@ if (app.Environment.IsDevelopment())
 
 //app.UseHttpsRedirection();
 //app.UseAuthorization();
+
+app.UseCors("DevCors");
 
 app.MapControllers();
 

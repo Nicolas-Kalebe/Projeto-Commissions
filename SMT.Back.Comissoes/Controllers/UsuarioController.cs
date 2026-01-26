@@ -12,7 +12,7 @@ namespace SMT.Back.Comissoes.Controllers
 {
     //[Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     public class UsuarioController : ControllerBase
     {
         public readonly IUsuarioService _usuarioService;
@@ -22,7 +22,7 @@ namespace SMT.Back.Comissoes.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CadastrarUsuario([FromBody] CadastrarUsuarioInput usuarioInput)
+        public async Task<IActionResult> Cadastrar([FromBody] CadastrarUsuarioInput usuarioInput)
         {
             await _usuarioService.CadastrarUsuario(usuarioInput);
             Log.Information($"Usuário cadastrado com sucesso: Nome de Perfil: {usuarioInput.NomePerfil}, Email {usuarioInput.Email}");
@@ -31,8 +31,7 @@ namespace SMT.Back.Comissoes.Controllers
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
                 StatusHttp = (int)HttpStatusCode.OK,
                 Mensagem = "Usuário cadastrado com sucesso.",
-            }
-            );
+            });
         }
     }
 }
