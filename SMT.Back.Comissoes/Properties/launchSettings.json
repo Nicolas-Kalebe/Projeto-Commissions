@@ -18,6 +18,23 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchBrowser": true,
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "POSTGRESQL_HOST": "projeto-comissao-jhone-project.b.aivencloud.com",
+        "POSTGRESQL_USER": "avnadmin",
+        "POSTGRESQL_PASSWORD": "{POSTGRES_PASSWORD}",
+        "POSTGRESQL_DATABASE": "defaultdb",
+        "REDIS_HOST": "host.docker.internal",
+        "REDIS_PORT": "6379"
+      },
+      "publishAllPorts": true,
+      "useSSL": true,
+      "httpPort": 8080
     }
   }
 }
