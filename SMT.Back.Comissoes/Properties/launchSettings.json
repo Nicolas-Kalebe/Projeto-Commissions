@@ -27,7 +27,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "POSTGRESQL_HOST": "projeto-comissao-jhone-project.b.aivencloud.com",
         "POSTGRESQL_USER": "avnadmin",
-        "POSTGRESQL_PASSWORD": "{POSTGRES_PASSWORD}",
+        "POSTGRESQL_PASSWORD": "AVNS_pvXFjtXMMbiXGUEj33v",
         "POSTGRESQL_DATABASE": "defaultdb",
         "REDIS_HOST": "host.docker.internal",
         "REDIS_PORT": "6379"
