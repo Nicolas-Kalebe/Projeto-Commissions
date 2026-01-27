@@ -46,5 +46,6 @@ namespace SMT.Back.Comissoes.Controllers
                 Resultado = statusUsuario
             });
         }
+
     }
 }

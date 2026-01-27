@@ -71,5 +71,9 @@ namespace SMT.Back.Comissoes.Services
             var usuario = await _usuarioRepository.ObterStatusUsuario(userGoogle.Email);
             return usuario;
         }
+        //public async Task CadastrarArtista(Artista artista)
+        //{
+        //    await _usuarioRepository.CadastrarArtista(artista);
+        //}
     }
 }

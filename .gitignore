@@ -12,4 +12,5 @@ SMT.Front.Comissoes/.DS_Store
 # .NET artifacts
 SMT.Back.Comissoes/bin/
 SMT.Back.Comissoes/obj/
+SMT.Back.Comissoes/appsettings.Development.json
 .vs/
