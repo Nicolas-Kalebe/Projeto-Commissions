@@ -1,4 +1,6 @@
-﻿namespace SMT.Back.Comissoes.Models
+﻿using SMT.Back.Comissoes.Models.Enum;
+
+namespace SMT.Back.Comissoes.Models
 {
     public class RetornoPadrao<T> where T: class, new()
     {

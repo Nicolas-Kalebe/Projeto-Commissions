@@ -58,15 +58,40 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             use_fedcm_for_prompt: false, // Ajuda a silenciar aquele erro 403
             callback: async (response: GoogleCredentialResponse) => {
                 if (response?.credential) {
-                    await fetch(API_ROUTES.Auth.validarTokenGoogle, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ tokenGoogle: response.credential }),
-                    })
+                    let statusUsuario: number | null = null
                     const payload = decodeJwtPayload(response.credential);
                     if (payload?.email) localStorage.setItem("google_email", payload.email);
                     if (payload?.picture) localStorage.setItem("google_photo", payload.picture);
                     if (payload?.name) localStorage.setItem("google_name", payload.name);
+                    localStorage.setItem("google_token", response.credential);
+
+                    try {
+                        const statusResponse = await fetch(API_ROUTES.Usuario.obterStatusUsuario, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ googleToken: response.credential }),
+                        })
+
+                        if (statusResponse.ok) {
+                            const body = await statusResponse.json().catch(() => null)
+                            const rawStatus = body?.resultado ?? body?.Resultado
+                            const parsedStatus = Number(rawStatus)
+                            if (!Number.isNaN(parsedStatus)) {
+                                statusUsuario = parsedStatus
+                            }
+                        }
+                    } catch {
+                        statusUsuario = null
+                    }
+
+                    if (statusUsuario === 1) {
+                        onLogin()
+                        navigate("/inicio")
+                        return
+                    }
+
+                    navigate("/cadastro")
+                    return
                 }
                 onLogin();
                 navigate("/inicio");

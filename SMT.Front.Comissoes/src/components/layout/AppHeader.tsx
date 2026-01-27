@@ -162,6 +162,8 @@ const handleLogout = () => {
   // 3. Limpa os dados do seu banco de dados local (navegador)
   localStorage.removeItem("google_email");
   localStorage.removeItem("google_photo");
+  localStorage.removeItem("google_name");
+  localStorage.removeItem("google_token");
 
   // 4. Notifica o seu sistema que o usuário deslogou
   // Geralmente isso limpa o estado (User Context) e redireciona para o login

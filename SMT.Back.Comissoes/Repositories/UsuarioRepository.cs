@@ -2,6 +2,9 @@
 using SMT.Back.Comissoes.Data;
 using SMT.Back.Comissoes.Models.Entity;
 using SMT.Back.Comissoes.Repositories.Interfaces;
+using SMT.Back.Comissoes.Utils;
+using Serilog;
+using SMT.Back.Comissoes.Models.Enum;
 
 namespace SMT.Back.Comissoes.Repositories
 {
@@ -32,6 +35,17 @@ namespace SMT.Back.Comissoes.Repositories
         {
             await _context.Usuarios.AddAsync(usuario);
             await _context.SaveChangesAsync();
+        }
+        
+        public async Task<StatusEnum> ObterStatusUsuario(string email)
+        {
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Email == email);
+            if(usuario != null)
+            {
+                return usuario.Status;
+            }
+            return StatusEnum.Inativo;
         }
     }
 }

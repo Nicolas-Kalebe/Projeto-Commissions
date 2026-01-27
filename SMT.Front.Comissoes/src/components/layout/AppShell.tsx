@@ -7,6 +7,7 @@ import { InboxPage } from "@/pages/InboxPage"
 import { NewArtPage } from "@/pages/NewArtPage"
 import { NotificationsPage } from "@/pages/NotificationsPage"
 import { LoginPage } from "@/pages/LoginPage"
+import { CompleteSignupPage } from "@/pages/CompleteSignupPage"
 import { MyPurchasesPage } from "@/pages/MyPurchasesPage"
 import { arts, notifications, users } from "@/data"
 import { ArtDetailsPage } from "@/pages/ArtDetailsPage"
@@ -32,7 +33,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
   }, [location.pathname])
 
   // Determine if we should show the radial background
-  const showBackground = location.pathname !== '/perfil' && location.pathname !== '/login'
+  const showBackground = !["/perfil", "/login", "/cadastro"].includes(location.pathname)
 
   const artistMap = useMemo(
     () => new Map(users.map((user) => [user.id, user])),
@@ -63,7 +64,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.98_0.02_90),transparent)] dark:bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.18_0_0),transparent)]" />
       )}
       <div className="flex min-h-svh flex-1 flex-col">
-        {location.pathname !== '/login' && (
+        {location.pathname !== '/login' && location.pathname !== '/cadastro' && (
           <AppHeader
             notifications={notifications}
             currentUser={users[2]}
@@ -98,6 +99,10 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
 
             <Route path="/login" element={
               isAuthenticated ? <Navigate to="/inicio" replace /> : <LoginPage onLogin={onLogin} />
+            } />
+
+            <Route path="/cadastro" element={
+              isAuthenticated ? <Navigate to="/inicio" replace /> : <CompleteSignupPage onLogin={onLogin} />
             } />
 
             <Route path="/perfil" element={

@@ -11,10 +11,11 @@ namespace SMT.Back.Comissoes.Services
     public class UsuarioService : IUsuarioService
     {
         private readonly IUsuarioRepository _usuarioRepository;
-
-        public UsuarioService(IUsuarioRepository usuarioRepository)
+        private readonly IAuthService _authService;
+        public UsuarioService(IUsuarioRepository usuarioRepository, IAuthService authService)
         {
             _usuarioRepository = usuarioRepository;
+            _authService = authService;
         }
 
         public async Task CadastrarUsuario(CadastrarUsuarioInput usuarioInput)
@@ -27,13 +28,15 @@ namespace SMT.Back.Comissoes.Services
                     (int)System.Net.HttpStatusCode.BadRequest
                 );
 
-            var usuarioExistente = await _usuarioRepository.VerificaUsuarioExistePorEmail(usuarioInput.Email);
+            var userGoogle = await _authService.ValidarTokenGoogle(usuarioInput.TokenGoogle);
+
+            var usuarioExistente = await _usuarioRepository.VerificaUsuarioExistePorEmail(userGoogle.Email);
 
             if (usuarioExistente)
                 throw new ExcecaoPersonalizada(
                     ConstantesCodigoRetornoPadrao.DuplicidadeEncontrada,
                     "Já existe um usuário cadastrado com este email.",
-                    () => Log.Error("Tentativa de cadastro com email já existente: {Email}", usuarioInput.Email),
+                    () => Log.Error("Tentativa de cadastro com email já existente: {Email}", userGoogle.Email),
                     (int)System.Net.HttpStatusCode.Conflict
                 );
 
@@ -46,16 +49,13 @@ namespace SMT.Back.Comissoes.Services
                     () => Log.Error($"Tentativa de cadastro com nome de perfil já existente: {usuarioInput.NomePerfil}"),
                     (int)System.Net.HttpStatusCode.Conflict
                 );
-
             var usuario = new Usuario
             {
-                Nome = usuarioInput.Nome,
-                NomePerfil = usuarioInput.NomePerfil,
-                TipoUsuario = usuarioInput.TipoUsuario,
-                DataNascimento = usuarioInput.DataNascimento,
-                Email = usuarioInput.Email,
-                SenhaHash = usuarioInput.SenhaHash,
-                DataCriacao = DateTime.UtcNow,
+                Nome = userGoogle.Name, // vem do google
+                NomePerfil = usuarioInput.NomePerfil, // payload front
+                DataNascimento = usuarioInput.DataNascimento, // payload front
+                Email = userGoogle.Email, // vem do google
+                DataCriacao = DateTime.UtcNow, 
                 Status = StatusEnum.Ativo,
                 JaAnunciou = false,
             };
@@ -63,6 +63,13 @@ namespace SMT.Back.Comissoes.Services
             await _usuarioRepository.CadastrarUsuario(usuario);
 
             return;
+        }
+        public async Task<StatusEnum> ObterStatusUsuario(ObterStatusInput obterStatusInput)
+        {
+            var userGoogle = await _authService.ValidarTokenGoogle(obterStatusInput.GoogleToken);
+
+            var usuario = await _usuarioRepository.ObterStatusUsuario(userGoogle.Email);
+            return usuario;
         }
     }
 }

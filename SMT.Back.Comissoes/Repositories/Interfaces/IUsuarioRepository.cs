@@ -1,4 +1,5 @@
 ﻿using SMT.Back.Comissoes.Models.Entity;
+using SMT.Back.Comissoes.Models.Enum;
 
 namespace SMT.Back.Comissoes.Repositories.Interfaces
 {
@@ -7,5 +8,6 @@ namespace SMT.Back.Comissoes.Repositories.Interfaces
         Task<bool> VerificaUsuarioExistePorEmail(string email);
         Task<bool> VerificaUsuarioExistePorNomePerfil(string nomeUsuario);
         Task CadastrarUsuario(Usuario usuario);
+        Task<StatusEnum> ObterStatusUsuario(string email);
     }
 }

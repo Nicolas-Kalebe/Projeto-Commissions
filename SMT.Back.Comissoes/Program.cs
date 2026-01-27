@@ -28,6 +28,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
