@@ -361,6 +361,30 @@ export const priceSheets: PriceSheet[] = [
     imageUrl:
       "/mock_arts/charcoal_tree.png",
   },
+  {
+    id: "ps-4",
+    titulo: "Chibi Express",
+    preco: 40,
+    descricao: "Chibi rapido com foco em carisma e paleta pastel.",
+    imageUrl:
+      "/mock_arts/anime_neon.png",
+  },
+  {
+    id: "ps-5",
+    titulo: "Emote Pack (3)",
+    preco: 70,
+    descricao: "Tres emotes prontos para stream com variações de humor.",
+    imageUrl:
+      "/mock_arts/sketch_dragon.png",
+  },
+  {
+    id: "ps-6",
+    titulo: "Ilustracao Vertical",
+    preco: 180,
+    descricao: "Arte vertical para story/poster com foco em luz suave.",
+    imageUrl:
+      "/mock_arts/low_poly.png",
+  },
 ]
 
 export const commissionStatuses: CommissionStatus[] = [

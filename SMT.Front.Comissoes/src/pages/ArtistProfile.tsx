@@ -254,7 +254,7 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
           >
 
             <div className="flex flex-col items-center gap-3 text-center">
-              <Avatar className="h-32 w-32">
+              <Avatar className="relative z-10 h-32 w-32">
                 <AvatarImage src={artist.avatarUrl} alt={artist.nome} />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
