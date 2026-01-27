@@ -340,7 +340,8 @@ export const priceSheets: PriceSheet[] = [
     id: "ps-1",
     titulo: "Headshot Anime",
     preco: 50,
-    descricao: "Arte colorida apenas do rosto, com fundo simples.",
+    descricao:
+      "## Headshot Anime Premium\nFeito para **avatar**, redes sociais e comissoes rapidas, com foco em expressividade e acabamento limpo.\n\n### O que voce recebe\n- **Pintura completa** com luz suave\n- Ajustes finos de cor, olhos, cabelo e acessorios\n- Arquivo final em **alta resolucao** + versao para redes\n\n### Como funciona\n- Envie referencias ou moodboard\n- Aprovacao do esboco e lineart\n- Entrega final em **ate 7 dias**\n\n### Observacoes\n- Fundo simples incluso\n- Uso comercial sob consulta",
     imageUrl:
       "/mock_arts/cyberpunk_char.png",
   },
