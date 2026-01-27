@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { arts, priceSheets, users } from "@/data"
-import { PriceSheetCard } from "@/components/profile/PriceSheetCard"
+import { PriceSheetRow } from "@/components/profile/PriceSheetRow"
 import { Separator } from "@/components/ui/separator"
 import {
   Bookmark,
@@ -36,7 +36,7 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
   const [portfolioSort, setPortfolioSort] = useState<"recentes" | "populares">(
     "recentes"
   )
-  const [showPriceTable, setShowPriceTable] = useState(false)
+  const [showServices, setShowServices] = useState(true)
   const artist = users.find((user) => user.id === "art-1")
   const gallery = arts.filter((art) => art.artistId === "art-1")
   const extendedGallery = [
@@ -99,6 +99,28 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
 
     return 0
   })
+  const serviceGalleries = priceSheets.map((sheet, index) => {
+    if (sheet.id === "ps-1") {
+      return [
+        "/mock_arts/test_wide_16_9.png",
+        "/mock_arts/test_ultrawide_21_9.png",
+        "/mock_arts/test_4_3.png",
+        "/mock_arts/test_3_4.png",
+        "/mock_arts/test_tall_9_16.png",
+      ]
+    }
+    const startIndex = gallery.length > 0 ? (index * 3) % gallery.length : 0
+    const images = gallery
+      .slice(startIndex, startIndex + 3)
+      .map((art) => art.imageUrl)
+      .filter(Boolean)
+
+    if (images.length === 0 && sheet.imageUrl) {
+      images.push(sheet.imageUrl)
+    }
+
+    return images
+  })
 
   return (
     <section className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-">
@@ -109,31 +131,31 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
               <Button
                 type="button"
                 size="default"
-                variant={showPriceTable ? "ghost" : "default"}
-                onClick={() => setShowPriceTable(false)}
+                variant={showServices ? "default" : "ghost"}
+                onClick={() => setShowServices(true)}
                 className={
-                  showPriceTable
-                    ? "rounded-full text-muted-foreground"
-                    : "rounded-full"
-                }
-              >
-                Portifolio
-              </Button>
-              <Button
-                type="button"
-                size="default"
-                variant={showPriceTable ? "default" : "ghost"}
-                onClick={() => setShowPriceTable(true)}
-                className={
-                  showPriceTable
+                  showServices
                     ? "rounded-full"
                     : "rounded-full text-muted-foreground"
                 }
               >
                 Servicos
               </Button>
+              <Button
+                type="button"
+                size="default"
+                variant={showServices ? "ghost" : "default"}
+                onClick={() => setShowServices(false)}
+                className={
+                  showServices
+                    ? "rounded-full text-muted-foreground"
+                    : "rounded-full"
+                }
+              >
+                Portifolio
+              </Button>
             </div>
-            {!showPriceTable && (
+            {!showServices && (
               <Select
                 value={portfolioSort}
                 onValueChange={(value) =>
@@ -150,12 +172,14 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
               </Select>
             )}
           </div>
-          {showPriceTable ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {priceSheets.map((sheet) => (
-                <PriceSheetCard
+          {showServices ? (
+            <div className="space-y-4">
+              {priceSheets.map((sheet, index) => (
+                <PriceSheetRow
                   key={sheet.id}
                   sheet={sheet}
+                  images={serviceGalleries[index] ?? []}
+                  artist={artist}
                   onRequest={onRequestCommission}
                 />
               ))}
