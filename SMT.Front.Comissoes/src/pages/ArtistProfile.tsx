@@ -13,7 +13,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { arts, priceSheets, users } from "@/data"
 import { PriceSheetRow } from "@/components/profile/PriceSheetRow"
-import { Separator } from "@/components/ui/separator"
 import {
   Bookmark,
   Heart,
@@ -54,7 +53,6 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
   ]
   const following = 312
   const rating = 4.8
-
   if (!artist) {
     return null
   }
@@ -64,6 +62,12 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
     .map((part) => part[0])
     .join("")
     .slice(0, 2)
+  const handle = `@${artist.nome
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "")}`
 
   const socialLinks = [
     {
@@ -123,7 +127,15 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
   })
 
   return (
-    <section className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-">
+    <section className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-6">
+      <div className="h-52 w-full overflow-hidden rounded-2xl md:h-64">
+        <img
+          src="/mock_arts/test_wide_16_9.png"
+          alt="Foto de capa"
+          className="h-full w-full object-cover"
+          loading="lazy"
+        />
+      </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
         <section className="space-y-4 bg-card/80 p-4 md:p-5 dark:bg-[oklch(0.12_0_0)]">
           <div className="flex items-center justify-between gap-3">
@@ -236,43 +248,43 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
             </div>
           )}
         </section>
-        <aside className="self-start lg:sticky lg:top-24">
+        <aside className="self-start lg:sticky lg:top-8">
           <section
-            className="space-y-4 rounded-xl border bg-card p-5 shadow-sm lg:-mt-3 lg:min-h-[calc(100svh-14em)]"
+            className="space-y-6 p-3 lg:-mt-3 lg:min-h-[calc(100svh-14em)]"
           >
-            <div className="text-sm font-semibold">Perfil do artista</div>
-            <div className="flex items-start gap-4">
-              <Avatar className="size-25 border-4 border-background shadow-sm">
+
+            <div className="flex flex-col items-center gap-3 text-center">
+              <Avatar className="h-32 w-32">
                 <AvatarImage src={artist.avatarUrl} alt={artist.nome} />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
-              <div>
+              <div className="space-y-1">
                 <h2 className="text-2xl font-semibold">{artist.nome}</h2>
-                <p className="text-sm text-muted-foreground">{artist.bio}</p>
+                <p className="text-sm text-muted-foreground">{handle}</p>
               </div>
+              <p className="text-sm text-muted-foreground">{artist.bio}</p>
             </div>
-            <div className="flex w-full flex-wrap justify-between gap-2">
-              <Badge variant="outline">
+            <div className="flex w-full flex-wrap justify-center gap-2">
+              <Badge variant="secondary">
                 Ela/dela
               </Badge>
               <Badge variant="secondary">
                 Ilustradora
               </Badge>
-              <Badge variant="outline">
+              <Badge variant="secondary">
                 Entrega em 7 dias
               </Badge>
-              <Badge variant="outline">
+              <Badge variant="secondary">
                 Ativo hoje
               </Badge>
             </div>
-            <Separator />
             <div className="flex gap-2">
               <Button className="flex-1 gap-2 px-4">
                 <UserPlus className="h-4 w-4" />
                 Seguir
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 className="flex-1 gap-2"
                 aria-label="Enviar DM"
               >
@@ -311,7 +323,6 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
                 <span className="text-muted-foreground">Avaliação</span>
               </div>
             </div>
-            <Separator />
             <div className="text-center text-xs font-semibold uppercase text-muted-foreground">
               Redes do Artista
             </div>
@@ -320,7 +331,7 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
                 <Button
                   key={link.name}
                   asChild
-                  variant="outline"
+                  variant="ghost"
                   size="icon-sm"
                   aria-label={link.name}
                 >
@@ -330,8 +341,7 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
                 </Button>
               ))}
             </div>
-            <Separator />
-            <div className="space-y-2 rounded-lg border bg-background/80 p-3 text-sm">
+            <div className="space-y-2 text-sm">
               <div className="text-xs font-semibold uppercase text-muted-foreground">
                 Sobre o estilo
               </div>
@@ -340,9 +350,9 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
                 delicados para personagens e cenas.
               </p>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">Lineart suave</Badge>
-                <Badge variant="outline">Cores pasteis</Badge>
-                <Badge variant="outline">Chibi</Badge>
+                <Badge variant="secondary">Lineart suave</Badge>
+                <Badge variant="secondary">Cores pasteis</Badge>
+                <Badge variant="secondary">Chibi</Badge>
               </div>
             </div>
           </section>
