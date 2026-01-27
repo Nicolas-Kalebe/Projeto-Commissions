@@ -47,5 +47,26 @@ namespace SMT.Back.Comissoes.Repositories
             }
             return StatusEnum.Inativo;
         }
+        public async Task<Usuario> ObterUsuarioPorId(int id)
+        {
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Id == id);
+            if (usuario == null)
+            {
+                Log.Error($"Usuário com ID {id} não encontrado.");
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
+                    $"Usuário com Id:{id} não encontrado",
+                    () => Log.Error($"Erro: Usuário com ID {id} não foi localizado no banco de dados."),
+                    (int)System.Net.HttpStatusCode.NotFound
+                );
+            }
+            return usuario;
+        }
+        public async Task CadastrarArtista(Artista artista)
+        {
+            await _context.Artistas.AddAsync(artista);
+            await _context.SaveChangesAsync();
+        }
     }
 }

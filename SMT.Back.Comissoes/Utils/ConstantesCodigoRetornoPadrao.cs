@@ -6,5 +6,6 @@
 
         public const string DadoNulo = "E0001";
         public const string DuplicidadeEncontrada = "E0002";
+        public const string RecursoNaoEncontrado = "E0003";
     }
 }

@@ -32,6 +32,7 @@ namespace SMT.Back.Comissoes.Controllers
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
                 StatusHttp = (int)HttpStatusCode.OK,
                 Mensagem = "Usuário cadastrado com sucesso.",
+                Resultado = "Cadastro de usuário realizado com sucesso."
             });
         }
         [HttpPost]
@@ -46,6 +47,17 @@ namespace SMT.Back.Comissoes.Controllers
                 Resultado = statusUsuario
             });
         }
-
+        [HttpPost]
+        public async Task<IActionResult> CadastrarArtista([FromBody] CadastrarArtistaInput cadastrarArtistaInput)
+        {
+            await _usuarioService.CadastrarArtista(cadastrarArtistaInput);
+            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
+            {
+                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
+                StatusHttp = (int)HttpStatusCode.OK,
+                Mensagem = "Usuário cadastrado como artista com sucesso",
+                Resultado = "Sucesso ao cadastrar usuário como artista no sistema."
+            });
+        }
     }
 }

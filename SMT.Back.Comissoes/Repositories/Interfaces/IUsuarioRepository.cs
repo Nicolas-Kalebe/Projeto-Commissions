@@ -9,5 +9,8 @@ namespace SMT.Back.Comissoes.Repositories.Interfaces
         Task<bool> VerificaUsuarioExistePorNomePerfil(string nomeUsuario);
         Task CadastrarUsuario(Usuario usuario);
         Task<StatusEnum> ObterStatusUsuario(string email);
+        Task<Usuario> ObterUsuarioPorId(int id);
+        Task CadastrarArtista(Artista artista);
+
     }
 }
