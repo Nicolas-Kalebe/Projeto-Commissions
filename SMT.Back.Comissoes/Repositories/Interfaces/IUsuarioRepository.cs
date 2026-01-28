@@ -11,6 +11,9 @@ namespace SMT.Back.Comissoes.Repositories.Interfaces
         Task<StatusEnum> ObterStatusUsuario(string email);
         Task<Usuario> ObterUsuarioPorId(int id);
         Task CadastrarArtista(Artista artista);
+        Task<Usuario> ObterUsuarioPorEmail(string email);
+        Task<Artista> ObterArtistaPorUsuarioId(int usuarioId);
+        Task AtualizarPortfolioArtista(int artistaId, string portfolioUrl);
 
     }
 }

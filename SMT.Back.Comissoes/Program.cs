@@ -5,6 +5,7 @@ using SMT.Back.Comissoes.Services.Interfaces;
 using SMT.Back.Comissoes.Services;
 using SMT.Back.Comissoes.Repositories.Interfaces;
 using SMT.Back.Comissoes.Repositories;
+using Amazon.S3;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,21 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<IBucketService, BucketService>();
+builder.Services.AddSingleton<IAmazonS3>(sp =>
+{
+    var config = new AmazonS3Config
+    {
+        ServiceURL = "https://s3.us-east-005.backblazeb2.com",
+        ForcePathStyle = true
+    };
 
+    return new AmazonS3Client(
+        "005e91036491bcb0000000003",
+        "K005QplQTwc/fpq5AE+iArEPEUE4vVo",
+        config
+    );
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 

@@ -59,5 +59,29 @@ namespace SMT.Back.Comissoes.Controllers
                 Resultado = "Sucesso ao cadastrar usuário como artista no sistema."
             });
         }
+        [HttpGet]
+        public async Task<IActionResult> ObterPerfilArtista([FromBody] ObterArtistaInput obterArtistaInput)
+        {
+            var artista = await _usuarioService.ObterPerfilArtista(obterArtistaInput);
+            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
+            {
+                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
+                StatusHttp = (int)HttpStatusCode.OK,
+                Mensagem = "Perfil de artista obtido com sucesso.",
+                Resultado = artista
+            });
+        }
+        [HttpPatch]
+        public async Task<IActionResult> AtualizarPortfolio([FromForm] AtualizarPortfolioInput atualizarPortfolioInput)
+        {
+            await _usuarioService.AtualizarPortfolioAsync(atualizarPortfolioInput);
+            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
+            {
+                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
+                StatusHttp = (int)HttpStatusCode.OK,
+                Mensagem = "Portfólio atualizado com sucesso.",
+                Resultado = "Sucesso ao atualizar portfólio do artista."
+            });
+        }
     }
 }

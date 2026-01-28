@@ -12,10 +12,12 @@ namespace SMT.Back.Comissoes.Services
     {
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IAuthService _authService;
-        public UsuarioService(IUsuarioRepository usuarioRepository, IAuthService authService)
+        private readonly IBucketService _bucketService;
+        public UsuarioService(IUsuarioRepository usuarioRepository, IAuthService authService, IBucketService bucketService)
         {
             _usuarioRepository = usuarioRepository;
             _authService = authService;
+            _bucketService = bucketService;
         }
 
         public async Task CadastrarUsuario(CadastrarUsuarioInput usuarioInput)
@@ -81,6 +83,52 @@ namespace SMT.Back.Comissoes.Services
             };
             usuario.JaAnunciou = true;
             await _usuarioRepository.CadastrarArtista(artista);
+        }
+
+        public async Task<Artista> ObterPerfilArtista(ObterArtistaInput obterArtistaInput)
+        {
+            var userGoogle = await _authService.ValidarTokenGoogle(obterArtistaInput.GoogleToken);
+            var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
+            if (usuario == null)
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
+                    "Usuário não encontrado.",
+                    () => Log.Error("Usuário não encontrado para o email: {Email}", userGoogle.Email),
+                    (int)System.Net.HttpStatusCode.NotFound
+                );
+            var artista = await _usuarioRepository.ObterArtistaPorUsuarioId(usuario.Id);
+            if (artista == null)
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
+                    "Perfil de artista não encontrado para o usuário.",
+                    () => Log.Error("Perfil de artista não encontrado para o usuário ID: {UsuarioId}", usuario.Id),
+                    (int)System.Net.HttpStatusCode.NotFound
+                );
+            return artista;
+        }
+        public async Task AtualizarPortfolioAsync(AtualizarPortfolioInput atualizarPortfolioInput)
+        {
+            var artista = await ObterPerfilArtista(atualizarPortfolioInput.GoogleToken);
+
+            if (atualizarPortfolioInput.Imagem == null || atualizarPortfolioInput.Imagem.Length == 0)
+                throw new ArgumentException("Nenhuma imagem enviada.");
+
+            // Validação de tipo
+            if (!atualizarPortfolioInput.Imagem.ContentType.StartsWith("image/"))
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
+                    "Tipo de dado inválido, insira uma imagem/gif",
+                    () => Log.Error($"Tipo de dado inválido para imagem de portfolio do artista Email: {artista.Usuario.NomePerfil}"),
+                    (int)System.Net.HttpStatusCode.BadRequest);
+
+            // Path no bucket organizado por usuário
+            var pathBucket = $"portfolios/usuarios/{artista.Usuario.NomePerfil}/main.webp";
+
+            // Upload da imagem
+            var pathCompleto = await _bucketService.UploadAsync(atualizarPortfolioInput.Imagem, pathBucket);
+
+            // Atualiza apenas o path no banco            
+            await _usuarioRepository.AtualizarPortfolioArtista(artista.Id, pathCompleto);
         }
     }
 }
