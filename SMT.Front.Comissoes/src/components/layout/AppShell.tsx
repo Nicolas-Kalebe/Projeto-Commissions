@@ -116,7 +116,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <>
-                  <main className="mx-auto w-full max-w-6xl px-6 py-8">
+                  <main className="w-full px-6 py-8">
                     <DashboardPage />
                   </main>
                   <AppFooter />
