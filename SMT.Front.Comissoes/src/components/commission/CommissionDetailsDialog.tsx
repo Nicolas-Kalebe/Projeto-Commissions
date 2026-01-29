@@ -127,15 +127,19 @@ export function CommissionDetailsDialog({
                   </div>
                 </div>
 
-                <div
-                  className={`sticky bottom-[30px] z-10 flex justify-center ${
-                    isSingleImage ? "pt-2" : "pt-6"
-                  }`}
-                >
-                  <Button onClick={() => onRequest?.(price)}>
-                    Pedir Comissao
-                  </Button>
-                </div>
+                {isSingleImage ? (
+                  <div className="sticky -bottom-5 z-10 mt-6 flex justify-center">
+                    <Button onClick={() => onRequest?.(price)}>
+                      Pedir Comissao
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="sticky bottom-12 z-10 mt-6 flex justify-center">
+                    <Button onClick={() => onRequest?.(price)}>
+                      Pedir Comissao
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div
