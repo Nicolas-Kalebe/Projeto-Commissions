@@ -37,7 +37,7 @@ export function ArtCard({
         "- Entrega em **PNG** e **JPG** (alta resolucao).",
         "",
         "### Observacoes",
-        "- Mudancas grandes apos pintura final podem gerar taxa.",
+        "- Mudancas grandes apos pintura final podem gerar taxa",
       ].join("\n"),
     []
   )
