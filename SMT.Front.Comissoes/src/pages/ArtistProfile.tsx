@@ -179,6 +179,9 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
         "/mock_arts/test_tall_9_16.png",
       ]
     }
+    if (sheet.id === "ps-single-vertical") {
+      return ["/mock_arts/test_tall_9_16.png"]
+    }
     const startIndex = gallery.length > 0 ? (index * 3) % gallery.length : 0
     const images = gallery
       .slice(startIndex, startIndex + 3)

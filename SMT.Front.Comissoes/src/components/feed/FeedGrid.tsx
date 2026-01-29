@@ -6,9 +6,15 @@ type FeedGridProps = {
     arts: Art[]
     artistMap: Map<string, User>
     showNsfw: boolean
+    onRequestCommission?: (price: number) => void
 }
 
-export function FeedGrid({ arts, artistMap, showNsfw }: FeedGridProps) {
+export function FeedGrid({
+    arts,
+    artistMap,
+    showNsfw,
+    onRequestCommission,
+}: FeedGridProps) {
     if (arts.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4 p-8">
@@ -30,7 +36,15 @@ export function FeedGrid({ arts, artistMap, showNsfw }: FeedGridProps) {
             {arts.map((art) => {
                 const artist = artistMap.get(art.artistId)
                 if (!artist) return null
-                return <ArtCard key={art.id} art={art} artist={artist} showNsfw={showNsfw} />
+                return (
+                    <ArtCard
+                        key={art.id}
+                        art={art}
+                        artist={artist}
+                        showNsfw={showNsfw}
+                        onRequestCommission={onRequestCommission}
+                    />
+                )
             })}
         </div>
     )

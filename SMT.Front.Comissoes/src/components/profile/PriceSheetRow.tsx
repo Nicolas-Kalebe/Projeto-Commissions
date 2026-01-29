@@ -28,6 +28,7 @@ export function PriceSheetRow({
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const hasImages = images.length > 0
+  const isSingleImage = images.length <= 1
   const currentImage = hasImages ? images[0] : null
   const terms = useMemo(
     () =>
@@ -130,9 +131,19 @@ export function PriceSheetRow({
 
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="h-[92vh] max-h-[96vh] w-[98vw] max-w-7xl overflow-hidden p-0">
-          <div className="h-full overflow-y-auto">
-            <div className="grid gap-6 px-6 pb-6 pt-6 lg:grid-cols-[minmax(0,1fr)_840px]">
-            <div className="flex flex-col gap-4 pb-16 lg:sticky lg:bottom-6 lg:self-end">
+          <div className={isSingleImage ? "h-full min-h-0" : "h-full overflow-y-auto"}>
+            <div
+              className={`grid gap-6 px-6 pb-6 pt-6 lg:grid-cols-[minmax(0,1fr)_840px] ${
+                isSingleImage ? "h-full min-h-0 lg:items-stretch" : ""
+              }`}
+            >
+            <div
+              className={`flex min-h-0 flex-col gap-4 pb-16 pr-2 ${
+                isSingleImage
+                  ? "h-full max-h-full overflow-y-auto"
+                  : "lg:sticky lg:bottom-6 lg:self-end"
+              }`}
+            >
               <DialogTitle className="text-2xl font-semibold">
                 {sheet.titulo}
               </DialogTitle>
@@ -208,33 +219,57 @@ export function PriceSheetRow({
               </div>
             </div>
 
-            <div className="space-y-3 lg:sticky lg:bottom-6 lg:self-end">
-              <div className="space-y-3">
-                {(hasImages ? images : []).map((imageUrl, index) => (
-                  <div
-                    key={`${imageUrl}-${index}`}
-                    className="overflow-hidden rounded-lg"
-                  >
-                    <button
-                      type="button"
-                      className="block w-full"
-                      onClick={() => {
-                        setLightboxIndex(index)
-                        setLightboxOpen(true)
-                      }}
+            <div
+              className={`flex min-h-0 ${
+                isSingleImage
+                  ? "h-full items-center justify-center"
+                  : "flex-col space-y-3 lg:sticky lg:bottom-6 lg:self-end"
+              }`}
+            >
+              {isSingleImage ? (
+                <button
+                  type="button"
+                  className="inline-flex max-h-[70vh] max-w-full items-center justify-center overflow-hidden rounded-lg"
+                  onClick={() => {
+                    setLightboxIndex(0)
+                    setLightboxOpen(true)
+                  }}
+                >
+                  <img
+                    src={images[0]}
+                    alt={`${sheet.titulo} 1`}
+                    className="max-h-[70vh] w-auto max-w-full object-contain"
+                    loading="lazy"
+                  />
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  {(hasImages ? images : []).map((imageUrl, index) => (
+                    <div
+                      key={`${imageUrl}-${index}`}
+                      className="overflow-hidden rounded-lg"
                     >
-                      <div className="aspect-[16/9] w-full">
-                        <img
-                          src={imageUrl}
-                          alt={`${sheet.titulo} ${index + 1}`}
-                          className="h-full w-full object-contain"
-                          loading="lazy"
-                        />
-                      </div>
-                    </button>
-                  </div>
-                ))}
-              </div>
+                      <button
+                        type="button"
+                        className="block w-full"
+                        onClick={() => {
+                          setLightboxIndex(index)
+                          setLightboxOpen(true)
+                        }}
+                      >
+                        <div className="aspect-[16/9] w-full">
+                          <img
+                            src={imageUrl}
+                            alt={`${sheet.titulo} ${index + 1}`}
+                            className="h-full w-full object-contain"
+                            loading="lazy"
+                          />
+                        </div>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             </div>
           </div>
