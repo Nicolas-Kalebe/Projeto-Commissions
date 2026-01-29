@@ -23,6 +23,7 @@ namespace SMT.Back.Comissoes.Models.Entity
         public string Email { get; set; } = string.Empty; // Email do usuário
         public int? Celular { get; set; } // Número de celular do usuário
 
+        public string? FotoPerfil { get; set; } // Url da foto de perfil do usuário (opcional)
         [Required]
         public DateTime DataCriacao { get; set; } // Data de criação do registro
 
