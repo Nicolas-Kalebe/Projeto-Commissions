@@ -2,11 +2,8 @@ import { useMemo, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
 import type { PriceSheet } from "@/types"
-import { X } from "lucide-react"
+import { CommissionDetailsDialog } from "@/components/commission/CommissionDetailsDialog"
 
 interface PriceSheetRowProps {
   sheet: PriceSheet
@@ -25,8 +22,6 @@ export function PriceSheetRow({
   onRequest,
 }: PriceSheetRowProps) {
   const [detailsOpen, setDetailsOpen] = useState(false)
-  const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [lightboxIndex, setLightboxIndex] = useState(0)
   const hasImages = images.length > 0
   const currentImage = hasImages ? images[0] : null
   const terms = useMemo(
@@ -50,11 +45,7 @@ export function PriceSheetRow({
       ].join("\n"),
     []
   )
-  const artistInitials = artist.nome
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
+  const description = useMemo(() => sheet.descricao, [sheet.descricao])
 
   return (
     <>
@@ -128,203 +119,17 @@ export function PriceSheetRow({
         </CardContent>
       </Card>
 
-      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="h-[92vh] max-h-[96vh] w-[98vw] max-w-7xl overflow-hidden p-0">
-          <div className="h-full overflow-y-auto">
-            <div className="grid gap-6 px-6 pb-6 pt-6 lg:grid-cols-[minmax(0,1fr)_840px]">
-            <div className="flex flex-col gap-4 pb-16 lg:sticky lg:bottom-6 lg:self-end">
-              <DialogTitle className="text-2xl font-semibold">
-                {sheet.titulo}
-              </DialogTitle>
-              <div className="flex flex-wrap items-center gap-3 text-lg">
-                <span className="font-semibold">
-                  {sheet.preco.toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  })}
-                </span>
-                <span className="text-sm text-muted-foreground">por pedido</span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Avatar className="size-10 border border-border/60">
-                  <AvatarImage src={artist.avatarUrl} alt={artist.nome} />
-                  <AvatarFallback>{artistInitials}</AvatarFallback>
-                </Avatar>
-                <div className="text-sm font-medium">{artist.nome}</div>
-              </div>
-
-              <div className="grid gap-3">
-                <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/70 px-4 py-3">
-                  <div className="mt-0.5 text-lg">🎨</div>
-                  <div className="space-y-0.5">
-                    <div className="text-sm font-semibold">Personalizado (YCH)</div>
-                    <div className="text-xs text-muted-foreground">
-                      Arte baseada em template com ajustes de pose e cor.
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/70 px-4 py-3">
-                  <div className="mt-0.5 text-lg">💬</div>
-                  <div className="space-y-0.5">
-                    <div className="text-sm font-semibold">Comunicacao aberta</div>
-                    <div className="text-xs text-muted-foreground">
-                      Atualizacoes WIP + revisoes disponiveis.
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/70 px-4 py-3">
-                  <div className="mt-0.5 text-lg">✅</div>
-                  <div className="space-y-0.5">
-                    <div className="text-sm font-semibold">Proposta custom</div>
-                    <div className="text-xs text-muted-foreground">
-                      Pedido → proposta → compromisso (pagamento).
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-border/60 bg-card/70 px-4 py-3">
-                <div className="text-sm text-muted-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mt-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-foreground [&_h2]:mt-2 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-2">
-                  <ReactMarkdown>{sheet.descricao}</ReactMarkdown>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="rounded-xl border border-border/60 bg-card/70 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  Termos de servico
-                </p>
-                <div className="mt-2 space-y-2 text-sm text-muted-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mt-1 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-2">
-                  <ReactMarkdown>{terms}</ReactMarkdown>
-                </div>
-              </div>
-
-              <div className="sticky bottom-[30px] z-10 flex justify-center pt-6">
-                <Button onClick={() => onRequest(sheet.preco)}>
-                  Pedir Comissao
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-3 lg:sticky lg:bottom-6 lg:self-end">
-              <div className="space-y-3">
-                {(hasImages ? images : []).map((imageUrl, index) => (
-                  <div
-                    key={`${imageUrl}-${index}`}
-                    className="overflow-hidden rounded-lg"
-                  >
-                    <button
-                      type="button"
-                      className="block w-full"
-                      onClick={() => {
-                        setLightboxIndex(index)
-                        setLightboxOpen(true)
-                      }}
-                    >
-                      <div className="aspect-[16/9] w-full">
-                        <img
-                          src={imageUrl}
-                          alt={`${sheet.titulo} ${index + 1}`}
-                          className="h-full w-full object-contain"
-                          loading="lazy"
-                        />
-                      </div>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-        <DialogContent
-          className="fixed left-1/2 top-1/2 flex w-[96vw] max-w-none -translate-x-1/2 -translate-y-1/2 justify-center border-0 bg-transparent p-0 shadow-none [&>button]:hidden"
-          onPointerDownOutside={() => setLightboxOpen(false)}
-          onClick={() => setLightboxOpen(false)}
-        >
-          <Button
-            variant="secondary"
-            size="icon"
-            className="absolute right-4 top-4 z-50"
-            onClick={() => setLightboxOpen(false)}
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Fechar</span>
-          </Button>
-
-          <div
-            className="relative flex items-center justify-center"
-            style={{
-              width: "min(2000px, 96vw)",
-              height: "min(800px, 90vh)",
-            }}
-          >
-            <Button
-              variant="secondary"
-              size="icon"
-              className="absolute left-0 top-1/2 z-50 -translate-y-1/2 translate-x-3"
-              onClick={(event) => {
-                event.stopPropagation()
-                setLightboxIndex((prev) =>
-                  prev === 0 ? images.length - 1 : prev - 1
-                )
-              }}
-            >
-              <span className="sr-only">Anterior</span>
-              <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </Button>
-
-            <img
-              src={(hasImages ? images : [])[lightboxIndex]}
-              alt={`${sheet.titulo} ${lightboxIndex + 1}`}
-              className="block"
-              style={{
-                maxHeight: "min(800px, 90vh)",
-                maxWidth: "min(2000px, 96vw)",
-                height: "auto",
-                width: "auto",
-              }}
-              onClick={(event) => event.stopPropagation()}
-            />
-
-            <Button
-              variant="secondary"
-              size="icon"
-              className="absolute right-0 top-1/2 z-50 -translate-y-1/2 -translate-x-3"
-              onClick={(event) => {
-                event.stopPropagation()
-                setLightboxIndex((prev) =>
-                  prev === images.length - 1 ? 0 : prev + 1
-                )
-              }}
-            >
-              <span className="sr-only">Proximo</span>
-              <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CommissionDetailsDialog
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        title={sheet.titulo}
+        price={sheet.preco}
+        artist={artist}
+        images={images}
+        descriptionMarkdown={description}
+        termsMarkdown={terms}
+        onRequest={onRequest}
+      />
     </>
   )
 }

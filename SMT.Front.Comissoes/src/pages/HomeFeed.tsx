@@ -16,12 +16,14 @@ type HomeFeedProps = {
   arts: Art[]
   artistMap: Map<string, User>
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>
+  onRequestCommission?: (price: number) => void
 }
 
 export function HomeFeed({
   arts,
   artistMap,
   scrollContainerRef,
+  onRequestCommission,
 }: HomeFeedProps) {
   const [activeCategory] = useState("categorias")
   const [showNsfw, setShowNsfw] = useState(false)
@@ -211,7 +213,12 @@ export function HomeFeed({
               Anúncios Impulsionados
             </h2>
           </div>
-          <FeedGrid arts={sponsoredArts} artistMap={artistMap} showNsfw={showNsfw} />
+          <FeedGrid
+            arts={sponsoredArts}
+            artistMap={artistMap}
+            showNsfw={showNsfw}
+            onRequestCommission={onRequestCommission}
+          />
         </div>
       )}
 
@@ -220,7 +227,12 @@ export function HomeFeed({
           <div className="flex items-center gap-2 border-b pb-2">
             <h2 className="text-xl font-bold">Mais acessados da semana</h2>
           </div>
-          <FeedGrid arts={mostAccessedArts} artistMap={artistMap} showNsfw={showNsfw} />
+          <FeedGrid
+            arts={mostAccessedArts}
+            artistMap={artistMap}
+            showNsfw={showNsfw}
+            onRequestCommission={onRequestCommission}
+          />
         </div>
       )}
 
@@ -229,7 +241,12 @@ export function HomeFeed({
           <div className="flex items-center gap-2 border-b pb-2">
             <h2 className="text-xl font-bold">Mundos Fantásticos</h2>
           </div>
-          <FeedGrid arts={fantasyArts} artistMap={artistMap} showNsfw={showNsfw} />
+          <FeedGrid
+            arts={fantasyArts}
+            artistMap={artistMap}
+            showNsfw={showNsfw}
+            onRequestCommission={onRequestCommission}
+          />
         </div>
       )}
 
@@ -238,7 +255,12 @@ export function HomeFeed({
           <div className="flex items-center gap-2 border-b pb-2">
             <h2 className="text-xl font-bold">Retratos & Personagens</h2>
           </div>
-          <FeedGrid arts={portraitArts} artistMap={artistMap} showNsfw={showNsfw} />
+          <FeedGrid
+            arts={portraitArts}
+            artistMap={artistMap}
+            showNsfw={showNsfw}
+            onRequestCommission={onRequestCommission}
+          />
         </div>
       )}
 
@@ -247,7 +269,12 @@ export function HomeFeed({
           <div className="flex items-center gap-2 border-b pb-2">
             <h2 className="text-xl font-bold">Universo Sci-Fi & Cyber</h2>
           </div>
-          <FeedGrid arts={sciFiArts} artistMap={artistMap} showNsfw={showNsfw} />
+          <FeedGrid
+            arts={sciFiArts}
+            artistMap={artistMap}
+            showNsfw={showNsfw}
+            onRequestCommission={onRequestCommission}
+          />
         </div>
       )}
 
@@ -256,7 +283,12 @@ export function HomeFeed({
           <div className="flex items-center gap-2 border-b pb-2">
             <h2 className="text-xl font-bold">Pixel Art & Retro</h2>
           </div>
-          <FeedGrid arts={pixelArts} artistMap={artistMap} showNsfw={showNsfw} />
+          <FeedGrid
+            arts={pixelArts}
+            artistMap={artistMap}
+            showNsfw={showNsfw}
+            onRequestCommission={onRequestCommission}
+          />
         </div>
       )}
 

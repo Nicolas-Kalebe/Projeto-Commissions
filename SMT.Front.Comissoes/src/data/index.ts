@@ -346,6 +346,13 @@ export const priceSheets: PriceSheet[] = [
       "/mock_arts/cyberpunk_char.png",
   },
   {
+    id: "ps-single-vertical",
+    titulo: "Vertical 9x16",
+    preco: 160,
+    descricao: "Arte vertical com foco em enquadramento e luz suave.",
+    imageUrl: "/mock_arts/test_tall_9_16.png",
+  },
+  {
     id: "ps-2",
     titulo: "Meio Corpo",
     preco: 120,

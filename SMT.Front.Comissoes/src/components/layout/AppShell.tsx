@@ -10,7 +10,6 @@ import { LoginPage } from "@/pages/LoginPage"
 import { CompleteSignupPage } from "@/pages/CompleteSignupPage"
 import { MyPurchasesPage } from "@/pages/MyPurchasesPage"
 import { arts, notifications, users } from "@/data"
-import { ArtDetailsPage } from "@/pages/ArtDetailsPage"
 import { AppHeader } from "@/components/layout/AppHeader"
 import { AppFooter } from "@/components/layout/AppFooter"
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
@@ -77,13 +76,6 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
           <Routes>
             <Route path="/" element={<Navigate to="/inicio" replace />} />
 
-            <Route path="/art/:id" element={
-              <>
-                <ArtDetailsPage />
-                <AppFooter />
-              </>
-            } />
-
             <Route path="/inicio" element={
               <>
                 <main className="w-full px-6 py-8">
@@ -91,6 +83,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
                     arts={arts}
                     artistMap={artistMap}
                     scrollContainerRef={viewportRef}
+                    onRequestCommission={handleRequestCommission}
                   />
                 </main>
                 <AppFooter />
