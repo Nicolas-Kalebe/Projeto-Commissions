@@ -1,9 +1,10 @@
-import { useState } from "react"
+﻿import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
   TableBody,
@@ -63,6 +64,27 @@ const activeOrders = [
   },
 ]
 
+const waitlistOrders = [
+  {
+    cliente: "Paula Mendes",
+    tipo: "Ilustracao completa",
+    prazo: "5 dias",
+    valor: "R$ 560,00",
+  },
+  {
+    cliente: "Joao Pedro",
+    tipo: "Arte para capa",
+    prazo: "8 dias",
+    valor: "R$ 420,00",
+  },
+  {
+    cliente: "Tania Souza",
+    tipo: "Character design",
+    prazo: "12 dias",
+    valor: "R$ 780,00",
+  },
+]
+
 const walletTransactions = [
   { descricao: "Pagamento #2041", tipo: "Entrada", data: "12/05", valor: "R$ 860,00" },
   { descricao: "Saque solicitado", tipo: "Saida", data: "10/05", valor: "R$ 300,00" },
@@ -106,6 +128,10 @@ export function DashboardPage() {
   const [isRangeOpen, setIsRangeOpen] = useState(false)
   const [startDate, setStartDate] = useState("2024-04-01")
   const [endDate, setEndDate] = useState("2024-05-31")
+  const [isAnalyticsRangeOpen, setIsAnalyticsRangeOpen] = useState(false)
+  const [analyticsStartDate, setAnalyticsStartDate] = useState("2025-12-30")
+  const [analyticsEndDate, setAnalyticsEndDate] = useState("2026-01-26")
+  const [analyticsTab, setAnalyticsTab] = useState("visao")
   const [portfolioPosts, setPortfolioPosts] = useState(() =>
     arts
       .filter((art) => art.artistId === user.id)
@@ -206,14 +232,14 @@ export function DashboardPage() {
                       <Icon className="size-4" />
                       {item.label}
                     </Button>
-                  )}
-               )}
+                  )
+                })}
               </div>
             </div>
 
             <div className="pt-2">
               <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Avaliação Média
+                Avaliacao Media
               </p>
               <div className="mt-2 flex items-center justify-start gap-1 text-yellow-400">
                 {Array.from({ length: 5 }).map((_, index) => (
@@ -367,13 +393,31 @@ export function DashboardPage() {
                       Ver detalhes
                     </Button>
                   </div>
-                  <div className="mt-3 space-y-2">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <div
-                        key={`wait-${index}`}
-                        className="h-8 rounded-md bg-muted/50"
-                      />
-                    ))}
+                  <div className="mt-4 rounded-lg border border-border/60">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Cliente</TableHead>
+                          <TableHead>Tipo</TableHead>
+                          <TableHead>Prazo</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {waitlistOrders.map((order) => (
+                          <TableRow key={`${order.cliente}-${order.tipo}`}>
+                            <TableCell className="font-medium">
+                              {order.cliente}
+                            </TableCell>
+                            <TableCell>{order.tipo}</TableCell>
+                            <TableCell>{order.prazo}</TableCell>
+                            <TableCell className="text-right">
+                              {order.valor}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
               </>
@@ -438,233 +482,338 @@ export function DashboardPage() {
             )}
 
             {activeMenu === "analytics" && (
-              <>
-                <div className="rounded-xl border border-border/60 bg-background/80 p-6">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+            <>
+              <Tabs value={analyticsTab} onValueChange={setAnalyticsTab} className="w-full">
+                <div className="rounded-2xl border border-border/60 bg-card/60 p-6">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-lg font-semibold">Estatisticas do canal</p>
-                      <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
-                        {[
-                          "Visao geral",
-                          "Conteudo",
-                          "Publico",
-                          "Tendencias",
-                        ].map((tab, index) => (
-                          <button
-                            key={tab}
-                            type="button"
-                            className={`border-b-2 pb-1 text-xs font-semibold transition-colors ${
-                              index === 0
-                                ? "border-foreground text-foreground"
-                                : "border-transparent text-muted-foreground hover:text-foreground"
-                            }`}
-                          >
-                            {tab}
-                          </button>
-                        ))}
-                      </div>
+                      <h2 className="text-lg font-semibold">Estatisticas do canal</h2>
+                      <p className="text-xs text-muted-foreground">Resumo geral das ultimas semanas</p>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <Button variant="outline" size="sm">
-                        Modo avancado
-                      </Button>
-                      <div className="rounded-full border border-border/60 px-3 py-1">
-                        Ultimos 28 dias
+                    <div className="flex items-center gap-3">
+                      <TabsList className="bg-muted/60">
+                        <TabsTrigger value="visao">Visao geral</TabsTrigger>
+                        <TabsTrigger value="conteudo">Conteudo</TabsTrigger>
+                        <TabsTrigger value="publico">Publico</TabsTrigger>
+                      </TabsList>
+                      <div className="relative">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsAnalyticsRangeOpen((open) => !open)}
+                        >
+                          {formatRangeLabel(analyticsStartDate)} -{" "}
+                          {formatRangeLabel(analyticsEndDate)}
+                        </Button>
+                        {isAnalyticsRangeOpen && (
+                          <div className="absolute right-0 top-full z-10 mt-2 w-64 rounded-xl border border-border/60 bg-background p-3 text-xs shadow-md">
+                            <div className="grid gap-3">
+                              <div>
+                                <label className="text-[11px] font-semibold uppercase text-muted-foreground">
+                                  De
+                                </label>
+                                <input
+                                  type="date"
+                                  value={analyticsStartDate}
+                                  onChange={(event) =>
+                                    setAnalyticsStartDate(event.target.value)
+                                  }
+                                  className="mt-1 w-full rounded-md border border-border/60 bg-background px-2 py-1 text-xs"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[11px] font-semibold uppercase text-muted-foreground">
+                                  Ate
+                                </label>
+                                <input
+                                  type="date"
+                                  value={analyticsEndDate}
+                                  onChange={(event) =>
+                                    setAnalyticsEndDate(event.target.value)
+                                  }
+                                  className="mt-1 w-full rounded-md border border-border/60 bg-background px-2 py-1 text-xs"
+                                />
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => setIsAnalyticsRangeOpen(false)}
+                              >
+                                Aplicar
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
                     <div className="rounded-xl border border-border/60 bg-background/60 p-5">
-                      <p className="text-center text-sm font-semibold">
-                        Seu canal nao teve nenhuma visualizacao nos ultimos
-                        <span className="block text-2xl">28 dias.</span>
-                      </p>
-                      <div className="mt-5 grid gap-4 md:grid-cols-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Ultimos 28 dias</p>
+                          <h3 className="text-base font-semibold">Sem visualizacoes no periodo</h3>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                          Atualizando
+                        </div>
+                      </div>
+
+                      <div className="mt-5 grid gap-3 sm:grid-cols-3">
                         {[
-                          { label: "Visualizacoes", value: "-" },
-                          { label: "Tempo de exibicao (horas)", value: "-" },
-                          { label: "Inscritos", value: "-" },
+                          { label: "Visualizacoes", value: "0" },
+                          { label: "Tempo de exibicao (horas)", value: "0" },
+                          { label: "Inscritos", value: "0" },
                         ].map((item) => (
                           <div
                             key={item.label}
-                            className="rounded-lg border border-border/60 bg-background/80 p-4 text-center"
+                            className="rounded-lg border border-border/60 bg-background/80 p-3 text-center"
                           >
                             <p className="text-xs text-muted-foreground">{item.label}</p>
                             <p className="mt-2 text-lg font-semibold">{item.value}</p>
                           </div>
                         ))}
                       </div>
-                      <div className="mt-6 h-40 rounded-lg border border-border/60 bg-muted/30" />
-                      <div className="mt-4 flex items-center justify-between text-[11px] text-muted-foreground">
-                        <span>30 de dez.</span>
-                        <span>4 de jan.</span>
-                        <span>8 de jan.</span>
-                        <span>13 de jan.</span>
-                        <span>17 de jan.</span>
-                        <span>22 de jan.</span>
-                        <span>26 de jan.</span>
-                      </div>
-                      <div className="mt-4">
-                        <Button variant="secondary" size="sm">
-                          Ver mais
-                        </Button>
-                      </div>
+
+                      <div className="mt-6 h-48 rounded-lg border border-dashed border-border/70 bg-muted/30" />
                     </div>
 
                     <div className="rounded-xl border border-border/60 bg-background/60 p-5">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold">Em tempo real</p>
-                        <span className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                          <span className="size-2 rounded-full bg-emerald-400" />
-                          Atualizando
-                        </span>
+                        <h3 className="text-sm font-semibold">Em tempo real</h3>
+                        <span className="text-xs text-muted-foreground">0 inscritos</span>
                       </div>
-                      <div className="mt-4">
-                        <p className="text-2xl font-semibold">0</p>
-                        <p className="text-xs text-muted-foreground">Inscritos</p>
-                      </div>
-                      <Button className="mt-3 w-full" variant="secondary" size="sm">
-                        Ver contagem de inscritos ao vivo
-                      </Button>
-                      <div className="mt-5">
-                        <p className="text-2xl font-semibold">0</p>
-                        <p className="text-xs text-muted-foreground">
-                          Visualizacoes · ultimas 48 horas
-                        </p>
-                      </div>
-                      <div className="mt-4 h-16 rounded-md border border-border/60 bg-muted/30" />
-                      <div className="mt-4">
-                        <Button variant="outline" size="sm">
-                          Ver mais
-                        </Button>
+                      <div className="mt-4 space-y-4">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Visualizacoes - ultimas 48 horas</p>
+                          <p className="mt-2 text-2xl font-semibold">0</p>
+                        </div>
+                        <div className="h-24 rounded-lg border border-dashed border-border/70 bg-muted/30" />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-border/60 bg-background/80 p-6">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold">Comissao/Arte em destaque</p>
-                      <p className="text-xs text-muted-foreground">
-                        Destaque de desempenho com alternancia rapida
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span>Mais visualizada</span>
-                    <Switch
-                      size="lg"
-                      checked={highlightMode === "sales"}
-                      onCheckedChange={(checked) =>
-                        setHighlightMode(checked ? "sales" : "views")
-                      }
-                      />
-                      <span>Mais comprada</span>
-                    </div>
+                <TabsContent value="visao" className="mt-6 space-y-6">
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {[
+                      { label: "Cliques no perfil", value: "0" },
+                      { label: "Mensagens recebidas", value: "0" },
+                      { label: "Novos seguidores", value: "0" },
+                    ].map((item) => (
+                      <div
+                        key={item.label}
+                        className="rounded-lg border border-border/60 bg-background/80 p-4 text-center"
+                      >
+                        <p className="text-xs text-muted-foreground">{item.label}</p>
+                        <p className="mt-2 text-lg font-semibold">{item.value}</p>
+                      </div>
+                    ))}
                   </div>
 
-                  <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-                    <div className="overflow-hidden rounded-xl border border-border/60">
-                      <img
-                        src={
-                          highlightMode === "sales"
-                            ? "/mock_arts/test_tall_9_16.png"
-                            : "/mock_arts/test_wide_16_9.png"
-                        }
-                        alt={`Arte em destaque: ${highlight.title}`}
-                        className="h-full w-full object-cover"
-                      />
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-xl border border-border/60 bg-background/60 p-4">
+                      <p className="text-xs text-muted-foreground">Performance geral</p>
+                      <p className="mt-2 text-2xl font-semibold">74%</p>
+                      <p className="text-xs text-muted-foreground">+8% em relacao ao mes passado</p>
                     </div>
                     <div className="rounded-xl border border-border/60 bg-background/60 p-4">
-                      <p className="text-[11px] font-semibold uppercase text-muted-foreground">
-                        {highlight.label}
-                      </p>
-                      <p className="mt-2 text-base font-semibold">{highlight.title}</p>
-                      <p className="text-xs text-muted-foreground">{highlight.artist}</p>
-                      <p className="mt-3 text-sm font-semibold text-foreground">
-                        {highlight.total}
-                      </p>
-                      <div className="mt-3 grid gap-2 text-xs text-muted-foreground">
-                        <div className="flex items-center justify-between">
-                          <span>Curtidas</span>
-                          <span className="font-semibold text-foreground">
-                            {highlight.likes}
-                          </span>
+                      <p className="text-xs text-muted-foreground">Meta do mes</p>
+                      <p className="mt-2 text-2xl font-semibold">R$ 8.400</p>
+                      <p className="text-xs text-muted-foreground">R$ 2.100 restantes</p>
+                    </div>
+                    <div className="rounded-xl border border-border/60 bg-background/60 p-4">
+                      <p className="text-xs text-muted-foreground">Audiencia</p>
+                      <p className="mt-2 text-2xl font-semibold">3.4k</p>
+                      <p className="text-xs text-muted-foreground">Usuarios unicos</p>
+                    </div>
+                    <div className="rounded-xl border border-border/60 bg-background/60 p-4">
+                      <p className="text-xs text-muted-foreground">Taxa de retorno</p>
+                      <p className="mt-2 text-2xl font-semibold">41%</p>
+                      <p className="text-xs text-muted-foreground">Visitantes recorrentes</p>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="conteudo" className="mt-6">
+                  <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_1.1fr]">
+                    <div className="rounded-xl border border-border/60 bg-background/60 p-5">
+                      <p className="text-xs text-muted-foreground">Ultima postagem</p>
+                      <h3 className="mt-2 text-lg font-semibold">Destaque do portfolio</h3>
+                      <div className="mt-4 flex flex-col gap-4 md:flex-row">
+                        <div className="md:w-5/12">
+                          <div className="h-full w-full overflow-hidden rounded-lg border border-border/60 aspect-video">
+                            <img
+                              src="/mock_arts/wallhaven-mlzdrk.jpg"
+                              alt="Arte da ultima postagem"
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span>Salvos</span>
-                          <span className="font-semibold text-foreground">
-                            {highlight.saves}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span>Entradas no perfil</span>
-                          <span className="font-semibold text-foreground">
-                            {highlight.profileEntries}
-                          </span>
+                        <div className="flex-1">
+                          <div className="grid gap-3 sm:grid-cols-1">
+                            {[
+                              { label: "Visualizacoes", value: "1.240" },
+                              { label: "Curtidas", value: "312" },
+                              { label: "Salvos", value: "88" },
+                              { label: "Compartilhamentos", value: "41" },
+                            ].map((item) => (
+                              <div
+                                key={item.label}
+                                className="rounded-lg border border-border/60 bg-background/80 p-3"
+                              >
+                                <p className="text-xs text-muted-foreground">{item.label}</p>
+                                <p className="text-lg font-semibold">{item.value}</p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {highlight.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="rounded-full border border-border/60 px-2 py-1 text-[11px] font-semibold text-muted-foreground"
+                    </div>
+
+                    <div className="rounded-xl border border-border/60 bg-background/60 p-5">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground">{highlight.label}</p>
+                          <h3 className="text-lg font-semibold">{highlight.title}</h3>
+                          <p className="text-xs text-muted-foreground">{highlight.artist}</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>Mais visualizada</span>
+                          <Switch
+                            checked={highlightMode === "views"}
+                            onCheckedChange={(checked) =>
+                              setHighlightMode(checked ? "views" : "sales")
+                            }
+                            size="lg"
+                          />
+                          <span>Mais comprada</span>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">{highlight.total}</p>
+                      <img
+                        src={
+                          highlightMode === "views"
+                            ? "/mock_arts/test_wide_16_9.png"
+                            : "/mock_arts/test_tall_9_16.png"
+                        }
+                        alt="Arte em destaque"
+                        className="mt-4 h-48 w-full rounded-lg object-cover"
+                      />
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        {[
+                          { label: "Curtidas", value: highlight.likes },
+                          { label: "Salvos", value: highlight.saves },
+                          { label: "Entradas no perfil", value: highlight.profileEntries },
+                          { label: "Tags", value: highlight.tags.join(" • ") },
+                        ].map((item) => (
+                          <div
+                            key={item.label}
+                            className="rounded-lg border border-border/60 bg-background/80 p-3"
                           >
-                            {tag}
-                          </span>
+                            <p className="text-xs text-muted-foreground">{item.label}</p>
+                            <p className="text-sm font-semibold">{item.value}</p>
+                          </div>
                         ))}
                       </div>
                     </div>
                   </div>
-                </div>
+                </TabsContent>
 
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_240px]">
-                  <div className="rounded-xl border border-border/60 bg-background/80 p-6">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold">Performance Geral</p>
-                      <Button variant="outline" size="sm">
-                        Ultimos 90 dias
-                      </Button>
-                    </div>
-                    <div className="mt-4 grid gap-4 md:grid-cols-3">
-                      {analyticsSummary.map((item) => (
-                        <div
-                          key={item.label}
-                          className="rounded-lg border border-border/60 bg-background/60 p-4"
-                        >
-                          <p className="text-xs text-muted-foreground">{item.label}</p>
-                          <p className="text-lg font-semibold">{item.value}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-border/60 bg-background/80 p-4">
-                    <p className="text-sm font-semibold">Meta do mes</p>
-                    <div className="mt-3 space-y-2">
-                      <div className="h-2 rounded-full bg-muted/40">
-                        <div className="h-full w-3/5 rounded-full bg-foreground/60" />
+                <TabsContent value="publico" className="mt-6">
+                  <div className="grid gap-6 lg:grid-cols-2">
+                    <div className="rounded-xl border border-border/60 bg-background/60 p-5">
+                      <p className="text-xs text-muted-foreground">Idade</p>
+                      <div className="mt-4 space-y-3">
+                        {[
+                          { label: "18-24", value: "42%" },
+                          { label: "25-34", value: "34%" },
+                          { label: "35-44", value: "16%" },
+                        ].map((item) => (
+                          <div key={item.label} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span>{item.label}</span>
+                              <span className="text-muted-foreground">{item.value}</span>
+                            </div>
+                            <div className="h-2 rounded-full bg-muted/60">
+                              <div className="h-2 rounded-full bg-primary/70" style={{ width: item.value }} />
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <p className="text-xs text-muted-foreground">60% da meta</p>
+                    </div>
+
+                    <div className="rounded-xl border border-border/60 bg-background/60 p-5">
+                      <p className="text-xs text-muted-foreground">Genero</p>
+                      <div className="mt-4 space-y-3">
+                        {[
+                          { label: "Feminino", value: "62%" },
+                          { label: "Masculino", value: "33%" },
+                          { label: "Outro", value: "5%" },
+                        ].map((item) => (
+                          <div key={item.label} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span>{item.label}</span>
+                              <span className="text-muted-foreground">{item.value}</span>
+                            </div>
+                            <div className="h-2 rounded-full bg-muted/60">
+                              <div className="h-2 rounded-full bg-emerald-400/70" style={{ width: item.value }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-border/60 bg-background/60 p-5">
+                      <p className="text-xs text-muted-foreground">Tipo de dispositivo</p>
+                      <div className="mt-4 space-y-3">
+                        {[
+                          { label: "Mobile", value: "82%" },
+                          { label: "Desktop", value: "14%" },
+                          { label: "Tablet", value: "4%" },
+                        ].map((item) => (
+                          <div key={item.label} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span>{item.label}</span>
+                              <span className="text-muted-foreground">{item.value}</span>
+                            </div>
+                            <div className="h-2 rounded-full bg-muted/60">
+                              <div className="h-2 rounded-full bg-violet-400/70" style={{ width: item.value }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-border/60 bg-background/60 p-5">
+                      <p className="text-xs text-muted-foreground">Locais mais acessados</p>
+                      <div className="mt-4 space-y-3">
+                        {[
+                          { label: "Sao Paulo", value: "28%" },
+                          { label: "Rio de Janeiro", value: "19%" },
+                          { label: "Lisboa", value: "14%" },
+                        ].map((item) => (
+                          <div key={item.label} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span>{item.label}</span>
+                              <span className="text-muted-foreground">{item.value}</span>
+                            </div>
+                            <div className="h-2 rounded-full bg-muted/60">
+                              <div className="h-2 rounded-full bg-sky-400/70" style={{ width: item.value }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </TabsContent>
+              </Tabs>
+            </>
+          )}
 
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="rounded-xl border border-border/60 bg-background/80 p-6">
-                    <p className="text-sm font-semibold">Audiencia</p>
-                    <div className="mt-4 h-36 rounded-lg bg-muted/30" />
-                  </div>
-                  <div className="rounded-xl border border-border/60 bg-background/80 p-6">
-                    <p className="text-sm font-semibold">Taxa de retorno</p>
-                    <div className="mt-4 h-36 rounded-lg bg-muted/30" />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {activeMenu === "portfolio" && (
+          {activeMenu === "portfolio" && (
               <div className="rounded-xl border border-border/60 bg-background/80 p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
@@ -910,6 +1059,7 @@ export function DashboardPage() {
           </div>
         </div>
       </div>
-    </section>
+</section>
   )
 }
+
