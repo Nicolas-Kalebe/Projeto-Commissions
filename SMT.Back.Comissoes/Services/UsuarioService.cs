@@ -57,6 +57,7 @@ namespace SMT.Back.Comissoes.Services
                 NomePerfil = usuarioInput.NomePerfil, // payload front
                 DataNascimento = usuarioInput.DataNascimento, // payload front
                 Email = userGoogle.Email, // vem do google
+                FotoPerfil = userGoogle.Picture, // vem do google
                 DataCriacao = DateTime.UtcNow, 
                 Status = StatusEnum.Ativo,
                 JaAnunciou = false,
@@ -65,6 +66,25 @@ namespace SMT.Back.Comissoes.Services
             await _usuarioRepository.CadastrarUsuario(usuario);
 
             return;
+        }
+        public async Task AutenticarUsuario(AutenticarUsuarioInput autenticarUsuarioInput)
+        {
+            try
+            {
+                var usuario = await _authService.ValidarTokenGoogle(autenticarUsuarioInput.TokenGoogle);
+                var usuarioCadastrado = await _usuarioRepository.ObterUsuarioPorEmail(usuario.Email);
+                if (usuarioCadastrado == null) {
+                    throw new ExcecaoPersonalizada(
+                        ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
+                        "Usuário não encontrado.",
+                        () => Log.Error($"Usuário não encontrado para o email: {usuario.Email}"),
+                        (int)System.Net.HttpStatusCode.NotFound
+                    );
+                }
+            } catch (Exception ex) {
+                Log.Error($"Erro ao autenticar usuário: {ex.Message}");
+                throw;
+            }
         }
         public async Task<StatusEnum> ObterStatusUsuario(ObterStatusInput obterStatusInput)
         {

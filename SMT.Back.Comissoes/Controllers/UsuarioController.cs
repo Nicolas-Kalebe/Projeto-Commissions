@@ -36,6 +36,19 @@ namespace SMT.Back.Comissoes.Controllers
             });
         }
         [HttpPost]
+        public async Task<IActionResult> Autenticar([FromBody] AutenticarUsuarioInput autenticarUsuarioInput)
+        {
+            var usuarioAutenticado = await _usuarioService.AutenticarUsuario(autenticarUsuarioInput);
+            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
+            {
+                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
+                StatusHttp = (int)HttpStatusCode.OK,
+                Mensagem = "Usuário autenticado com sucesso.",
+                Resultado = usuarioAutenticado
+            });
+        }
+
+        [HttpPost]
         public async Task<IActionResult> ObterStatusUsuario([FromBody] ObterStatusInput obterStatusInput)
         {
             var statusUsuario = await _usuarioService.ObterStatusUsuario(obterStatusInput);
