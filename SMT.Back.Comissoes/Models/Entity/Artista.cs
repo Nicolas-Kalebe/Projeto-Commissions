@@ -13,6 +13,7 @@ namespace SMT.Back.Comissoes.Models.Entity
         public Usuario Usuario { get; set; }
         public string? Estilo { get; set; }
         public string? TipoArtista { get; set; }
+        public string? PortifolioUrl { get; set; } //o codex colocou pra funcionar
         public PortfolioItem Portfolio { get; set; }
         public double Avaliacao { get; set; }
         public bool AtivoParaServicos { get; set; }
