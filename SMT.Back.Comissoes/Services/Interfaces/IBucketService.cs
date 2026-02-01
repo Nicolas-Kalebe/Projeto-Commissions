@@ -4,5 +4,6 @@
     {
         Task<string> UploadAsync(IFormFile file, string path);
         Task DeleteAsync(string path);
+        string? GetPresignedUrl(string fileUrlOrKey, TimeSpan expiresIn);
     }
 }

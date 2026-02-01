@@ -337,7 +337,7 @@ const handleLogout = () => {
                   aria-label="Perfil"
                 >
                   <Avatar className="size-9">
-                    <AvatarImage src={googlePhoto || currentUser.avatarUrl} alt={currentUser.nome} />
+                    <AvatarImage src={currentUser.avatarUrl || googlePhoto || ""} alt={currentUser.nome} />
                     <AvatarFallback>MS</AvatarFallback>
                   </Avatar>
                 </button>

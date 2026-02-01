@@ -14,6 +14,8 @@ import { AppHeader } from "@/components/layout/AppHeader"
 import { AppFooter } from "@/components/layout/AppFooter"
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { useState, type PropsWithChildren } from "react"
+import type { User } from "@/types"
+import { API_ROUTES } from "@/constants/apiRoutes"
 
 interface AppShellProps {
   isAuthenticated: boolean
@@ -21,15 +23,93 @@ interface AppShellProps {
   onLogout: () => void
 }
 
+const isValidProfilePhotoUrl = (value: unknown) => {
+  if (typeof value !== "string") return false
+  const trimmed = value.trim()
+  if (!trimmed) return false
+  try {
+    const url = new URL(trimmed)
+    if (url.protocol !== "http:" && url.protocol !== "https:") return false
+    if (!url.hostname.endsWith("backblazeb2.com")) return false
+    return url.pathname.includes("/usuario-portfolio/usuarios/")
+  } catch {
+    return false
+  }
+}
+
+const isLikelyJwt = (value: string) => value.split(".").length === 3
+
 export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) {
   const [commissionOpen, setCommissionOpen] = useState(false)
   const [selectedPrice, setSelectedPrice] = useState(100)
+  const [currentUser, setCurrentUser] = useState<User>(() => users[2])
+  const isMockUser = currentUser.id === users[2].id
+    && currentUser.nome === users[2].nome
+    && currentUser.avatarUrl === users[2].avatarUrl
   const location = useLocation()
   const viewportRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     viewportRef.current?.scrollTo(0, 0)
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setCurrentUser(users[2])
+    }
+  }, [isAuthenticated])
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+    let isActive = true
+    const tokenGoogleRaw = localStorage.getItem("google_token")
+    const tokenGoogle = tokenGoogleRaw?.trim() ?? ""
+    if (!tokenGoogle || !isLikelyJwt(tokenGoogle)) return
+
+    const loadUser = async () => {
+      try {
+        const response = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ googleToken: tokenGoogle }),
+        })
+        if (!response.ok) return
+        const body = await response.json().catch(() => null)
+        const resultado = body?.resultado ?? body?.Resultado
+        if (!resultado || typeof resultado !== "object") return
+
+        const fotoPerfil = (resultado as { fotoPerfil?: unknown; FotoPerfil?: unknown }).fotoPerfil
+          ?? (resultado as { FotoPerfil?: unknown }).FotoPerfil
+        const nomePerfil = (resultado as { nomePerfil?: unknown; NomePerfil?: unknown }).nomePerfil
+          ?? (resultado as { NomePerfil?: unknown }).NomePerfil
+        const nome = (resultado as { nome?: unknown; Nome?: unknown }).nome
+          ?? (resultado as { Nome?: unknown }).Nome
+        const id = (resultado as { id?: unknown; Id?: unknown }).id
+          ?? (resultado as { Id?: unknown }).Id
+
+        if (!isActive) return
+        setCurrentUser((prev) => ({
+          ...prev,
+          id: id ? String(id) : prev.id,
+          nome: typeof nomePerfil === "string" && nomePerfil.trim()
+            ? nomePerfil
+            : typeof nome === "string" && nome.trim()
+              ? nome
+              : prev.nome,
+          avatarUrl: isValidProfilePhotoUrl(fotoPerfil)
+            ? String(fotoPerfil)
+            : prev.avatarUrl,
+        }))
+      } catch {
+        // Silent fallback to existing mock user data
+      }
+    }
+
+    loadUser()
+    return () => {
+      isActive = false
+    }
+  }, [isAuthenticated])
 
   // Determine if we should show the radial background
   const showBackground = !["/perfil", "/login", "/cadastro"].includes(location.pathname)
@@ -66,7 +146,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
         {location.pathname !== '/login' && location.pathname !== '/cadastro' && (
           <AppHeader
             notifications={notifications}
-            currentUser={users[2]}
+            currentUser={currentUser}
             isAuthenticated={isAuthenticated}
             onLogout={onLogout}
           />
@@ -101,7 +181,14 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
             <Route path="/perfil" element={
               <ProtectedRoute>
                 <main className="w-full px-0 py-0">
-                  <ArtistProfile onRequestCommission={handleRequestCommission} />
+                  <ArtistProfile
+                    onRequestCommission={handleRequestCommission}
+                    currentUser={currentUser}
+                    isMockUser={isMockUser}
+                    onCurrentUserUpdate={(partial) =>
+                      setCurrentUser((prev) => ({ ...prev, ...partial }))
+                    }
+                  />
                 </main>
               </ProtectedRoute>
             } />

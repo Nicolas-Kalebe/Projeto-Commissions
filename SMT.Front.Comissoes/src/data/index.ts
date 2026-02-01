@@ -10,10 +10,10 @@
 export const users: User[] = [
   {
     id: "art-1",
-    nome: localStorage.getItem("google_name") ?? "Usuário",
+    nome: "MockUser-1",
     role: "artista",
     avatarUrl:
-      localStorage.getItem("google_photo") ?? "",
+      "/mock_arts/anime_neon.png",
     bio: "Ilustradora digital focada em fantasia suave e personagens expressivos.",
     seguidores: 12840,
     destaque: "Especialista em retratos anime.",

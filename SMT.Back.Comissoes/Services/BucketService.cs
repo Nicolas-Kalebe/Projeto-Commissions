@@ -38,4 +38,55 @@ public class BucketService : IBucketService
     {
         await _s3.DeleteObjectAsync(_bucketName, path);
     }
+
+    public string? GetPresignedUrl(string fileUrlOrKey, TimeSpan expiresIn)
+    {
+        var key = NormalizeKey(fileUrlOrKey);
+        if (string.IsNullOrWhiteSpace(key))
+            return null;
+
+        var request = new GetPreSignedUrlRequest
+        {
+            BucketName = _bucketName,
+            Key = key,
+            Expires = DateTime.UtcNow.Add(expiresIn),
+            Protocol = Protocol.HTTPS,
+            Verb = HttpVerb.GET,
+        };
+
+        return _s3.GetPreSignedURL(request);
+    }
+
+    private string? NormalizeKey(string fileUrlOrKey)
+    {
+        if (string.IsNullOrWhiteSpace(fileUrlOrKey))
+            return null;
+
+        var trimmed = fileUrlOrKey.Trim();
+        if (!trimmed.Contains("://"))
+        {
+            return trimmed.TrimStart('/');
+        }
+
+        if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var uri))
+            return null;
+
+        var path = uri.AbsolutePath.TrimStart('/');
+
+        if (path.StartsWith("file/", StringComparison.OrdinalIgnoreCase))
+        {
+            var withoutFile = path.Substring("file/".Length);
+            if (withoutFile.StartsWith($"{_bucketName}/", StringComparison.OrdinalIgnoreCase))
+                return withoutFile.Substring($"{_bucketName}/".Length);
+        }
+
+        if (path.StartsWith($"{_bucketName}/", StringComparison.OrdinalIgnoreCase))
+            return path.Substring($"{_bucketName}/".Length);
+
+        var basePrefix = $"{_baseUrl.TrimEnd('/')}/";
+        if (trimmed.StartsWith(basePrefix, StringComparison.OrdinalIgnoreCase))
+            return trimmed.Substring(basePrefix.Length);
+
+        return null;
+    }
 }

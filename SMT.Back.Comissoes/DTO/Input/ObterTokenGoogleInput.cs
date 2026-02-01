@@ -2,6 +2,6 @@
 {
     public class ObterTokenGoogleInput
     {
-        public string TokenGoogle { get; set; } = string.Empty;
+        public string GoogleToken { get; set; } = string.Empty;
     }
 }
