@@ -86,12 +86,24 @@ namespace SMT.Back.Comissoes.Services
                 throw;
             }
         }
+        public async Task<Usuario> ObterUsuarioPorToken(ObterTokenGoogleInput obterTokenGoogleInput)
+        {
+            var userGoogle = await _authService.ValidarTokenGoogle(obterTokenGoogleInput.TokenGoogle);
+            var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
+            if (usuario == null)
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
+                    "Usuário não encontrado.",
+                    () => Log.Error($"Usuário não encontrado para o email: {userGoogle.Email}"),
+                    (int)System.Net.HttpStatusCode.NotFound
+                );
+            return usuario;
+        }
         public async Task<StatusEnum> ObterStatusUsuario(ObterStatusInput obterStatusInput)
         {
             var userGoogle = await _authService.ValidarTokenGoogle(obterStatusInput.GoogleToken);
-
-            var usuario = await _usuarioRepository.ObterStatusUsuario(userGoogle.Email);
-            return usuario;
+            var usuarioStatus = await _usuarioRepository.ObterStatusUsuario(userGoogle.Email);
+            return usuarioStatus;
         }
         public async Task CadastrarArtista(CadastrarArtistaInput cadastrarArtistaInput)
         {
@@ -149,6 +161,34 @@ namespace SMT.Back.Comissoes.Services
 
             // Atualiza apenas o path no banco            
             await _usuarioRepository.AtualizarPortfolioArtista(artista.Id, pathCompleto);
+        }
+        public async Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput)
+        {
+            var userGoogle = await _authService.ValidarTokenGoogle(atualizarFotoUsuarioInput.TokenGoogle);
+            var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
+            if (usuario == null)
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
+                    "Usuário não encontrado.",
+                    () => Log.Error($"Usuário não encontrado para o email: {userGoogle.Email}"),
+                    (int)System.Net.HttpStatusCode.NotFound
+                );
+            if (atualizarFotoUsuarioInput.FotoPerfil == null || atualizarFotoUsuarioInput.FotoPerfil.Length == 0)
+                throw new ArgumentException("Nenhuma imagem enviada.");
+            // Validação de tipo
+            if (!atualizarFotoUsuarioInput.FotoPerfil.ContentType.StartsWith("image/"))
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
+                    "Tipo de dado inválido, insira uma imagem/gif",
+                    () => Log.Error($"Tipo de dado inválido para foto de perfil do usuário Email: {usuario.NomePerfil}"),
+                    (int)System.Net.HttpStatusCode.BadRequest);
+            // Path no bucket organizado por usuário
+            var pathBucket = $"usuarios/{usuario.NomePerfil}/foto_perfil.webp";
+            // Upload da imagem
+            var pathCompleto = await _bucketService.UploadAsync(atualizarFotoUsuarioInput.FotoPerfil, pathBucket);
+            // Atualiza apenas o path no banco            
+            await _usuarioRepository.AtualizarFotoPerfil(usuario.Id, pathCompleto);
+            return pathCompleto;
         }
     }
 }

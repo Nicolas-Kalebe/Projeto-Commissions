@@ -9,8 +9,10 @@ namespace SMT.Back.Comissoes.Services.Interfaces
         Task CadastrarUsuario(CadastrarUsuarioInput usuarioInput);
         Task<StatusEnum> ObterStatusUsuario(ObterStatusInput obterStatusInput);
         Task CadastrarArtista(CadastrarArtistaInput cadastrarArtistaInput);
-        Task <Artista> ObterPerfilArtista(ObterArtistaInput obterArtistaInput);
+        Task<Artista> ObterPerfilArtista(ObterArtistaInput obterArtistaInput);
         Task AtualizarPortfolioAsync(AtualizarPortfolioInput atualizarPortfolioInput);
+        Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput);
+        Task<Usuario> ObterUsuarioPorToken(ObterTokenGoogleInput obterTokenGoogleInput);
 
     }
 }

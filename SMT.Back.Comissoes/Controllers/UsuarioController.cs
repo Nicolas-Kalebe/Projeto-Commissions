@@ -35,18 +35,18 @@ namespace SMT.Back.Comissoes.Controllers
                 Resultado = "Cadastro de usuário realizado com sucesso."
             });
         }
-        [HttpPost]
-        public async Task<IActionResult> Autenticar([FromBody] AutenticarUsuarioInput autenticarUsuarioInput)
-        {
-            var usuarioAutenticado = await _usuarioService.AutenticarUsuario(autenticarUsuarioInput);
-            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
-            {
-                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
-                StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Usuário autenticado com sucesso.",
-                Resultado = usuarioAutenticado
-            });
-        }
+        //[HttpPost]
+        //public async Task<IActionResult> Autenticar([FromBody] AutenticarUsuarioInput autenticarUsuarioInput)
+        //{
+        //    var usuarioAutenticado = await _usuarioService.AutenticarUsuario(autenticarUsuarioInput);
+        //    return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
+        //    {
+        //        Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
+        //        StatusHttp = (int)HttpStatusCode.OK,
+        //        Mensagem = "Usuário autenticado com sucesso.",
+        //        Resultado = usuarioAutenticado
+        //    });
+        //}
 
         [HttpPost]
         public async Task<IActionResult> ObterStatusUsuario([FromBody] ObterStatusInput obterStatusInput)
@@ -72,7 +72,7 @@ namespace SMT.Back.Comissoes.Controllers
                 Resultado = "Sucesso ao cadastrar usuário como artista no sistema."
             });
         }
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> ObterPerfilArtista([FromBody] ObterArtistaInput obterArtistaInput)
         {
             var artista = await _usuarioService.ObterPerfilArtista(obterArtistaInput);
@@ -82,6 +82,18 @@ namespace SMT.Back.Comissoes.Controllers
                 StatusHttp = (int)HttpStatusCode.OK,
                 Mensagem = "Perfil de artista obtido com sucesso.",
                 Resultado = artista
+            });
+        }
+        [HttpPost]
+        public async Task<IActionResult> ObterUsuarioPorToken([FromBody] ObterTokenGoogleInput obterTokenGoogleInput)
+        {
+            var usuario = await _usuarioService.ObterUsuarioPorToken(obterTokenGoogleInput);
+            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
+            {
+                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
+                StatusHttp = (int)HttpStatusCode.OK,
+                Mensagem = "Usuário obtido com sucesso pelo token Google.",
+                Resultado = usuario
             });
         }
         [HttpPatch]
@@ -94,6 +106,19 @@ namespace SMT.Back.Comissoes.Controllers
                 StatusHttp = (int)HttpStatusCode.OK,
                 Mensagem = "Portfólio atualizado com sucesso.",
                 Resultado = "Sucesso ao atualizar portfólio do artista."
+            });
+        }
+        [HttpPatch]
+        public async Task<IActionResult> AtualizarFotoUsuario([FromForm] AtualizarFotoUsuarioInput atualizarFotoUsuarioInput)
+        {
+            var fotoUsuario = await _usuarioService.AtualizarFotoUsuario(atualizarFotoUsuarioInput);
+            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
+            {
+                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
+                StatusHttp = (int)HttpStatusCode.OK,
+                Mensagem = "Foto de usuário atualizada com sucesso.",
+                Resultado = $"Sucesso ao atualizar foto de usuário, segue imagem: {fotoUsuario}"
+
             });
         }
     }

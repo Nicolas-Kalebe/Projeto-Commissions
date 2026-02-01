@@ -90,5 +90,14 @@ namespace SMT.Back.Comissoes.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+        public async Task AtualizarFotoPerfil(int usuarioId, string fotoPerfilUrl)
+        {
+            var usuario = await _context.Usuarios.FindAsync(usuarioId);
+            if (usuario != null)
+            {
+                usuario.FotoPerfil = fotoPerfilUrl;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }
