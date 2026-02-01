@@ -2,6 +2,20 @@
 
 Bem-vindo ao repositório do Projeto Commissions! Este projeto é uma aplicação web completa composta por um backend .NET e um frontend React (Vite).
 
+## Objetivo
+
+Desenvolver uma plataforma digital que permita a artistas divulgar, publicar e comercializar seus trabalhos de forma profissional e acessível. O ambiente deverá possibilitar que os artistas definam e gerenciem a precificação de suas obras, ofereçam serviços personalizados por meio de encomendas e mantenham um portfólio organizado e atrativo.
+
+| | |
+|---|---|
+| ![1](https://github.com/user-attachments/assets/0285a007-44d7-4413-967b-c4472146d85e) | ![2](https://github.com/user-attachments/assets/b6e97274-3bac-46ac-a5b2-e5f23c1c36cc) |
+| ![3](https://github.com/user-attachments/assets/f8d74d6b-e888-47d2-9cc3-38cb2826ba6c) | ![4](https://github.com/user-attachments/assets/2ec066eb-dfae-42e1-bf0d-a317b59960a2) |
+
+
+
+
+
+
 ## Estrutura do Projeto
 
 - **Backend**: `SMT.Back.Comissoes` (.NET 9 Web API)
