@@ -88,7 +88,7 @@ namespace SMT.Back.Comissoes.Services
         }
         public async Task<Usuario> ObterUsuarioPorToken(ObterTokenGoogleInput obterTokenGoogleInput)
         {
-            var userGoogle = await _authService.ValidarTokenGoogle(obterTokenGoogleInput.TokenGoogle);
+            var userGoogle = await _authService.ValidarTokenGoogle(obterTokenGoogleInput.GoogleToken);
             var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
             if (usuario == null)
                 throw new ExcecaoPersonalizada(
@@ -97,6 +97,12 @@ namespace SMT.Back.Comissoes.Services
                     () => Log.Error($"Usuário não encontrado para o email: {userGoogle.Email}"),
                     (int)System.Net.HttpStatusCode.NotFound
                 );
+            if (!string.IsNullOrWhiteSpace(usuario.FotoPerfil))
+            {
+                var signedUrl = _bucketService.GetPresignedUrl(usuario.FotoPerfil, TimeSpan.FromHours(6));
+                if (!string.IsNullOrWhiteSpace(signedUrl))
+                    usuario.FotoPerfil = signedUrl;
+            }
             return usuario;
         }
         public async Task<StatusEnum> ObterStatusUsuario(ObterStatusInput obterStatusInput)

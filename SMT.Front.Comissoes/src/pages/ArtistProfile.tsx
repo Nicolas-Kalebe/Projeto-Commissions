@@ -14,10 +14,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { arts, priceSheets, users } from "@/data"
 import { PriceSheetRow } from "@/components/profile/PriceSheetRow"
+import type { User } from "@/types"
+import { API_ROUTES } from "@/constants/apiRoutes"
+import { useToast } from "@/hooks/use-toast"
 import {
   Bookmark,
   Heart,
   MessageCircle,
+  Pencil,
   Star,
   Twitch,
   Twitter,
@@ -27,9 +31,17 @@ import {
 
 interface ArtistProfileProps {
   onRequestCommission: (price: number) => void
+  currentUser?: User
+  isMockUser?: boolean
+  onCurrentUserUpdate?: (partial: Partial<User>) => void
 }
 
-export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
+export function ArtistProfile({
+  onRequestCommission,
+  currentUser,
+  isMockUser = false,
+  onCurrentUserUpdate,
+}: ArtistProfileProps) {
   const [postDialogOpen, setPostDialogOpen] = useState(false)
   const [activePostIndex, setActivePostIndex] = useState(0)
   const [activeImageIndex, setActiveImageIndex] = useState(0)
@@ -37,8 +49,13 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
     "recentes"
   )
   const [showServices, setShowServices] = useState(true)
-  const artist = users.find((user) => user.id === "art-1")
-  const gallery = arts.filter((art) => art.artistId === "art-1")
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const { toast } = useToast()
+  const fallbackArtist = users.find((user) => user.id === "art-1")
+  const artist = !isMockUser && currentUser ? currentUser : fallbackArtist
+  const gallery = !isMockUser && currentUser
+    ? arts.filter((art) => art.artistId === currentUser.id)
+    : arts.filter((art) => art.artistId === "art-1")
   const extendedGallery = [
     ...gallery,
     ...gallery.map((art, index) => ({
@@ -195,6 +212,67 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
     return images
   })
 
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file || isMockUser) return
+
+    const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
+    if (!tokenGoogle) {
+      toast({
+        title: "Sessao expirada",
+        description: "Faça login novamente para atualizar a foto.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUploadingAvatar(true)
+    try {
+      const formData = new FormData()
+      formData.append("TokenGoogle", tokenGoogle)
+      formData.append("FotoPerfil", file)
+
+      const response = await fetch(API_ROUTES.Usuario.atualizarFotoUsuario, {
+        method: "PATCH",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Falha ao atualizar a foto.")
+      }
+
+      const refresh = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ googleToken: tokenGoogle }),
+      })
+
+      if (refresh.ok) {
+        const body = await refresh.json().catch(() => null)
+        const resultado = body?.resultado ?? body?.Resultado
+        const fotoPerfil = (resultado as { fotoPerfil?: unknown; FotoPerfil?: unknown })?.fotoPerfil
+          ?? (resultado as { FotoPerfil?: unknown })?.FotoPerfil
+        if (typeof fotoPerfil === "string" && onCurrentUserUpdate) {
+          onCurrentUserUpdate({ avatarUrl: fotoPerfil })
+        }
+      }
+
+      toast({
+        title: "Foto atualizada",
+        description: "Sua nova foto de perfil ja aparece no sistema.",
+      })
+    } catch {
+      toast({
+        title: "Erro ao atualizar",
+        description: "Nao foi possivel enviar a imagem agora.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUploadingAvatar(false)
+    }
+  }
+
   return (
     <section className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-6">
       <div className="h-52 w-full overflow-hidden rounded-2xl md:h-64">
@@ -324,10 +402,38 @@ export function ArtistProfile({ onRequestCommission }: ArtistProfileProps) {
           >
 
             <div className="flex flex-col items-center gap-3 text-center">
-              <Avatar className="relative z-10 h-32 w-32">
-                <AvatarImage src={artist.avatarUrl} alt={artist.nome} />
-                <AvatarFallback>{initials}</AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="relative z-10 h-32 w-32">
+                  <AvatarImage src={artist.avatarUrl} alt={artist.nome} />
+                  <AvatarFallback>{initials}</AvatarFallback>
+                </Avatar>
+                {!isMockUser && (
+                  <>
+                    <input
+                      id="profile-photo-input"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                    <label
+                      htmlFor="profile-photo-input"
+                      className="group absolute inset-0 z-20 flex cursor-pointer items-center justify-center rounded-full bg-black/45 text-white opacity-0 transition-opacity hover:opacity-100"
+                      aria-label="Editar foto de perfil"
+                    >
+                      <span className="flex items-center gap-2 text-sm font-semibold">
+                        <Pencil className="h-4 w-4" />
+                        Editar
+                      </span>
+                    </label>
+                  </>
+                )}
+                {isUploadingAvatar && (
+                  <div className="absolute inset-0 z-30 flex items-center justify-center rounded-full bg-black/60 text-xs font-semibold text-white">
+                    Enviando...
+                  </div>
+                )}
+              </div>
               <div className="space-y-1">
                 <h2 className="text-2xl font-semibold">{artist.nome}</h2>
                 <p className="text-sm text-muted-foreground">{handle}</p>
