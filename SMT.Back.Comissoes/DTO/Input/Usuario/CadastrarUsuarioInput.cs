@@ -1,7 +1,7 @@
 ﻿using SMT.Back.Comissoes.Models.Enum;
 using System.ComponentModel.DataAnnotations;
 
-namespace SMT.Back.Comissoes.DTO.Input
+namespace SMT.Back.Comissoes.DTO.Input.UsuarioController
 {
     public class CadastrarUsuarioInput
     {

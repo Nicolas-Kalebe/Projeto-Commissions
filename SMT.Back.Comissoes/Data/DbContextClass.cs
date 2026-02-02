@@ -9,4 +9,14 @@ public class DbContextClass(DbContextOptions<DbContextClass> options) : DbContex
     public DbSet<Artista> Artistas { get; set; }
     public DbSet<Servicos> Servicos { get; set; }
     public DbSet<TermoDeServico> TermosDeServico { get; set; }
+    public DbSet<Interacao> Interacao { get; set; }
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Interacao>()
+            .HasIndex(i => new { i.UsuarioId, i.AlvoId, i.TipoAlvoInteracao, i.TipoInteracao })
+            .IsUnique();
+
+        base.OnModelCreating(modelBuilder);
+    }
+
 }

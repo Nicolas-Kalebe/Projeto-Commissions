@@ -1,4 +1,4 @@
-﻿namespace SMT.Back.Comissoes.DTO.Input
+﻿namespace SMT.Back.Comissoes.DTO.Input.UsuarioController
 {
     public class ObterStatusInput
     {

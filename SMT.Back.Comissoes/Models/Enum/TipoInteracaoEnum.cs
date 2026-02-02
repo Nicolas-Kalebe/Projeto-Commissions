@@ -3,6 +3,8 @@
     public enum TipoInteracaoEnum
     {
         Like = 1,
-        Favorite = 2
+        Favorito = 2,
+        Seguir = 3,
+        Avaliacao = 4
     }
 }
