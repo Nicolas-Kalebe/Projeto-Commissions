@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
@@ -14,6 +14,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { arts, priceSheets, users } from "@/data"
 import { PriceSheetRow } from "@/components/profile/PriceSheetRow"
+import {
+  type CarouselApi,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
 import type { User } from "@/types"
 import { API_ROUTES } from "@/constants/apiRoutes"
 import { useToast } from "@/hooks/use-toast"
@@ -28,6 +36,124 @@ import {
   UserPlus,
   Youtube,
 } from "lucide-react"
+
+type PortfolioPost = {
+  id: string
+  titulo: string
+  descricao: string
+  tags: string[]
+  images: string[]
+  popularidade: number
+  likes: number
+  saves: number
+  commissionLink?: string
+}
+
+type PortfolioPreviewCardProps = {
+  post: PortfolioPost
+  onOpen: () => void
+}
+
+function PortfolioPreviewCard({ post, onOpen }: PortfolioPreviewCardProps) {
+  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null)
+  const [carouselIndex, setCarouselIndex] = useState(0)
+  const [carouselSnaps, setCarouselSnaps] = useState<number[]>([])
+  const hasMultipleImages = post.images.length > 1
+
+  useEffect(() => {
+    if (!carouselApi || !hasMultipleImages) return
+    setCarouselSnaps(carouselApi.scrollSnapList())
+    setCarouselIndex(carouselApi.selectedScrollSnap())
+    const onSelect = () => setCarouselIndex(carouselApi.selectedScrollSnap())
+    carouselApi.on("select", onSelect)
+    carouselApi.on("reInit", onSelect)
+    return () => {
+      carouselApi.off("select", onSelect)
+    }
+  }, [carouselApi, hasMultipleImages])
+
+  return (
+    <button
+      type="button"
+      className="relative cursor-pointer overflow-hidden rounded-xl border bg-card"
+      onClick={onOpen}
+    >
+      <div className="aspect-[4/3] w-full overflow-hidden">
+        <div className="relative h-full w-full">
+          {hasMultipleImages ? (
+            <Carousel
+              opts={{ loop: true }}
+              setApi={setCarouselApi}
+              className="h-full w-full overflow-hidden"
+            >
+              <CarouselContent viewportClassName="h-full" className="h-full !-ml-0">
+                {post.images.map((image, index) => (
+                  <CarouselItem key={`${post.id}-${index}`} className="h-full !pl-0">
+                    <img
+                      src={image}
+                      alt={`${post.titulo} ${index + 1}`}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious
+                className="left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 text-white hover:bg-black/70 border-transparent opacity-0 transition-opacity group-hover:opacity-100 dark:bg-black/60 dark:text-white dark:hover:bg-black/70"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  carouselApi?.scrollPrev()
+                }}
+                onPointerDown={(event) => event.stopPropagation()}
+                aria-label="Imagem anterior"
+              />
+              <CarouselNext
+                className="right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 text-white hover:bg-black/70 border-transparent opacity-0 transition-opacity group-hover:opacity-100 dark:bg-black/60 dark:text-white dark:hover:bg-black/70"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  carouselApi?.scrollNext()
+                }}
+                onPointerDown={(event) => event.stopPropagation()}
+                aria-label="Proxima imagem"
+              />
+              <div className="pointer-events-auto absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5">
+                {carouselSnaps.map((_, index) => (
+                  <button
+                    key={`${post.id}-dot-${index}`}
+                    type="button"
+                    className={`h-1.5 w-1.5 rounded-full transition ${
+                      index === carouselIndex
+                        ? "bg-white"
+                        : "bg-white/50 hover:bg-white/80"
+                    }`}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      carouselApi?.scrollTo(index)
+                    }}
+                    onPointerDown={(event) => event.stopPropagation()}
+                    aria-label={`Ir para imagem ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </Carousel>
+          ) : (
+            <img
+              src={post.images[0]}
+              alt={post.titulo}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          )}
+          <div className="pointer-events-none absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
+            <span className="p-3 text-sm font-semibold text-white">
+              {post.titulo}
+            </span>
+          </div>
+        </div>
+      </div>
+    </button>
+  )
+}
 
 interface ArtistProfileProps {
   onRequestCommission: (price: number) => void
@@ -69,19 +195,7 @@ export function ArtistProfile({
       titulo: `${art.titulo} (Variacao)`,
     })),
   ]
-  const portfolioPosts = extendedGallery.reduce<
-    {
-      id: string
-      titulo: string
-      descricao: string
-      tags: string[]
-      images: string[]
-      popularidade: number
-      likes: number
-      saves: number
-      commissionLink?: string
-    }[]
-  >((acc, art, index) => {
+  const portfolioPosts = extendedGallery.reduce<PortfolioPost[]>((acc, _, index) => {
     const chunkSize = 3
     if (index % chunkSize !== 0) {
       return acc
@@ -114,7 +228,7 @@ export function ArtistProfile({
     })
     return acc
   }, [])
-  const testSingleImagePost = {
+  const testSingleImagePost: PortfolioPost = {
     id: "post-test-single",
     titulo: "Anime Draw",
     descricao:
@@ -126,7 +240,7 @@ export function ArtistProfile({
     saves: 860,
     commissionLink: "/comissoes",
   }
-  const testPortfolioPosts = [
+  const testPortfolioPosts: PortfolioPost[] = [
     {
       id: "post-test-3-4",
       titulo: "Character Sketch",
@@ -418,16 +532,15 @@ export function ArtistProfile({
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {sortedPosts.map((post, index) => (
-                <button
-                  key={post.id}
-                  type="button"
-                  className="group relative cursor-pointer overflow-hidden rounded-xl border bg-card"
-                  onClick={() => {
-                    setActivePostIndex(index)
-                    setActiveImageIndex(0)
-                    setPostDialogOpen(true)
-                  }}
-                >
+                <div key={post.id} className="group relative">
+                  <PortfolioPreviewCard
+                    post={post}
+                    onOpen={() => {
+                      setActivePostIndex(index)
+                      setActiveImageIndex(0)
+                      setPostDialogOpen(true)
+                    }}
+                  />
                   <div className="absolute bottom-3 right-3 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
                     <Button
                       type="button"
@@ -448,22 +561,7 @@ export function ArtistProfile({
                       <Bookmark className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="aspect-[4/3] w-full overflow-hidden">
-                    <div className="relative h-full w-full">
-                      <img
-                        src={post.images[0]}
-                        alt={post.titulo}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-                        loading="lazy"
-                      />
-                      <div className="pointer-events-none absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
-                        <span className="p-3 text-sm font-semibold text-white">
-                          {post.titulo}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </button>
+                </div>
               ))}
             </div>
           )}
