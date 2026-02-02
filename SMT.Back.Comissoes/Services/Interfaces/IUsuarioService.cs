@@ -1,4 +1,4 @@
-﻿using SMT.Back.Comissoes.DTO.Input;
+﻿using SMT.Back.Comissoes.DTO.Input.UsuarioController;
 using SMT.Back.Comissoes.Models.Entity;
 using SMT.Back.Comissoes.Models.Enum;
 

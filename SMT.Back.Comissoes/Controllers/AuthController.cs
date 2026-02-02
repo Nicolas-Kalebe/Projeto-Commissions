@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SMT.Back.Comissoes.DTO.Input;
 using SMT.Back.Comissoes.Models;
 using SMT.Back.Comissoes.Services.Interfaces;
 using SMT.Back.Comissoes.Utils;
 using Serilog;
 using System.Net;
+using SMT.Back.Comissoes.DTO.Input.UsuarioController;
 
 namespace SMT.Back.Comissoes.Controllers
 {

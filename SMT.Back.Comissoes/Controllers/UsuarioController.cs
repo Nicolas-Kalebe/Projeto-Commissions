@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
-using SMT.Back.Comissoes.DTO.Input;
+using SMT.Back.Comissoes.DTO.Input.UsuarioController;
 using SMT.Back.Comissoes.Models;
 using SMT.Back.Comissoes.Models.Entity;
 using SMT.Back.Comissoes.Models.Enum;

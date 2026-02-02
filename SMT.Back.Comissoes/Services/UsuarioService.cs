@@ -2,9 +2,9 @@
 using SMT.Back.Comissoes.Utils;
 using Serilog;
 using SMT.Back.Comissoes.Repositories.Interfaces;
-using SMT.Back.Comissoes.DTO.Input;
 using SMT.Back.Comissoes.Models.Enum;
 using SMT.Back.Comissoes.Services.Interfaces;
+using SMT.Back.Comissoes.DTO.Input.UsuarioController;
 
 namespace SMT.Back.Comissoes.Services
 {

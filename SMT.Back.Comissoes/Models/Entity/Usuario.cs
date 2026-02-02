@@ -30,5 +30,7 @@ namespace SMT.Back.Comissoes.Models.Entity
         public DateTime? DataAtualizacao { get; set; } // Data da última atualização do registro (opcional)
 
         public StatusEnum Status { get; set; } = StatusEnum.Ativo; // Status do usuário (Ativo ou Inativo)
+        public ICollection<Interacao> Interacoes { get; set; }
+
     }
 }
