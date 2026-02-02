@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import {
@@ -162,6 +163,64 @@ interface ArtistProfileProps {
   onCurrentUserUpdate?: (partial: Partial<User>) => void
 }
 
+type OwnerPriceSheetRowProps = {
+  sheet: {
+    id: string
+    titulo: string
+    preco: number
+    descricao: string
+    imageUrl?: string
+  }
+  images: string[]
+}
+
+function OwnerPriceSheetRow({ sheet, images }: OwnerPriceSheetRowProps) {
+  const image = images[0] ?? sheet.imageUrl
+  return (
+    <Card className="border-border/60 bg-card/95 shadow-sm">
+      <CardContent className="flex flex-col gap-6 p-5 xl:flex-row xl:items-stretch">
+        <div className="flex flex-1 flex-col gap-4">
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Comissao
+            </p>
+            <div className="flex flex-wrap items-baseline gap-3">
+              <h3 className="text-2xl font-semibold">{sheet.titulo}</h3>
+              <span className="text-lg font-semibold text-muted-foreground">
+                {sheet.preco.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}
+              </span>
+            </div>
+          </div>
+
+          <p className="text-sm text-muted-foreground">{sheet.descricao}</p>
+
+          <div className="mt-auto">
+            <Button variant="secondary">Editar comissao</Button>
+          </div>
+        </div>
+
+        <div className="space-y-3 xl:w-[520px] xl:shrink-0">
+          <div className="overflow-hidden rounded-xl">
+            <div className="aspect-[16/9] h-[220px] w-full">
+              {image ? (
+                <img
+                  src={image}
+                  alt={sheet.titulo}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 export function ArtistProfile({
   onRequestCommission,
   currentUser,
@@ -179,6 +238,7 @@ export function ArtistProfile({
   const { toast } = useToast()
   const fallbackArtist = users.find((user) => user.id === "art-1")
   const artist = !isMockUser && currentUser ? currentUser : fallbackArtist
+  const isOwnerProfile = Boolean(!isMockUser && currentUser?.id && artist?.id && currentUser.id === artist.id)
   const gallery = !isMockUser && currentUser
     ? arts.filter((art) => art.artistId === currentUser.id)
     : arts.filter((art) => art.artistId === "art-1")
@@ -308,7 +368,6 @@ export function ArtistProfile({
       saves: 420,
     },
   ]
-  const following = 312
   const rating = 4.8
   if (!artist) {
     return null
@@ -519,15 +578,23 @@ export function ArtistProfile({
           </div>
           {showServices ? (
             <div className="space-y-4">
-              {priceSheets.map((sheet, index) => (
-                <PriceSheetRow
-                  key={sheet.id}
-                  sheet={sheet}
-                  images={serviceGalleries[index] ?? []}
-                  artist={artist}
-                  onRequest={onRequestCommission}
-                />
-              ))}
+              {priceSheets.map((sheet, index) =>
+                isOwnerProfile ? (
+                  <OwnerPriceSheetRow
+                    key={sheet.id}
+                    sheet={sheet}
+                    images={serviceGalleries[index] ?? []}
+                  />
+                ) : (
+                  <PriceSheetRow
+                    key={sheet.id}
+                    sheet={sheet}
+                    images={serviceGalleries[index] ?? []}
+                    artist={artist}
+                    onRequest={onRequestCommission}
+                  />
+                )
+              )}
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -542,24 +609,38 @@ export function ArtistProfile({
                     }}
                   />
                   <div className="absolute bottom-3 right-3 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="icon-sm"
-                      aria-label="Curtir"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <Heart className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="icon-sm"
-                      aria-label="Salvar"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <Bookmark className="h-4 w-4" />
-                    </Button>
+                    {isOwnerProfile ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon-sm"
+                        aria-label="Editar post"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="icon-sm"
+                          aria-label="Curtir"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <Heart className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="icon-sm"
+                          aria-label="Salvar"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <Bookmark className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -625,18 +706,37 @@ export function ArtistProfile({
               </Badge>
             </div>
             <div className="flex gap-2">
-              <Button className="flex-1 gap-2 px-4">
-                <UserPlus className="h-4 w-4" />
-                Seguir
-              </Button>
-              <Button
-                variant="secondary"
-                className="flex-1 gap-2"
-                aria-label="Enviar DM"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Mensagem
-              </Button>
+              {isOwnerProfile ? (
+                <>
+                  <Button className="flex-1 gap-2 px-4">
+                    <Pencil className="h-4 w-4" />
+                    Editar perfil
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="flex-1 gap-2"
+                    aria-label="Editar posts"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Editar posts
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button className="flex-1 gap-2 px-4">
+                    <UserPlus className="h-4 w-4" />
+                    Seguir
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="flex-1 gap-2"
+                    aria-label="Enviar DM"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Mensagem
+                  </Button>
+                </>
+              )}
             </div>
             <div className="space-y-2 text-sm">
               <div className="flex items-baseline gap-2">
@@ -645,12 +745,12 @@ export function ArtistProfile({
                 </span>
                 <span className="text-muted-foreground">Seguidores</span>
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-base font-semibold">
-                  {following.toLocaleString("pt-BR")}
-                </span>
-                <span className="text-muted-foreground">Seguindo</span>
-              </div>
+              {!isOwnerProfile && (
+                <div className="flex items-baseline gap-2">
+                  <span className="text-base font-semibold">312</span>
+                  <span className="text-muted-foreground">Seguindo</span>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <span className="text-base font-semibold">
                   {rating.toFixed(1)}
@@ -731,7 +831,18 @@ export function ArtistProfile({
                     {clampedDescription}
                   </p>
                 </div>
-                {activePost?.commissionLink ? (
+                {isOwnerProfile ? (
+                  <>
+                    <Separator />
+                    <Button
+                      variant="secondary"
+                      className="inline-flex self-start items-center justify-start gap-2"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Editar post
+                    </Button>
+                  </>
+                ) : activePost?.commissionLink ? (
                   <>
                     <Separator />
                     <Button
@@ -763,21 +874,25 @@ export function ArtistProfile({
                     </Badge>
                   ))}
                 </div>
-                <Separator />
-                <div className="flex items-center gap-2">
-                  <Button variant="secondary" size="sm" className="gap-2">
-                    <Heart className="h-4 w-4" />
-                    <span className="text-xs font-semibold">
-                      {(activePost?.likes ?? 0).toLocaleString("pt-BR")}
-                    </span>
-                  </Button>
-                  <Button variant="secondary" size="sm" className="gap-2">
-                    <Bookmark className="h-4 w-4" />
-                    <span className="text-xs font-semibold">
-                      {(activePost?.saves ?? 0).toLocaleString("pt-BR")}
-                    </span>
-                  </Button>
-                </div>
+                {!isOwnerProfile && (
+                  <>
+                    <Separator />
+                    <div className="flex items-center gap-2">
+                      <Button variant="secondary" size="sm" className="gap-2">
+                        <Heart className="h-4 w-4" />
+                        <span className="text-xs font-semibold">
+                          {(activePost?.likes ?? 0).toLocaleString("pt-BR")}
+                        </span>
+                      </Button>
+                      <Button variant="secondary" size="sm" className="gap-2">
+                        <Bookmark className="h-4 w-4" />
+                        <span className="text-xs font-semibold">
+                          {(activePost?.saves ?? 0).toLocaleString("pt-BR")}
+                        </span>
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div

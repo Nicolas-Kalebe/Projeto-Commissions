@@ -363,7 +363,12 @@ const handleLogout = () => {
                 >
                   Minhas compras
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer hover:bg-accent hover:text-accent-foreground">Configuracoes</DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => navigate("/perfil")}
+                  className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                >
+                  Configuracoes
+                </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer hover:bg-accent hover:text-accent-foreground">Ajuda</DropdownMenuItem>
                 <DropdownMenuItem onClick={handleThemeToggle} className="cursor-pointer hover:bg-accent hover:text-accent-foreground">
                   <span className="flex w-full items-center justify-between">
