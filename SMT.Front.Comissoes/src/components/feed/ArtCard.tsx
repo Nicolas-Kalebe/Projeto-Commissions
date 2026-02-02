@@ -1,9 +1,17 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Art, User } from "@/types"
 import { CommissionDetailsDialog } from "@/components/commission/CommissionDetailsDialog"
 import { Megaphone } from "lucide-react"
+import {
+  type CarouselApi,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
 
 interface ArtCardProps {
   art: Art
@@ -19,7 +27,11 @@ export function ArtCard({
   onRequestCommission,
 }: ArtCardProps) {
   const [detailsOpen, setDetailsOpen] = useState(false)
-  const images = [art.imageUrl]
+  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null)
+  const [carouselIndex, setCarouselIndex] = useState(0)
+  const [carouselSnaps, setCarouselSnaps] = useState<number[]>([])
+  const images = art.images?.length ? art.images : [art.imageUrl]
+  const hasMultipleImages = images.length > 1
   const terms = useMemo(
     () =>
       [
@@ -60,6 +72,18 @@ export function ArtCard({
   const isBlurred = art.nsfw && !showNsfw
   const isSponsored = art.patrocinado
 
+  useEffect(() => {
+    if (!carouselApi || !hasMultipleImages) return
+    setCarouselSnaps(carouselApi.scrollSnapList())
+    setCarouselIndex(carouselApi.selectedScrollSnap())
+    const onSelect = () => setCarouselIndex(carouselApi.selectedScrollSnap())
+    carouselApi.on("select", onSelect)
+    carouselApi.on("reInit", onSelect)
+    return () => {
+      carouselApi.off("select", onSelect)
+    }
+  }, [carouselApi, hasMultipleImages])
+
   return (
     <>
       <Card
@@ -75,14 +99,72 @@ export function ArtCard({
         }}
       >
         <div className="relative aspect-square w-full overflow-hidden">
-          <div className="block h-full w-full">
-            <img
-              src={art.imageUrl}
-              alt={art.titulo}
-              className={`h-full w-full object-cover transition-all duration-500 group-hover:scale-105 ${isBlurred ? "blur-xl scale-110" : ""}`}
-              loading="lazy"
-            />
-          </div>
+          {hasMultipleImages ? (
+            <Carousel
+              opts={{ loop: true }}
+              setApi={setCarouselApi}
+              className="h-full w-full"
+            >
+              <CarouselContent viewportClassName="h-full" className="h-full -ml-0">
+                {images.map((image, index) => (
+                  <CarouselItem key={`${art.id}-${index}`} className="h-full pl-0">
+                    <img
+                      src={image}
+                      alt={`${art.titulo} ${index + 1}`}
+                      className={`h-full w-full object-cover ${isBlurred ? "blur-xl scale-110" : ""}`}
+                      loading="lazy"
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious
+                className="left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 text-white hover:bg-black/70 border-transparent opacity-0 transition-opacity group-hover:opacity-100 dark:bg-black/60 dark:text-white dark:hover:bg-black/70"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  carouselApi?.scrollPrev()
+                }}
+                onPointerDown={(event) => event.stopPropagation()}
+                aria-label="Imagem anterior"
+              />
+              <CarouselNext
+                className="right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 text-white hover:bg-black/70 border-transparent opacity-0 transition-opacity group-hover:opacity-100 dark:bg-black/60 dark:text-white dark:hover:bg-black/70"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  carouselApi?.scrollNext()
+                }}
+                onPointerDown={(event) => event.stopPropagation()}
+                aria-label="Próxima imagem"
+              />
+              <div className="pointer-events-auto absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5">
+                {carouselSnaps.map((_, index) => (
+                  <button
+                    key={`${art.id}-dot-${index}`}
+                    type="button"
+                    className={`h-1.5 w-1.5 rounded-full transition ${
+                      index === carouselIndex
+                        ? "bg-white"
+                        : "bg-white/50 hover:bg-white/80"
+                    }`}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      carouselApi?.scrollTo(index)
+                    }}
+                    onPointerDown={(event) => event.stopPropagation()}
+                    aria-label={`Ir para imagem ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </Carousel>
+          ) : (
+            <div className="block h-full w-full">
+              <img
+                src={art.imageUrl}
+                alt={art.titulo}
+                className={`h-full w-full object-cover transition-all duration-500 group-hover:scale-105 ${isBlurred ? "blur-xl scale-110" : ""}`}
+                loading="lazy"
+              />
+            </div>
+          )}
 
           <div className="absolute right-2 top-2 flex flex-col gap-1 z-10">
             {isSponsored && (

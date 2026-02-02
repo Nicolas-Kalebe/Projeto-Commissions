@@ -14,6 +14,7 @@ export interface Art {
   id: string
   titulo: string
   imageUrl: string
+  images?: string[]
   artistId: string
   tags: string[]
   nsfw: boolean

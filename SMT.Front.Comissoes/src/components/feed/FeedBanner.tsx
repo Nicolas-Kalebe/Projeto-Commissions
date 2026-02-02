@@ -99,13 +99,13 @@ export function FeedBanner() {
             <CarouselPrevious
                 variant="secondary"
                 size="icon"
-                className="left-4 top-1/2 -translate-y-1/2 rounded-full opacity-0 transition group-hover:opacity-100"
+                className="left-4 top-1/2 -translate-y-1/2 rounded-full opacity-0 transition group-hover:opacity-100 dark:bg-[oklch(0.97_0_0)] dark:text-[oklch(0.205_0_0)] dark:hover:bg-[oklch(0.93_0_0)]"
                 onClick={handleBannerPrev}
             />
             <CarouselNext
                 variant="secondary"
                 size="icon"
-                className="right-4 top-1/2 -translate-y-1/2 rounded-full opacity-0 transition group-hover:opacity-100"
+                className="right-4 top-1/2 -translate-y-1/2 rounded-full opacity-0 transition group-hover:opacity-100 dark:bg-[oklch(0.97_0_0)] dark:text-[oklch(0.205_0_0)] dark:hover:bg-[oklch(0.93_0_0)]"
                 onClick={handleBannerNext}
             />
         </Carousel>

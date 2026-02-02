@@ -54,6 +54,7 @@ export function AppHeader({
   isAuthenticated,
   onLogout,
 }: AppHeaderProps) {
+  const themeStorageKey = "theme"
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
@@ -81,6 +82,10 @@ export function AppHeader({
   }, [notifications])
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem(themeStorageKey)
+    if (savedTheme === "dark" || savedTheme === "light") {
+      document.documentElement.classList.toggle("dark", savedTheme === "dark")
+    }
     setIsDark(document.documentElement.classList.contains("dark"))
 
     // Fecha o chat ao clicar fora
@@ -100,6 +105,7 @@ export function AppHeader({
     setIsDark((prev) => {
       const next = !prev
       document.documentElement.classList.toggle("dark", next)
+      localStorage.setItem(themeStorageKey, next ? "dark" : "light")
       return next
     })
   }

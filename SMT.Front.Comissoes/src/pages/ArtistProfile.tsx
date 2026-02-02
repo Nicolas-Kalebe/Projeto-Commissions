@@ -116,16 +116,84 @@ export function ArtistProfile({
   }, [])
   const testSingleImagePost = {
     id: "post-test-single",
-    titulo: "Teste Vertical",
+    titulo: "Anime Draw",
     descricao:
-      "Post de teste com uma unica imagem vertical para validar como a composicao se comporta no dialog. A ideia e simular um conteudo real, com contexto e detalhes suficientes para avaliar alinhamento, hierarquia e respiro do layout. O foco e garantir legibilidade em telas menores e equilibrio entre texto e imagem.",
-    tags: ["#Teste", "#Vertical", "#9x16"],
+      "Ilustracao com foco em expressao, cores suaves e atmosfera delicada.",
+    tags: ["#Anime", "#Ilustracao", "#Personagem"],
     images: ["/mock_arts/test_tall_9_16.png"],
     popularidade: 999,
     likes: 4280,
     saves: 860,
     commissionLink: "/comissoes",
   }
+  const testPortfolioPosts = [
+    {
+      id: "post-test-3-4",
+      titulo: "Character Sketch",
+      descricao:
+        "Estudo rapido de personagem com linha limpa e foco em silhueta.",
+      tags: ["#Sketch", "#Personagem", "#Lineart"],
+      images: ["/mock_arts/test_3_4.png", "/mock_arts/test_tall_9_16.png"],
+      popularidade: 780,
+      likes: 1670,
+      saves: 310,
+    },
+    {
+      id: "post-test-4-3",
+      titulo: "Cenario Ilustrado",
+      descricao:
+        "Cenario com elementos em camadas e detalhes sutis no fundo.",
+      tags: ["#Cenario", "#Background", "#Ilustracao"],
+      images: ["/mock_arts/test_4_3.png"],
+      popularidade: 720,
+      likes: 1420,
+      saves: 280,
+    },
+    {
+      id: "post-test-16-9",
+      titulo: "Paisagem Concept",
+      descricao:
+        "Paisagem com luz natural e clima de aventura.",
+      tags: ["#Paisagem", "#Concept", "#Fantasy"],
+      images: ["/mock_arts/test_wide_16_9.png", "/mock_arts/fantasy_landscape.png"],
+      popularidade: 690,
+      likes: 1310,
+      saves: 250,
+    },
+    {
+      id: "post-test-21-9",
+      titulo: "Horizonte Fantasy",
+      descricao:
+        "Cena ampla com atmosfera leve e contraste suave.",
+      tags: ["#Fantasy", "#Atmosfera", "#Arte"],
+      images: ["/mock_arts/test_ultrawide_21_9.png"],
+      popularidade: 640,
+      likes: 1180,
+      saves: 220,
+    },
+    {
+      id: "post-test-wallhaven",
+      titulo: "Noite Urbana",
+      descricao:
+        "Ilustracao noturna com luzes marcantes e clima urbano.",
+      tags: ["#Noite", "#Urbano", "#Luzes"],
+      images: ["/mock_arts/wallhaven-mlzdrk.jpg"],
+      popularidade: 820,
+      likes: 1900,
+      saves: 360,
+    },
+    {
+      id: "post-test-watercolor",
+      titulo: "Aquarela Naturaleza",
+      descricao:
+        "Pintura delicada com cores suaves e sensacao de calma.",
+      tags: ["#Aquarela", "#Natureza", "#Pintura"],
+      images: ["/mock_arts/watercolor_meadow.png", "/mock_arts/abstract_shapes.png"],
+      popularidade: 860,
+      likes: 2100,
+      saves: 420,
+    },
+  ]
   const following = 312
   const rating = 4.8
   if (!artist) {
@@ -171,7 +239,11 @@ export function ArtistProfile({
     },
   ]
 
-  const sortedPosts = [testSingleImagePost, ...portfolioPosts].sort((a, b) => {
+  const sortedPosts = [
+    testSingleImagePost,
+    ...testPortfolioPosts,
+    ...portfolioPosts,
+  ].sort((a, b) => {
     if (portfolioSort === "populares") {
       return b.popularidade - a.popularidade
     }

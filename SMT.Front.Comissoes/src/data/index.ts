@@ -44,6 +44,11 @@ export const arts: Art[] = [
     titulo: "Noite Neon",
     imageUrl:
       "/mock_arts/cyberpunk_char.png",
+    images: [
+      "/mock_arts/cyberpunk_char.png",
+      "/mock_arts/anime_neon.png",
+      "/mock_arts/comic_hero.png",
+    ],
     artistId: "art-1",
     tags: ["#Neon", "#Retrato", "#Anime"],
     nsfw: false,
@@ -65,6 +70,11 @@ export const arts: Art[] = [
     titulo: "Pixel Drift",
     imageUrl:
       "/mock_arts/render_3d.png",
+    images: [
+      "/mock_arts/render_3d.png",
+      "/mock_arts/pixel_city.png",
+      "/mock_arts/abstract_shapes.png",
+    ],
     artistId: "art-2",
     tags: ["#PixelArt", "#Retro", "#Cidade"],
     nsfw: false,
@@ -85,6 +95,11 @@ export const arts: Art[] = [
     titulo: "Catedral Astral",
     imageUrl:
       "/mock_arts/charcoal_tree.png",
+    images: [
+      "/mock_arts/charcoal_tree.png",
+      "/mock_arts/fantasy_landscape.png",
+      "/mock_arts/watercolor_meadow.png",
+    ],
     artistId: "art-2",
     tags: ["#SciFi", "#Matte", "#Arquitetura"],
     nsfw: false,
@@ -106,6 +121,11 @@ export const arts: Art[] = [
     titulo: "Viagem Dourada",
     imageUrl:
       "/mock_arts/watercolor_meadow.png",
+    images: [
+      "/mock_arts/watercolor_meadow.png",
+      "/mock_arts/fantasy_landscape.png",
+      "/mock_arts/low_poly.png",
+    ],
     artistId: "art-1",
     tags: ["#Concept", "#Ilustração", "#Luz"],
     nsfw: false,
@@ -136,6 +156,11 @@ export const arts: Art[] = [
     titulo: "Luz Larga",
     imageUrl:
       "/mock_arts/comic_hero.png",
+    images: [
+      "/mock_arts/comic_hero.png",
+      "/mock_arts/test_wide_16_9.png",
+      "/mock_arts/test_ultrawide_21_9.png",
+    ],
     artistId: "art-1",
     tags: ["#Wide", "#Glow", "#Atmosphere"],
     nsfw: false,
