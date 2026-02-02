@@ -50,6 +50,62 @@ type PortfolioPost = {
   commissionLink?: string
 }
 
+type BackendArtistProfile = {
+  avaliacao?: number
+  estilo?: string
+  tipoArtista?: string
+  portifolioUrl?: string
+  ativoParaServicos?: boolean
+  usuarioNomePerfil?: string
+  usuarioNome?: string
+  usuarioFotoPerfil?: string
+  usuarioSeguidores?: number
+  portfolioItens?: BackendPortfolioItem[]
+}
+
+type BackendPortfolioItem = {
+  id?: number
+  artistaId?: number
+  titulo?: string
+  descricao?: string
+  urlArquivo?: string
+  ordem?: number
+  likeCount?: number
+  favoritoCount?: number
+  visualizacaoCount?: number
+  dataCriacao?: string
+}
+
+const readField = <T,>(source: Record<string, unknown>, ...keys: string[]) => {
+  for (const key of keys) {
+    const value = source[key]
+    if (value !== undefined && value !== null) return value as T
+  }
+  return undefined
+}
+
+const parsePortfolioItems = (value: unknown): BackendPortfolioItem[] => {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return []
+    const record = entry as Record<string, unknown>
+    return [
+      {
+        id: readField<number>(record, "id", "Id"),
+        artistaId: readField<number>(record, "artistaId", "ArtistaId"),
+        titulo: readField<string>(record, "titulo", "Titulo"),
+        descricao: readField<string>(record, "descricao", "Descricao"),
+        urlArquivo: readField<string>(record, "urlArquivo", "UrlArquivo"),
+        ordem: readField<number>(record, "ordem", "Ordem"),
+        likeCount: readField<number>(record, "likeCount", "LikeCount"),
+        favoritoCount: readField<number>(record, "favoritoCount", "FavoritoCount"),
+        visualizacaoCount: readField<number>(record, "visualizacaoCount", "VisualizacaoCount"),
+        dataCriacao: readField<string>(record, "dataCriacao", "DataCriacao"),
+      },
+    ]
+  })
+}
+
 type PortfolioPreviewCardProps = {
   post: PortfolioPost
   onOpen: () => void
@@ -235,13 +291,91 @@ export function ArtistProfile({
   )
   const [showServices, setShowServices] = useState(true)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [backendProfile, setBackendProfile] = useState<BackendArtistProfile | null>(null)
   const { toast } = useToast()
   const fallbackArtist = users.find((user) => user.id === "art-1")
   const artist = !isMockUser && currentUser ? currentUser : fallbackArtist
   const isOwnerProfile = Boolean(!isMockUser && currentUser?.id && artist?.id && currentUser.id === artist.id)
-  const gallery = !isMockUser && currentUser
-    ? arts.filter((art) => art.artistId === currentUser.id)
-    : arts.filter((art) => art.artistId === "art-1")
+  const isRealUser = Boolean(!isMockUser && currentUser)
+
+  useEffect(() => {
+    if (!isRealUser) {
+      setBackendProfile(null)
+      return
+    }
+    const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
+    if (!tokenGoogle) {
+      setBackendProfile(null)
+      return
+    }
+
+    let isActive = true
+    const loadProfile = async () => {
+      try {
+        const response = await fetch(API_ROUTES.Usuario.obterPerfilArtista, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ googleToken: tokenGoogle }),
+        })
+        if (!response.ok) return
+
+        const body = await response.json().catch(() => null)
+        const resultado = body?.resultado ?? body?.Resultado
+        if (!resultado || typeof resultado !== "object") return
+
+        const resultadoObj = resultado as Record<string, unknown>
+        const usuarioObj =
+          (readField<Record<string, unknown>>(resultadoObj, "usuario", "Usuario") ?? {}) as Record<
+            string,
+            unknown
+          >
+
+        const avaliacao = readField<number>(resultadoObj, "avaliacao", "Avaliacao")
+        const estilo = readField<string>(resultadoObj, "estilo", "Estilo")
+        const tipoArtista = readField<string>(resultadoObj, "tipoArtista", "TipoArtista")
+        const portifolioUrl = readField<string>(
+          resultadoObj,
+          "portifolioUrl",
+          "PortifolioUrl",
+          "portfolioUrl",
+          "PortfolioUrl"
+        )
+        const ativoParaServicos = readField<boolean>(resultadoObj, "ativoParaServicos", "AtivoParaServicos")
+        const portfolioItens = parsePortfolioItems(
+          readField<unknown>(resultadoObj, "portfolioItens", "PortfolioItens")
+        )
+        const usuarioNomePerfil = readField<string>(usuarioObj, "nomePerfil", "NomePerfil")
+        const usuarioNome = readField<string>(usuarioObj, "nome", "Nome")
+        const usuarioFotoPerfil = readField<string>(usuarioObj, "fotoPerfil", "FotoPerfil")
+        const usuarioSeguidores = readField<number>(usuarioObj, "seguidores", "Seguidores")
+
+        if (!isActive) return
+        setBackendProfile({
+          avaliacao,
+          estilo,
+          tipoArtista,
+          portifolioUrl,
+          ativoParaServicos,
+          portfolioItens,
+          usuarioNomePerfil,
+          usuarioNome,
+          usuarioFotoPerfil,
+          usuarioSeguidores,
+        })
+      } catch {
+        // Silent fallback to existing profile data
+      }
+    }
+
+    loadProfile()
+    return () => {
+      isActive = false
+    }
+  }, [isRealUser, currentUser?.id])
+
+  const gallery = isMockUser
+    ? arts.filter((art) => art.artistId === "art-1")
+    : []
   const extendedGallery = [
     ...gallery,
     ...gallery.map((art, index) => ({
@@ -368,22 +502,58 @@ export function ArtistProfile({
       saves: 420,
     },
   ]
-  const rating = 4.8
+  const ratingValue = isMockUser
+    ? 4.8
+    : typeof backendProfile?.avaliacao === "number"
+      ? backendProfile.avaliacao
+      : 0
   if (!artist) {
     return null
   }
+
+  const profileBio = isMockUser
+    ? artist.bio
+    : artist.bio?.trim()
+      ? artist.bio
+      : "Bio ainda não informada."
+  const styleDescription = isMockUser
+    ? "Traço leve com foco em expressões, paleta suave e detalhes delicados para personagens e cenas."
+    : backendProfile?.estilo?.trim()
+      ? backendProfile.estilo
+      : "Estilo ainda não informado."
+  const styleTags = isMockUser
+    ? ["Lineart suave", "Cores pasteis", "Chibi"]
+    : (backendProfile?.tipoArtista
+      ? backendProfile.tipoArtista
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+      : [])
+  const coverImageUrl =
+    !isMockUser && typeof backendProfile?.portifolioUrl === "string" && backendProfile.portifolioUrl.trim()
+      ? backendProfile.portifolioUrl
+      : "/mock_arts/test_wide_16_9.png"
+  const handleSource =
+    !isMockUser && typeof backendProfile?.usuarioNomePerfil === "string" && backendProfile.usuarioNomePerfil.trim()
+      ? backendProfile.usuarioNomePerfil
+      : artist.nome
 
   const initials = artist.nome
     .split(" ")
     .map((part) => part[0])
     .join("")
     .slice(0, 2)
-  const handle = `@${artist.nome
+  const handle = `@${handleSource
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_|_$/g, "")}`
+  const followersValue = isMockUser
+    ? artist.seguidores
+    : typeof backendProfile?.usuarioSeguidores === "number"
+      ? backendProfile.usuarioSeguidores
+      : undefined
 
   const socialLinks = [
     {
@@ -412,11 +582,30 @@ export function ArtistProfile({
     },
   ]
 
-  const sortedPosts = [
-    testSingleImagePost,
-    ...testPortfolioPosts,
-    ...portfolioPosts,
-  ].sort((a, b) => {
+  const backendPosts: PortfolioPost[] = (backendProfile?.portfolioItens ?? [])
+    .filter((item) => typeof item.urlArquivo === "string" && item.urlArquivo.trim())
+    .map((item, index) => {
+      const titulo = item.titulo?.trim() ? item.titulo : "Post do portfólio"
+      const descricao = item.descricao?.trim() ? item.descricao : ""
+      const images = [item.urlArquivo?.trim() ?? ""].filter(Boolean)
+      const popularidade = item.visualizacaoCount ?? item.likeCount ?? 0
+      return {
+        id: item.id ? `portfolio-${item.id}` : `portfolio-${index}`,
+        titulo,
+        descricao,
+        tags: [],
+        images,
+        popularidade,
+        likes: item.likeCount ?? 0,
+        saves: item.favoritoCount ?? 0,
+      }
+    })
+
+  const activePriceSheets = isMockUser ? priceSheets : []
+  const visiblePosts = isMockUser
+    ? [testSingleImagePost, ...testPortfolioPosts, ...portfolioPosts]
+    : backendPosts
+  const sortedPosts = [...visiblePosts].sort((a, b) => {
     if (portfolioSort === "populares") {
       return b.popularidade - a.popularidade
     }
@@ -431,7 +620,15 @@ export function ArtistProfile({
     descriptionText.length > descriptionLimit
       ? `${descriptionText.slice(0, descriptionLimit).trim()}...`
       : descriptionText
-  const serviceGalleries = priceSheets.map((sheet, index) => {
+
+  useEffect(() => {
+    if (sortedPosts.length === 0) return
+    if (activePostIndex >= sortedPosts.length) {
+      setActivePostIndex(0)
+      setActiveImageIndex(0)
+    }
+  }, [activePostIndex, sortedPosts.length])
+  const serviceGalleries = activePriceSheets.map((sheet, index) => {
     if (sheet.id === "ps-1") {
       return [
         "/mock_arts/test_wide_16_9.png",
@@ -522,7 +719,7 @@ export function ArtistProfile({
     <section className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-6">
       <div className="h-52 w-full overflow-hidden rounded-2xl md:h-64">
         <img
-          src="/mock_arts/test_wide_16_9.png"
+          src={coverImageUrl}
           alt="Foto de capa"
           className="h-full w-full object-cover"
           loading="lazy"
@@ -577,74 +774,86 @@ export function ArtistProfile({
             )}
           </div>
           {showServices ? (
-            <div className="space-y-4">
-              {priceSheets.map((sheet, index) =>
-                isOwnerProfile ? (
-                  <OwnerPriceSheetRow
-                    key={sheet.id}
-                    sheet={sheet}
-                    images={serviceGalleries[index] ?? []}
-                  />
-                ) : (
-                  <PriceSheetRow
-                    key={sheet.id}
-                    sheet={sheet}
-                    images={serviceGalleries[index] ?? []}
-                    artist={artist}
-                    onRequest={onRequestCommission}
-                  />
-                )
-              )}
-            </div>
+            activePriceSheets.length > 0 ? (
+              <div className="space-y-4">
+                {activePriceSheets.map((sheet, index) =>
+                  isOwnerProfile ? (
+                    <OwnerPriceSheetRow
+                      key={sheet.id}
+                      sheet={sheet}
+                      images={serviceGalleries[index] ?? []}
+                    />
+                  ) : (
+                    <PriceSheetRow
+                      key={sheet.id}
+                      sheet={sheet}
+                      images={serviceGalleries[index] ?? []}
+                      artist={artist}
+                      onRequest={onRequestCommission}
+                    />
+                  )
+                )}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center text-sm text-muted-foreground">
+                Nenhum serviço cadastrado ainda.
+              </div>
+            )
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {sortedPosts.map((post, index) => (
-                <div key={post.id} className="group relative">
-                  <PortfolioPreviewCard
-                    post={post}
-                    onOpen={() => {
-                      setActivePostIndex(index)
-                      setActiveImageIndex(0)
-                      setPostDialogOpen(true)
-                    }}
-                  />
-                  <div className="absolute bottom-3 right-3 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                    {isOwnerProfile ? (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="icon-sm"
-                        aria-label="Editar post"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    ) : (
-                      <>
+            sortedPosts.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {sortedPosts.map((post, index) => (
+                  <div key={post.id} className="group relative">
+                    <PortfolioPreviewCard
+                      post={post}
+                      onOpen={() => {
+                        setActivePostIndex(index)
+                        setActiveImageIndex(0)
+                        setPostDialogOpen(true)
+                      }}
+                    />
+                    <div className="absolute bottom-3 right-3 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                      {isOwnerProfile ? (
                         <Button
                           type="button"
                           variant="secondary"
                           size="icon-sm"
-                          aria-label="Curtir"
+                          aria-label="Editar post"
                           onClick={(event) => event.stopPropagation()}
                         >
-                          <Heart className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="icon-sm"
-                          aria-label="Salvar"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <Bookmark className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
+                      ) : (
+                        <>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="icon-sm"
+                            aria-label="Curtir"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <Heart className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="icon-sm"
+                            aria-label="Salvar"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <Bookmark className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center text-sm text-muted-foreground">
+                Nenhum post no portfólio ainda.
+              </div>
+            )
           )}
         </section>
         <aside className="self-start lg:sticky lg:top-8">
@@ -655,7 +864,10 @@ export function ArtistProfile({
             <div className="flex flex-col items-center gap-3 text-center">
               <div className="relative">
                 <Avatar className="relative z-10 h-32 w-32">
-                  <AvatarImage src={artist.avatarUrl} alt={artist.nome} />
+                  <AvatarImage
+                    src={artist.avatarUrl || backendProfile?.usuarioFotoPerfil || ""}
+                    alt={artist.nome}
+                  />
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
                 {!isMockUser && (
@@ -689,7 +901,7 @@ export function ArtistProfile({
                 <h2 className="text-2xl font-semibold">{artist.nome}</h2>
                 <p className="text-sm text-muted-foreground">{handle}</p>
               </div>
-              <p className="text-sm text-muted-foreground">{artist.bio}</p>
+              <p className="text-sm text-muted-foreground">{profileBio}</p>
             </div>
             <div className="flex w-full flex-wrap justify-center gap-2">
               <Badge variant="secondary">
@@ -741,7 +953,9 @@ export function ArtistProfile({
             <div className="space-y-2 text-sm">
               <div className="flex items-baseline gap-2">
                 <span className="text-base font-semibold">
-                  {artist.seguidores.toLocaleString("pt-BR")}
+                  {typeof followersValue === "number"
+                    ? followersValue.toLocaleString("pt-BR")
+                    : "--"}
                 </span>
                 <span className="text-muted-foreground">Seguidores</span>
               </div>
@@ -753,13 +967,13 @@ export function ArtistProfile({
               )}
               <div className="flex items-center gap-2">
                 <span className="text-base font-semibold">
-                  {rating.toFixed(1)}
+                  {ratingValue.toFixed(1)}
                 </span>
                 <div className="flex items-center gap-0.5">
                   {Array.from({ length: 5 }).map((_, index) => (
                     <Star
                       key={index}
-                      className={`h-3.5 w-2.5 ${index < Math.round(rating)
+                      className={`h-3.5 w-2.5 ${index < Math.round(ratingValue)
                           ? "fill-foreground text-foreground"
                           : "text-muted-foreground"
                         }`}
@@ -792,13 +1006,18 @@ export function ArtistProfile({
                 Sobre o estilo
               </div>
               <p className="text-muted-foreground">
-                Traço leve com foco em expressões, paleta suave e detalhes
-                delicados para personagens e cenas.
+                {styleDescription}
               </p>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">Lineart suave</Badge>
-                <Badge variant="secondary">Cores pasteis</Badge>
-                <Badge variant="secondary">Chibi</Badge>
+                {styleTags.length > 0 ? (
+                  styleTags.map((tag) => (
+                    <Badge key={tag} variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))
+                ) : (
+                  <Badge variant="secondary">Sem tags</Badge>
+                )}
               </div>
             </div>
           </section>

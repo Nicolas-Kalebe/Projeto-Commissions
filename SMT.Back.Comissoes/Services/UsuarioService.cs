@@ -13,11 +13,13 @@ namespace SMT.Back.Comissoes.Services
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IAuthService _authService;
         private readonly IBucketService _bucketService;
-        public UsuarioService(IUsuarioRepository usuarioRepository, IAuthService authService, IBucketService bucketService)
+        private readonly IInteracaoRepository _interacaoRepository;
+        public UsuarioService(IUsuarioRepository usuarioRepository, IAuthService authService, IBucketService bucketService, IInteracaoRepository interacaoRepository)
         {
             _usuarioRepository = usuarioRepository;
             _authService = authService;
             _bucketService = bucketService;
+            _interacaoRepository = interacaoRepository;
         }
 
         public async Task CadastrarUsuario(CadastrarUsuarioInput usuarioInput)
@@ -142,6 +144,28 @@ namespace SMT.Back.Comissoes.Services
                     () => Log.Error("Perfil de artista não encontrado para o usuário ID: {UsuarioId}", usuario.Id),
                     (int)System.Net.HttpStatusCode.NotFound
                 );
+
+            if (artista.Usuario != null)
+            {
+                artista.Usuario.Seguidores = await _interacaoRepository.CountAsync(
+                    TipoInteracaoEnum.Seguir,
+                    TipoAlvoInteracaoEnum.PerfilArtista,
+                    usuario.Id
+                );
+            }
+
+            if (artista.PortfolioItens != null)
+            {
+                foreach (var item in artista.PortfolioItens)
+                {
+                    if (!string.IsNullOrWhiteSpace(item.UrlArquivo))
+                    {
+                        var signedUrl = _bucketService.GetPresignedUrl(item.UrlArquivo, TimeSpan.FromHours(6));
+                        if (!string.IsNullOrWhiteSpace(signedUrl))
+                            item.UrlArquivo = signedUrl;
+                    }
+                }
+            }
             return artista;
         }
         public async Task AtualizarPortfolioAsync(AtualizarPortfolioInput atualizarPortfolioInput)
@@ -166,7 +190,15 @@ namespace SMT.Back.Comissoes.Services
             var pathCompleto = await _bucketService.UploadAsync(atualizarPortfolioInput.Imagem, pathBucket);
 
             // Atualiza apenas o path no banco            
-            await _usuarioRepository.AtualizarPortfolioArtista(artista.Id, pathCompleto);
+            await _usuarioRepository.AtualizarPortfolioArtista(
+                    artista.Id,
+                    new PortfolioItem
+                    {
+                        Titulo = atualizarPortfolioInput.Titulo ?? string.Empty,
+                        Descricao = atualizarPortfolioInput.Descricao ?? string.Empty,
+                        UrlArquivo = pathCompleto
+                    }
+                );
         }
         public async Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput)
         {

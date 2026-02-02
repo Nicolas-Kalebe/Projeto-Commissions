@@ -23,19 +23,28 @@ interface AppShellProps {
   onLogout: () => void
 }
 
-const isValidProfilePhotoUrl = (value: unknown) => {
-  if (typeof value !== "string") return false
+const normalizeHttpUrl = (value: unknown) => {
+  if (typeof value !== "string") return ""
   const trimmed = value.trim()
-  if (!trimmed) return false
+  if (!trimmed) return ""
   try {
     const url = new URL(trimmed)
-    if (url.protocol !== "http:" && url.protocol !== "https:") return false
-    if (!url.hostname.endsWith("backblazeb2.com")) return false
-    return url.pathname.includes("/usuario-portfolio/usuarios/")
+    if (url.protocol !== "http:" && url.protocol !== "https:") return ""
+    return url.toString()
   } catch {
-    return false
+    return ""
   }
 }
+
+const resolveDisplayName = (nomePerfil: unknown, nome: unknown, googleName: string) => {
+  if (typeof nomePerfil === "string" && nomePerfil.trim()) return nomePerfil.trim()
+  if (typeof nome === "string" && nome.trim()) return nome.trim()
+  if (googleName) return googleName
+  return "Usuario"
+}
+
+const resolveUserRole = (jaAnunciou: unknown) =>
+  jaAnunciou === true ? "artista" : "cliente"
 
 const isLikelyJwt = (value: string) => value.split(".").length === 3
 
@@ -56,7 +65,18 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
   useEffect(() => {
     if (!isAuthenticated) {
       setCurrentUser(users[2])
+      return
     }
+    const googleName = localStorage.getItem("google_name")?.trim() ?? ""
+    const googlePhoto = localStorage.getItem("google_photo")?.trim() ?? ""
+    setCurrentUser({
+      id: "",
+      nome: resolveDisplayName("", "", googleName),
+      role: "cliente",
+      avatarUrl: normalizeHttpUrl(googlePhoto),
+      bio: "",
+      seguidores: 0,
+    })
   }, [isAuthenticated])
 
   useEffect(() => {
@@ -68,6 +88,16 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
 
     const loadUser = async () => {
       try {
+        const googleName = localStorage.getItem("google_name")?.trim() ?? ""
+        const googlePhoto = localStorage.getItem("google_photo")?.trim() ?? ""
+        const fallbackUser: User = {
+          id: "",
+          nome: resolveDisplayName("", "", googleName),
+          role: "cliente",
+          avatarUrl: normalizeHttpUrl(googlePhoto),
+          bio: "",
+          seguidores: 0,
+        }
         const response = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -86,22 +116,24 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
           ?? (resultado as { Nome?: unknown }).Nome
         const id = (resultado as { id?: unknown; Id?: unknown }).id
           ?? (resultado as { Id?: unknown }).Id
+        const jaAnunciou = (resultado as { jaAnunciou?: unknown; JaAnunciou?: unknown }).jaAnunciou
+          ?? (resultado as { JaAnunciou?: unknown }).JaAnunciou
 
         if (!isActive) return
-        setCurrentUser((prev) => ({
-          ...prev,
-          id: id ? String(id) : prev.id,
-          nome: typeof nomePerfil === "string" && nomePerfil.trim()
-            ? nomePerfil
-            : typeof nome === "string" && nome.trim()
-              ? nome
-              : prev.nome,
-          avatarUrl: isValidProfilePhotoUrl(fotoPerfil)
-            ? String(fotoPerfil)
-            : prev.avatarUrl,
-        }))
+        const displayName = resolveDisplayName(nomePerfil, nome, googleName)
+        const avatarUrl = normalizeHttpUrl(fotoPerfil) || normalizeHttpUrl(googlePhoto)
+        setCurrentUser({
+          id: id ? String(id) : fallbackUser.id,
+          nome: displayName || fallbackUser.nome,
+          role: typeof jaAnunciou === "boolean"
+            ? resolveUserRole(jaAnunciou)
+            : fallbackUser.role,
+          avatarUrl: avatarUrl || fallbackUser.avatarUrl,
+          bio: "",
+          seguidores: 0,
+        })
       } catch {
-        // Silent fallback to existing mock user data
+        // Silent fallback to existing user data
       }
     }
 

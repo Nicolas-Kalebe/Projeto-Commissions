@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace SMT.Back.Comissoes.Models.Entity
 {
@@ -10,6 +11,7 @@ namespace SMT.Back.Comissoes.Models.Entity
 
         public int ArtistaId { get; set; }
         [ForeignKey(nameof(ArtistaId))]
+        [JsonIgnore]
         public Artista Artista { get; set; }
         public string Titulo { get; set; } = string.Empty;
         public string Descricao { get; set; } = string.Empty;

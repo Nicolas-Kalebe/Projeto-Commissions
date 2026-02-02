@@ -7,8 +7,6 @@ public class DbContextClass(DbContextOptions<DbContextClass> options) : DbContex
 {
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Artista> Artistas { get; set; }
-    public DbSet<Servicos> Servicos { get; set; }
-    public DbSet<TermoDeServico> TermosDeServico { get; set; }
     public DbSet<Interacao> Interacao { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

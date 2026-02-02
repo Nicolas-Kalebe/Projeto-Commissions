@@ -72,6 +72,9 @@ namespace SMT.Back.Comissoes.Repositories
         public async Task<Artista> ObterArtistaPorUsuarioId(int usuarioId)
         {
             var artista = await _context.Artistas
+                .AsNoTracking()
+                .Include(a => a.Usuario)
+                .Include(a => a.PortfolioItens)
                 .FirstOrDefaultAsync(a => a.UsuarioId == usuarioId);
             return artista;
         }
@@ -81,14 +84,30 @@ namespace SMT.Back.Comissoes.Repositories
             await _context.Artistas.AddAsync(artista);
             await _context.SaveChangesAsync();
         }
-        public async Task AtualizarPortfolioArtista(int artistaId, string portfolioUrl)
+        public async Task AtualizarPortfolioArtista(int artistaId, PortfolioItem portfolioItem)
         {
-            var artista = await _context.Artistas.FindAsync(artistaId);
-            if (artista != null)
-            {
-                artista.PortifolioUrl = portfolioUrl;
-                await _context.SaveChangesAsync();
-            }
+            var artista = await _context.Artistas
+                .Include(a => a.PortfolioItens)
+                .FirstOrDefaultAsync(a => a.Id == artistaId);
+
+            if (artista == null)
+                throw new Exception("Artista não encontrado.");
+
+            // define a ordem automaticamente
+            var proximaOrdem = artista.PortfolioItens.Any()
+                ? artista.PortfolioItens.Max(p => p.Ordem) + 1
+                : 1;
+
+            portfolioItem.ArtistaId = artistaId;
+            portfolioItem.Ordem = proximaOrdem;
+            portfolioItem.LikeCount = 0;
+            portfolioItem.FavoritoCount = 0;
+            portfolioItem.VisualizacaoCount = 0;
+            portfolioItem.DataCriacao = DateTime.UtcNow;
+
+            artista.PortfolioItens.Add(portfolioItem);
+
+            await _context.SaveChangesAsync();
         }
         public async Task AtualizarFotoPerfil(int usuarioId, string fotoPerfilUrl)
         {

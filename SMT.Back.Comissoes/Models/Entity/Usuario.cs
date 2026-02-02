@@ -1,5 +1,6 @@
 ﻿using SMT.Back.Comissoes.Models.Enum;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SMT.Back.Comissoes.Models.Entity
 {
@@ -30,7 +31,9 @@ namespace SMT.Back.Comissoes.Models.Entity
         public DateTime? DataAtualizacao { get; set; } // Data da última atualização do registro (opcional)
 
         public StatusEnum Status { get; set; } = StatusEnum.Ativo; // Status do usuário (Ativo ou Inativo)
+        [NotMapped]
+        public int Seguidores { get; set; }
         public ICollection<Interacao> Interacoes { get; set; }
-
+        public ICollection<LinkSocial>? LinksSociais { get; set; }
     }
 }
