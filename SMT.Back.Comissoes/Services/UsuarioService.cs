@@ -165,6 +165,11 @@ namespace SMT.Back.Comissoes.Services
                         if (!string.IsNullOrWhiteSpace(signedUrl))
                             item.UrlArquivo = signedUrl;
                     }
+                    
+                    item.LikeCount = await _interacaoRepository.CountAsync(
+                    TipoInteracaoEnum.Like,
+                    TipoAlvoInteracaoEnum.PortfolioItem,
+                    item.Id);
                 }
             }
             return artista;
