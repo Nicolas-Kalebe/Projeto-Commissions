@@ -1,4 +1,5 @@
-﻿using SMT.Back.Comissoes.DTO.Input.UsuarioController;
+﻿using SMT.Back.Comissoes.DTO.Input.Usuario;
+using SMT.Back.Comissoes.DTO.Input.UsuarioController;
 using SMT.Back.Comissoes.Models.Entity;
 using SMT.Back.Comissoes.Models.Enum;
 
@@ -13,6 +14,7 @@ namespace SMT.Back.Comissoes.Services.Interfaces
         Task AtualizarPortfolioAsync(AtualizarPortfolioInput atualizarPortfolioInput);
         Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput);
         Task<Usuario> ObterUsuarioPorToken(ObterTokenGoogleInput obterTokenGoogleInput);
+        Task AtualizarRedesSociais(AtualizarRedesSociaisInput atualizarRedesSociaisInput);
 
     }
 }

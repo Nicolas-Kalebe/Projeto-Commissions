@@ -5,6 +5,7 @@ using SMT.Back.Comissoes.Repositories.Interfaces;
 using SMT.Back.Comissoes.Models.Enum;
 using SMT.Back.Comissoes.Services.Interfaces;
 using SMT.Back.Comissoes.DTO.Input.UsuarioController;
+using SMT.Back.Comissoes.DTO.Input.Usuario;
 
 namespace SMT.Back.Comissoes.Services
 {
@@ -227,6 +228,25 @@ namespace SMT.Back.Comissoes.Services
             // Atualiza apenas o path no banco            
             await _usuarioRepository.AtualizarFotoPerfil(usuario.Id, pathCompleto);
             return pathCompleto;
+        }
+        public async Task AtualizarRedesSociais(AtualizarRedesSociaisInput atualizarRedesSociaisInput)
+        {
+            var userGoogle = await _authService.ValidarTokenGoogle(atualizarRedesSociaisInput.TokenGoogle);
+            var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
+            if (usuario == null)
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
+                    "Usuário não encontrado.",
+                    () => Log.Error($"Usuário não encontrado para o email: {userGoogle.Email}"),
+                    (int)System.Net.HttpStatusCode.NotFound
+                );
+            var redeSocial = new RedeSocial
+            {
+                Titulo = atualizarRedesSociaisInput.RedeSocial,
+                Url = atualizarRedesSociaisInput.Url,
+                UsuarioId = usuario.Id
+            };
+            await _usuarioRepository.AtualizarRedesSociais(redeSocial);
         }
     }
 }
