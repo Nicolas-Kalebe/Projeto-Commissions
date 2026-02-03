@@ -167,9 +167,15 @@ namespace SMT.Back.Comissoes.Services
                     }
                     
                     item.LikeCount = await _interacaoRepository.CountAsync(
-                    TipoInteracaoEnum.Like,
-                    TipoAlvoInteracaoEnum.PortfolioItem,
-                    item.Id);
+                        TipoInteracaoEnum.Like,
+                        TipoAlvoInteracaoEnum.PortfolioItem,
+                        item.Id
+                    );
+                    item.FavoritoCount = await _interacaoRepository.CountAsync(
+                        TipoInteracaoEnum.Favorito,
+                        TipoAlvoInteracaoEnum.PortfolioItem,
+                        item.Id
+                    );
                 }
             }
             return artista;
