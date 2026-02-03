@@ -34,6 +34,6 @@ namespace SMT.Back.Comissoes.Models.Entity
         [NotMapped]
         public int Seguidores { get; set; }
         public ICollection<Interacao> Interacoes { get; set; }
-        public ICollection<LinkSocial>? LinksSociais { get; set; }
+        public ICollection<RedeSocial> RedesSociais { get; set; } = new List<RedeSocial>();
     }
 }

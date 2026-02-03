@@ -118,5 +118,20 @@ namespace SMT.Back.Comissoes.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+        public async Task AtualizarRedesSociais(RedeSocial redesSociais)
+        {
+            var usuario = await _context.Usuarios.FindAsync(redesSociais.UsuarioId);
+            if (usuario == null)
+            {
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
+                    $"Usuário com Id:{redesSociais.UsuarioId} não encontrado",
+                    () => Log.Error($"Erro: Usuário com ID {redesSociais.UsuarioId} não foi localizado no banco de dados."),
+                    (int)System.Net.HttpStatusCode.NotFound
+                );
+            }
+            usuario.RedesSociais.Add(redesSociais);
+            await _context.SaveChangesAsync();
+        }
     }
 }

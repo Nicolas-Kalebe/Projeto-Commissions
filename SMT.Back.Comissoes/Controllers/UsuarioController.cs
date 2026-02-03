@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using SMT.Back.Comissoes.DTO.Input.Usuario;
 using SMT.Back.Comissoes.DTO.Input.UsuarioController;
 using SMT.Back.Comissoes.Models;
 using SMT.Back.Comissoes.Models.Entity;
@@ -119,6 +120,18 @@ namespace SMT.Back.Comissoes.Controllers
                 Mensagem = "Foto de usuário atualizada com sucesso.",
                 Resultado = $"Sucesso ao atualizar foto de usuário, segue imagem: {fotoUsuario}"
 
+            });
+        }
+        [HttpPatch]
+        public async Task<IActionResult> AtualizarRedesSociais([FromBody] AtualizarRedesSociaisInput atualizarDadosUsuarioInput)
+        {
+            await _usuarioService.AtualizarRedesSociais(atualizarDadosUsuarioInput);
+            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
+            {
+                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
+                StatusHttp = (int)HttpStatusCode.OK,
+                Mensagem = "Dados do usuário atualizados com sucesso.",
+                Resultado = "Sucesso ao atualizar dados do usuário."
             });
         }
     }

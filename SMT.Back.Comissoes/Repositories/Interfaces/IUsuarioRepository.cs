@@ -15,6 +15,6 @@ namespace SMT.Back.Comissoes.Repositories.Interfaces
         Task<Artista> ObterArtistaPorUsuarioId(int usuarioId);
         Task AtualizarPortfolioArtista(int artistaId, PortfolioItem portfolioItem);
         Task AtualizarFotoPerfil(int usuarioId, string fotoPerfilUrl);
-
+        Task AtualizarRedesSociais(RedeSocial redesSociais);
     }
 }
