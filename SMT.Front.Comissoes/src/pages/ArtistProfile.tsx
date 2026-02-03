@@ -186,7 +186,7 @@ function PortfolioPreviewCard({ post, onOpen }: PortfolioPreviewCardProps) {
   return (
     <button
       type="button"
-      className="relative cursor-pointer overflow-hidden rounded-xl border bg-card"
+      className="relative h-full w-full cursor-pointer overflow-hidden rounded-xl border bg-card"
       onClick={onOpen}
     >
       <div className="aspect-[4/3] w-full overflow-hidden">
