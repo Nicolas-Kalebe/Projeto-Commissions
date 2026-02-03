@@ -66,6 +66,7 @@ namespace SMT.Back.Comissoes.Repositories
         public async Task<Usuario> ObterUsuarioPorEmail(string email)
         {
             var usuario = await _context.Usuarios
+                .Include(u => u.RedesSociais)
                 .FirstOrDefaultAsync(u => u.Email == email);
             return usuario;
         }
@@ -111,14 +112,23 @@ namespace SMT.Back.Comissoes.Repositories
 
             await _context.SaveChangesAsync();
         }
-        public async Task AtualizarFotoPerfil(int usuarioId, string fotoPerfilUrl)
+        public async Task AtualizarFotoPerfil(int usuarioId, string fotoPerfilUrl, TipoFotoPerfilEnum tipoFotoPerfilEnum)
         {
             var usuario = await _context.Usuarios.FindAsync(usuarioId);
-            if (usuario != null)
+            if (usuario == null)
             {
-                usuario.FotoPerfil = fotoPerfilUrl;
-                await _context.SaveChangesAsync();
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
+                    $"Usuário com Id:{usuario.Id} não encontrado",
+                    () => Log.Error($"Erro: Usuário com ID {usuario.Id} não foi localizado no banco de dados."),
+                    (int)System.Net.HttpStatusCode.NotFound
+                );
             }
+            if (tipoFotoPerfilEnum == TipoFotoPerfilEnum.FotoCapa) usuario.FotoCapa = fotoPerfilUrl;
+                else if (tipoFotoPerfilEnum == TipoFotoPerfilEnum.FotoPerfil){
+                usuario.FotoPerfil = fotoPerfilUrl;
+                }
+                await _context.SaveChangesAsync();
         }
         public async Task AtualizarRedesSociais(RedeSocial redesSociais)
         {

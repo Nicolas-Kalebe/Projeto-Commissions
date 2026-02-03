@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace SMT.Back.Comissoes.Models.Entity
 {
@@ -14,6 +15,7 @@ namespace SMT.Back.Comissoes.Models.Entity
         public string Url { get; set; }
 
         [Required]
+        [JsonIgnore]
         public int UsuarioId { get; set; }
     }
 }

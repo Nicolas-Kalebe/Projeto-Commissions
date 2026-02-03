@@ -106,6 +106,12 @@ namespace SMT.Back.Comissoes.Services
                 if (!string.IsNullOrWhiteSpace(signedUrl))
                     usuario.FotoPerfil = signedUrl;
             }
+            if (!string.IsNullOrWhiteSpace(usuario.FotoCapa))
+            {
+                var signedUrl = _bucketService.GetPresignedUrl(usuario.FotoCapa, TimeSpan.FromHours(6));
+                if (!string.IsNullOrWhiteSpace(signedUrl))
+                    usuario.FotoCapa = signedUrl;
+            }
             return usuario;
         }
         public async Task<StatusEnum> ObterStatusUsuario(ObterStatusInput obterStatusInput)
@@ -253,12 +259,25 @@ namespace SMT.Back.Comissoes.Services
                     () => Log.Error($"Tipo de dado inválido para foto de perfil do usuário Email: {usuario.NomePerfil}"),
                     (int)System.Net.HttpStatusCode.BadRequest);
             // Path no bucket organizado por usuário
+            if (atualizarFotoUsuarioInput.fotoPerfilEnum == TipoFotoPerfilEnum.FotoPerfil)
+            {
             var pathBucket = $"usuarios/{usuario.NomePerfil}/foto_perfil.webp";
             // Upload da imagem
             var pathCompleto = await _bucketService.UploadAsync(atualizarFotoUsuarioInput.FotoPerfil, pathBucket);
             // Atualiza apenas o path no banco            
-            await _usuarioRepository.AtualizarFotoPerfil(usuario.Id, pathCompleto);
+
+            await _usuarioRepository.AtualizarFotoPerfil(usuario.Id, pathCompleto, atualizarFotoUsuarioInput.fotoPerfilEnum);
             return pathCompleto;
+            }
+            else
+            {
+                var pathBucket = $"usuarios/{usuario.NomePerfil}/foto_capa.webp";
+                // Upload da imagem
+                var pathCompleto = await _bucketService.UploadAsync(atualizarFotoUsuarioInput.FotoPerfil, pathBucket);
+                // Atualiza apenas o path no banco            
+                await _usuarioRepository.AtualizarFotoPerfil(usuario.Id, pathCompleto, atualizarFotoUsuarioInput.fotoPerfilEnum);
+                return pathCompleto;
+            }
         }
         public async Task AtualizarRedesSociais(AtualizarRedesSociaisInput atualizarRedesSociaisInput)
         {
