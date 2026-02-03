@@ -59,6 +59,8 @@ type PortfolioPost = {
   popularidade: number
   likes: number
   saves: number
+  createdAt?: string
+  backendId?: number
   commissionLink?: string
 }
 
@@ -349,6 +351,16 @@ export function ArtistProfile({
   const [profileDraft, setProfileDraft] = useState<ProfileDraft | null>(null)
   const [draftAvatarPreview, setDraftAvatarPreview] = useState("")
   const [draftCoverPreview, setDraftCoverPreview] = useState("")
+  const [isAddPortfolioOpen, setIsAddPortfolioOpen] = useState(false)
+  const [portfolioTitle, setPortfolioTitle] = useState("")
+  const [portfolioDescription, setPortfolioDescription] = useState("")
+  const [portfolioImage, setPortfolioImage] = useState<File | null>(null)
+  const [isUploadingPortfolio, setIsUploadingPortfolio] = useState(false)
+  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({})
+  const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({})
+  const [postMetrics, setPostMetrics] = useState<Record<string, { likes: number; saves: number }>>({})
+  const [pulseLikeId, setPulseLikeId] = useState<string | null>(null)
+  const [pulseSaveId, setPulseSaveId] = useState<string | null>(null)
   const { toast } = useToast()
   const fallbackArtist = users.find((user) => user.id === "art-1")
   const artist = !isMockUser && currentUser ? currentUser : fallbackArtist
@@ -476,6 +488,7 @@ export function ArtistProfile({
       popularidade,
       likes,
       saves,
+      createdAt: new Date().toISOString(),
       commissionLink: index % 3 === 0 ? "/comissoes" : undefined,
     })
     return acc
@@ -490,6 +503,7 @@ export function ArtistProfile({
     popularidade: 999,
     likes: 4280,
     saves: 860,
+    createdAt: new Date().toISOString(),
     commissionLink: "/comissoes",
   }
   const testPortfolioPosts: PortfolioPost[] = [
@@ -503,6 +517,7 @@ export function ArtistProfile({
       popularidade: 780,
       likes: 1670,
       saves: 310,
+      createdAt: new Date().toISOString(),
     },
     {
       id: "post-test-4-3",
@@ -514,6 +529,7 @@ export function ArtistProfile({
       popularidade: 720,
       likes: 1420,
       saves: 280,
+      createdAt: new Date().toISOString(),
     },
     {
       id: "post-test-16-9",
@@ -525,6 +541,7 @@ export function ArtistProfile({
       popularidade: 690,
       likes: 1310,
       saves: 250,
+      createdAt: new Date().toISOString(),
     },
     {
       id: "post-test-21-9",
@@ -536,6 +553,7 @@ export function ArtistProfile({
       popularidade: 640,
       likes: 1180,
       saves: 220,
+      createdAt: new Date().toISOString(),
     },
     {
       id: "post-test-wallhaven",
@@ -547,6 +565,7 @@ export function ArtistProfile({
       popularidade: 820,
       likes: 1900,
       saves: 360,
+      createdAt: new Date().toISOString(),
     },
     {
       id: "post-test-watercolor",
@@ -558,6 +577,7 @@ export function ArtistProfile({
       popularidade: 860,
       likes: 2100,
       saves: 420,
+      createdAt: new Date().toISOString(),
     },
   ]
   const ratingValue = isMockUser
@@ -729,6 +749,12 @@ export function ArtistProfile({
     profileOverrides?.coverUrl,
   ])
 
+  useEffect(() => {
+    if (!isAddPortfolioOpen) {
+      resetPortfolioDialog()
+    }
+  }, [isAddPortfolioOpen])
+
   const updateDraft = (partial: Partial<ProfileDraft>) => {
     setProfileDraft((prev) => (prev ? { ...prev, ...partial } : prev))
   }
@@ -821,6 +847,8 @@ export function ArtistProfile({
         popularidade,
         likes: item.likeCount ?? 0,
         saves: item.favoritoCount ?? 0,
+        createdAt: item.dataCriacao ?? undefined,
+        backendId: item.id,
       }
     })
 
@@ -837,12 +865,30 @@ export function ArtistProfile({
   })
   const activePost = sortedPosts[activePostIndex]
   const isSingleImagePost = (activePost?.images?.length ?? 0) <= 1
+  const portfolioTitleLimit = 50
   const descriptionLimit = 300
   const descriptionText = activePost?.descricao ?? ""
   const clampedDescription =
     descriptionText.length > descriptionLimit
       ? `${descriptionText.slice(0, descriptionLimit).trim()}...`
       : descriptionText
+  const remainingPortfolioChars = descriptionLimit - portfolioDescription.length
+  const remainingPortfolioTitleChars = portfolioTitleLimit - portfolioTitle.length
+  const formatPostDate = (value?: string) => {
+    if (!value) return ""
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return ""
+    return date.toLocaleDateString("pt-BR")
+  }
+
+  const resolveMetrics = (post?: PortfolioPost | null) => {
+    if (!post) return { likes: 0, saves: 0 }
+    const override = postMetrics[post.id]
+    return {
+      likes: override?.likes ?? post.likes,
+      saves: override?.saves ?? post.saves,
+    }
+  }
 
   useEffect(() => {
     if (sortedPosts.length === 0) return
@@ -938,6 +984,250 @@ export function ArtistProfile({
     }
   }
 
+  const resetPortfolioDialog = () => {
+    setPortfolioTitle("")
+    setPortfolioDescription("")
+    setPortfolioImage(null)
+  }
+
+  const handlePortfolioImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null
+    event.target.value = ""
+    setPortfolioImage(file)
+  }
+
+  const refreshBackendProfile = async (tokenGoogle: string) => {
+    const response = await fetch(API_ROUTES.Usuario.obterPerfilArtista, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ googleToken: tokenGoogle }),
+    })
+    if (!response.ok) return
+    const body = await response.json().catch(() => null)
+    const resultado = body?.resultado ?? body?.Resultado
+    if (!resultado || typeof resultado !== "object") return
+    const resultadoObj = resultado as Record<string, unknown>
+    const usuarioObj =
+      (readField<Record<string, unknown>>(resultadoObj, "usuario", "Usuario") ?? {}) as Record<
+        string,
+        unknown
+      >
+    const avaliacao = readField<number>(resultadoObj, "avaliacao", "Avaliacao")
+    const estilo = readField<string>(resultadoObj, "estilo", "Estilo")
+    const tipoArtista = readField<string>(resultadoObj, "tipoArtista", "TipoArtista")
+    const portifolioUrl = readField<string>(
+      resultadoObj,
+      "portifolioUrl",
+      "PortifolioUrl",
+      "portfolioUrl",
+      "PortfolioUrl"
+    )
+    const ativoParaServicos = readField<boolean>(resultadoObj, "ativoParaServicos", "AtivoParaServicos")
+    const portfolioItens = parsePortfolioItems(
+      readField<unknown>(resultadoObj, "portfolioItens", "PortfolioItens")
+    )
+    const usuarioNomePerfil = readField<string>(usuarioObj, "nomePerfil", "NomePerfil")
+    const usuarioNome = readField<string>(usuarioObj, "nome", "Nome")
+    const usuarioFotoPerfil = readField<string>(usuarioObj, "fotoPerfil", "FotoPerfil")
+    const usuarioSeguidores = readField<number>(usuarioObj, "seguidores", "Seguidores")
+    setBackendProfile({
+      avaliacao,
+      estilo,
+      tipoArtista,
+      portifolioUrl,
+      ativoParaServicos,
+      portfolioItens,
+      usuarioNomePerfil,
+      usuarioNome,
+      usuarioFotoPerfil,
+      usuarioSeguidores,
+    })
+  }
+
+  const handlePortfolioSubmit = async () => {
+    if (!portfolioImage || isMockUser) return
+    const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
+    if (!tokenGoogle) {
+      toast({
+        title: "Sessao expirada",
+        description: "Faca login novamente para atualizar o portifolio.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUploadingPortfolio(true)
+    try {
+      const formData = new FormData()
+      formData.append("GoogleToken.GoogleToken", tokenGoogle)
+      formData.append("Imagem", portfolioImage)
+      if (portfolioTitle.trim()) {
+        formData.append("Titulo", portfolioTitle.trim())
+      }
+      if (portfolioDescription.trim()) {
+        formData.append("Descricao", portfolioDescription.trim())
+      }
+
+      const response = await fetch(API_ROUTES.Usuario.atualizarPortfolio, {
+        method: "PATCH",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Falha ao atualizar portifolio.")
+      }
+
+      await refreshBackendProfile(tokenGoogle)
+      toast({
+        title: "Portifolio atualizado",
+        description: "Sua nova imagem ja aparece no perfil.",
+      })
+      setIsAddPortfolioOpen(false)
+      resetPortfolioDialog()
+    } catch {
+      toast({
+        title: "Erro ao enviar",
+        description: "Nao foi possivel enviar a imagem agora.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUploadingPortfolio(false)
+    }
+  }
+
+  const triggerPulse = (setter: React.Dispatch<React.SetStateAction<string | null>>, postId: string) => {
+    setter(postId)
+    window.setTimeout(() => {
+      setter((current) => (current === postId ? null : current))
+    }, 220)
+  }
+
+  const handleLikePost = async (post?: PortfolioPost | null) => {
+    if (!post) return
+    if (likedPosts[post.id]) return
+    if (!post.backendId) {
+      toast({
+        title: "Post indisponivel",
+        description: "Este post ainda nao pode ser curtido.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
+    if (!tokenGoogle) {
+      toast({
+        title: "Sessao expirada",
+        description: "Faca login novamente para curtir.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setLikedPosts((prev) => ({ ...prev, [post.id]: true }))
+    setPostMetrics((prev) => ({
+      ...prev,
+      [post.id]: {
+        likes: (prev[post.id]?.likes ?? post.likes) + 1,
+        saves: prev[post.id]?.saves ?? post.saves,
+      },
+    }))
+    triggerPulse(setPulseLikeId, post.id)
+
+    try {
+      const response = await fetch(API_ROUTES.Interacao.curtirPortfolio, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          googleToken: tokenGoogle,
+          portfolioItemId: post.backendId,
+        }),
+      })
+      if (!response.ok) throw new Error("Falha ao curtir.")
+    } catch {
+      setLikedPosts((prev) => {
+        const next = { ...prev }
+        delete next[post.id]
+        return next
+      })
+      setPostMetrics((prev) => ({
+        ...prev,
+        [post.id]: {
+          likes: Math.max(0, (prev[post.id]?.likes ?? post.likes) - 1),
+          saves: prev[post.id]?.saves ?? post.saves,
+        },
+      }))
+      toast({
+        title: "Erro ao curtir",
+        description: "Nao foi possivel registrar a curtida.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleSavePost = async (post?: PortfolioPost | null) => {
+    if (!post) return
+    if (!post.backendId) {
+      toast({
+        title: "Post indisponivel",
+        description: "Este post ainda nao pode ser salvo.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
+    if (!tokenGoogle) {
+      toast({
+        title: "Sessao expirada",
+        description: "Faca login novamente para salvar.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const isSaved = Boolean(savedPosts[post.id])
+    setSavedPosts((prev) => ({ ...prev, [post.id]: !isSaved }))
+    setPostMetrics((prev) => ({
+      ...prev,
+      [post.id]: {
+        likes: prev[post.id]?.likes ?? post.likes,
+        saves: (prev[post.id]?.saves ?? post.saves) + (isSaved ? -1 : 1),
+      },
+    }))
+    triggerPulse(setPulseSaveId, post.id)
+
+    try {
+      const response = await fetch(
+        isSaved ? API_ROUTES.Interacao.desfavoritar : API_ROUTES.Interacao.favoritar,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            googleToken: tokenGoogle,
+            alvoId: post.backendId,
+            tipoAlvoInteracao: 1,
+          }),
+        }
+      )
+      if (!response.ok) throw new Error("Falha ao salvar.")
+    } catch {
+      setSavedPosts((prev) => ({ ...prev, [post.id]: isSaved }))
+      setPostMetrics((prev) => ({
+        ...prev,
+        [post.id]: {
+          likes: prev[post.id]?.likes ?? post.likes,
+          saves: Math.max(0, (prev[post.id]?.saves ?? post.saves) + (isSaved ? 1 : -1)),
+        },
+      }))
+      toast({
+        title: "Erro ao salvar",
+        description: "Nao foi possivel registrar o salvamento.",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <section className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-6">
       <div className="h-52 w-full overflow-hidden rounded-2xl md:h-64">
@@ -1023,8 +1313,24 @@ export function ArtistProfile({
               </div>
             )
           ) : (
-            sortedPosts.length > 0 ? (
+            sortedPosts.length > 0 || canEditProfile ? (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {canEditProfile && (
+                  <button
+                    type="button"
+                    className="group flex aspect-[4/3] items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/40 text-muted-foreground transition hover:border-foreground/40 hover:text-foreground"
+                    onClick={() => setIsAddPortfolioOpen(true)}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-border/60 text-3xl font-semibold">
+                        +
+                      </div>
+                      <span className="text-sm font-semibold">
+                        Adicionar imagem
+                      </span>
+                    </div>
+                  </button>
+                )}
                 {sortedPosts.map((post, index) => (
                   <div key={post.id} className="group relative">
                     <PortfolioPreviewCard
@@ -1249,9 +1555,16 @@ export function ArtistProfile({
                   <h3 className="text-3xl font-semibold">
                     {activePost?.titulo ?? "Post do portifolio"}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {clampedDescription}
-                  </p>
+                  <div className="flex items-end justify-between gap-3">
+                    <p className="text-sm text-muted-foreground">
+                      {clampedDescription}
+                    </p>
+                    {activePost?.createdAt ? (
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {formatPostDate(activePost.createdAt)}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
                 {activePost?.commissionLink && !isOwnerProfile ? (
                   <>
@@ -1285,25 +1598,39 @@ export function ArtistProfile({
                     </Badge>
                   ))}
                 </div>
-                {!isOwnerProfile && (
-                  <>
-                    <Separator />
-                    <div className="flex items-center gap-2">
-                      <Button variant="secondary" size="sm" className="gap-2">
-                        <Heart className="h-4 w-4" />
-                        <span className="text-xs font-semibold">
-                          {(activePost?.likes ?? 0).toLocaleString("pt-BR")}
-                        </span>
-                      </Button>
-                      <Button variant="secondary" size="sm" className="gap-2">
-                        <Bookmark className="h-4 w-4" />
-                        <span className="text-xs font-semibold">
-                          {(activePost?.saves ?? 0).toLocaleString("pt-BR")}
-                        </span>
-                      </Button>
-                    </div>
-                  </>
-                )}
+                <Separator />
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => handleLikePost(activePost)}
+                  >
+                    <Heart
+                      className={`h-4 w-4 transition-transform ${
+                        likedPosts[activePost?.id ?? ""] ? "fill-red-500 text-red-500" : ""
+                      } ${pulseLikeId === activePost?.id ? "scale-110" : ""}`}
+                    />
+                    <span className="text-xs font-semibold">
+                      {resolveMetrics(activePost).likes.toLocaleString("pt-BR")}
+                    </span>
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => handleSavePost(activePost)}
+                  >
+                    <Bookmark
+                      className={`h-4 w-4 transition-transform ${
+                        savedPosts[activePost?.id ?? ""] ? "fill-sky-500 text-sky-500" : ""
+                      } ${pulseSaveId === activePost?.id ? "scale-110" : ""}`}
+                    />
+                    <span className="text-xs font-semibold">
+                      {resolveMetrics(activePost).saves.toLocaleString("pt-BR")}
+                    </span>
+                  </Button>
+                </div>
               </div>
 
               <div
@@ -1756,6 +2083,91 @@ export function ArtistProfile({
               </Button>
             </DialogFooter>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAddPortfolioOpen} onOpenChange={setIsAddPortfolioOpen}>
+        <DialogContent className="w-[92vw] max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Adicionar no portifolio</DialogTitle>
+            <DialogDescription>
+              Envie uma imagem para o seu portifolio.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="portfolio-title">Titulo</Label>
+              <Input
+                id="portfolio-title"
+                value={portfolioTitle}
+                onChange={(event) =>
+                  setPortfolioTitle(event.target.value.slice(0, portfolioTitleLimit))
+                }
+                placeholder="Ex: Cenario ilustrado"
+              />
+              <p className="text-xs text-muted-foreground">
+                {remainingPortfolioTitleChars} caracteres restantes
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="portfolio-description">
+                Descricao (max {descriptionLimit} caracteres)
+              </Label>
+              <Textarea
+                id="portfolio-description"
+                value={portfolioDescription}
+                onChange={(event) =>
+                  setPortfolioDescription(event.target.value.slice(0, descriptionLimit))
+                }
+                rows={4}
+                placeholder="Descreva o post."
+              />
+              <p className="text-xs text-muted-foreground">
+                {remainingPortfolioChars} caracteres restantes
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Imagem</Label>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() =>
+                    document.getElementById("portfolio-image-input")?.click()
+                  }
+                >
+                  Upar imagem
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  {portfolioImage ? portfolioImage.name : "Nenhum arquivo selecionado"}
+                </span>
+                <Input
+                  id="portfolio-image-input"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePortfolioImageChange}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setIsAddPortfolioOpen(false)
+                resetPortfolioDialog()
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handlePortfolioSubmit}
+              disabled={!portfolioImage || isUploadingPortfolio}
+            >
+              {isUploadingPortfolio ? "Enviando..." : "Enviar"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
