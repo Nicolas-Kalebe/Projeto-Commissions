@@ -84,7 +84,7 @@ namespace SMT.Back.Comissoes.Repositories
             await _context.Artistas.AddAsync(artista);
             await _context.SaveChangesAsync();
         }
-        public async Task AtualizarPortfolioArtista(int artistaId, List<PortfolioItem> portfolioItens)
+        public async Task CadastrarPortfolioArtista(int artistaId, List<PortfolioItem> portfolioItens)
         {
             var artista = await _context.Artistas
                 .Include(a => a.PortfolioItens)

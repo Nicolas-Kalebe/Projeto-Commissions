@@ -169,20 +169,20 @@ namespace SMT.Back.Comissoes.Services
             }
             return artista;
         }
-        public async Task AtualizarPortfolioAsync(AtualizarPortfolioInput atualizarPortfolioInput)
+        public async Task CadastrarPortfolioAsync(CadastrarPortfolioInput cadastrarPortfolioInput)
         {
-            var artista = await ObterPerfilArtista(atualizarPortfolioInput.GoogleToken);
+            var artista = await ObterPerfilArtista(cadastrarPortfolioInput.GoogleToken);
 
-            var imagens = atualizarPortfolioInput.Imagens?
+            var imagens = cadastrarPortfolioInput.Imagens?
                 .Where(imagem => imagem != null && imagem.Length > 0)
                 .ToList();
 
             if (imagens == null || imagens.Count == 0)
             {
-                if (atualizarPortfolioInput.Imagem == null || atualizarPortfolioInput.Imagem.Length == 0)
+                if (cadastrarPortfolioInput.Imagem == null || cadastrarPortfolioInput.Imagem.Length == 0)
                     throw new ArgumentException("Nenhuma imagem enviada.");
 
-                imagens = new List<IFormFile> { atualizarPortfolioInput.Imagem };
+                imagens = new List<IFormFile> { cadastrarPortfolioInput.Imagem };
             }
 
             foreach (var imagem in imagens)
@@ -196,17 +196,18 @@ namespace SMT.Back.Comissoes.Services
             }
 
             var portfolioItens = new List<PortfolioItem>();
+            var batchId = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
             for (var i = 0; i < imagens.Count; i++)
             {
                 var imagem = imagens[i];
-                var titulo = atualizarPortfolioInput.Titulos != null && i < atualizarPortfolioInput.Titulos.Count
-                    ? atualizarPortfolioInput.Titulos[i]
-                    : atualizarPortfolioInput.Titulo;
-                var descricao = atualizarPortfolioInput.Descricoes != null && i < atualizarPortfolioInput.Descricoes.Count
-                    ? atualizarPortfolioInput.Descricoes[i]
-                    : atualizarPortfolioInput.Descricao;
+                var titulo = cadastrarPortfolioInput.Titulos != null && i < cadastrarPortfolioInput.Titulos.Count
+                    ? cadastrarPortfolioInput.Titulos[i]
+                    : cadastrarPortfolioInput.Titulo;
+                var descricao = cadastrarPortfolioInput.Descricoes != null && i < cadastrarPortfolioInput.Descricoes.Count
+                    ? cadastrarPortfolioInput.Descricoes[i]
+                    : cadastrarPortfolioInput.Descricao;
 
-                var suffix = imagens.Count > 1 ? $"{DateTime.UtcNow:yyyyMMddHHmmss}-{i + 1}" : "main";
+                var suffix = $"{batchId}-{(i + 1).ToString("D2")}";
                 var pathBucket = $"portfolios/usuarios/{artista.Usuario.NomePerfil}/{suffix}.webp";
                 var pathCompleto = await _bucketService.UploadAsync(imagem, pathBucket);
 
@@ -218,7 +219,7 @@ namespace SMT.Back.Comissoes.Services
                 });
             }
 
-            await _usuarioRepository.AtualizarPortfolioArtista(artista.Id, portfolioItens);
+            await _usuarioRepository.CadastrarPortfolioArtista(artista.Id, portfolioItens);
         }
         public async Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput)
         {

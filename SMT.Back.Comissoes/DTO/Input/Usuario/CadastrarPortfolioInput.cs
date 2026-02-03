@@ -1,6 +1,6 @@
 ﻿namespace SMT.Back.Comissoes.DTO.Input.UsuarioController
 {
-    public class AtualizarPortfolioInput
+    public class CadastrarPortfolioInput
     {
         public ObterArtistaInput GoogleToken { get; set; }
         public IFormFile? Imagem { get; set; }

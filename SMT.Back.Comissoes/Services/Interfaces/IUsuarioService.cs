@@ -11,7 +11,7 @@ namespace SMT.Back.Comissoes.Services.Interfaces
         Task<StatusEnum> ObterStatusUsuario(ObterStatusInput obterStatusInput);
         Task CadastrarArtista(CadastrarArtistaInput cadastrarArtistaInput);
         Task<Artista> ObterPerfilArtista(ObterArtistaInput obterArtistaInput);
-        Task AtualizarPortfolioAsync(AtualizarPortfolioInput atualizarPortfolioInput);
+        Task CadastrarPortfolioAsync(CadastrarPortfolioInput atualizarPortfolioInput);
         Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput);
         Task<Usuario> ObterUsuarioPorToken(ObterTokenGoogleInput obterTokenGoogleInput);
         Task AtualizarRedesSociais(AtualizarRedesSociaisInput atualizarRedesSociaisInput);

@@ -97,10 +97,10 @@ namespace SMT.Back.Comissoes.Controllers
                 Resultado = usuario
             });
         }
-        [HttpPatch]
-        public async Task<IActionResult> AtualizarPortfolio([FromForm] AtualizarPortfolioInput atualizarPortfolioInput)
+        [HttpPost]
+        public async Task<IActionResult> CadastrarPortfolio([FromForm] CadastrarPortfolioInput cadastrarPortfolioInput)
         {
-            await _usuarioService.AtualizarPortfolioAsync(atualizarPortfolioInput);
+            await _usuarioService.CadastrarPortfolioAsync(cadastrarPortfolioInput);
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
             {
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
