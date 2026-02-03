@@ -173,33 +173,52 @@ namespace SMT.Back.Comissoes.Services
         {
             var artista = await ObterPerfilArtista(atualizarPortfolioInput.GoogleToken);
 
-            if (atualizarPortfolioInput.Imagem == null || atualizarPortfolioInput.Imagem.Length == 0)
-                throw new ArgumentException("Nenhuma imagem enviada.");
+            var imagens = atualizarPortfolioInput.Imagens?
+                .Where(imagem => imagem != null && imagem.Length > 0)
+                .ToList();
 
-            // Validação de tipo
-            if (!atualizarPortfolioInput.Imagem.ContentType.StartsWith("image/"))
-                throw new ExcecaoPersonalizada(
-                    ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
-                    "Tipo de dado inválido, insira uma imagem/gif",
-                    () => Log.Error($"Tipo de dado inválido para imagem de portfolio do artista Email: {artista.Usuario.NomePerfil}"),
-                    (int)System.Net.HttpStatusCode.BadRequest);
+            if (imagens == null || imagens.Count == 0)
+            {
+                if (atualizarPortfolioInput.Imagem == null || atualizarPortfolioInput.Imagem.Length == 0)
+                    throw new ArgumentException("Nenhuma imagem enviada.");
 
-            // Path no bucket organizado por usuário
-            var pathBucket = $"portfolios/usuarios/{artista.Usuario.NomePerfil}/main.webp";
+                imagens = new List<IFormFile> { atualizarPortfolioInput.Imagem };
+            }
 
-            // Upload da imagem
-            var pathCompleto = await _bucketService.UploadAsync(atualizarPortfolioInput.Imagem, pathBucket);
+            foreach (var imagem in imagens)
+            {
+                if (!imagem.ContentType.StartsWith("image/"))
+                    throw new ExcecaoPersonalizada(
+                        ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
+                        "Tipo de dado inválido, insira uma imagem/gif",
+                        () => Log.Error($"Tipo de dado inválido para imagem de portfolio do artista Email: {artista.Usuario.NomePerfil}"),
+                        (int)System.Net.HttpStatusCode.BadRequest);
+            }
 
-            // Atualiza apenas o path no banco            
-            await _usuarioRepository.AtualizarPortfolioArtista(
-                    artista.Id,
-                    new PortfolioItem
-                    {
-                        Titulo = atualizarPortfolioInput.Titulo ?? string.Empty,
-                        Descricao = atualizarPortfolioInput.Descricao ?? string.Empty,
-                        UrlArquivo = pathCompleto
-                    }
-                );
+            var portfolioItens = new List<PortfolioItem>();
+            for (var i = 0; i < imagens.Count; i++)
+            {
+                var imagem = imagens[i];
+                var titulo = atualizarPortfolioInput.Titulos != null && i < atualizarPortfolioInput.Titulos.Count
+                    ? atualizarPortfolioInput.Titulos[i]
+                    : atualizarPortfolioInput.Titulo;
+                var descricao = atualizarPortfolioInput.Descricoes != null && i < atualizarPortfolioInput.Descricoes.Count
+                    ? atualizarPortfolioInput.Descricoes[i]
+                    : atualizarPortfolioInput.Descricao;
+
+                var suffix = imagens.Count > 1 ? $"{DateTime.UtcNow:yyyyMMddHHmmss}-{i + 1}" : "main";
+                var pathBucket = $"portfolios/usuarios/{artista.Usuario.NomePerfil}/{suffix}.webp";
+                var pathCompleto = await _bucketService.UploadAsync(imagem, pathBucket);
+
+                portfolioItens.Add(new PortfolioItem
+                {
+                    Titulo = titulo ?? string.Empty,
+                    Descricao = descricao ?? string.Empty,
+                    UrlArquivo = pathCompleto
+                });
+            }
+
+            await _usuarioRepository.AtualizarPortfolioArtista(artista.Id, portfolioItens);
         }
         public async Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput)
         {

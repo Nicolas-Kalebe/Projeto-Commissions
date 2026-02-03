@@ -84,7 +84,7 @@ namespace SMT.Back.Comissoes.Repositories
             await _context.Artistas.AddAsync(artista);
             await _context.SaveChangesAsync();
         }
-        public async Task AtualizarPortfolioArtista(int artistaId, PortfolioItem portfolioItem)
+        public async Task AtualizarPortfolioArtista(int artistaId, List<PortfolioItem> portfolioItens)
         {
             var artista = await _context.Artistas
                 .Include(a => a.PortfolioItens)
@@ -98,14 +98,16 @@ namespace SMT.Back.Comissoes.Repositories
                 ? artista.PortfolioItens.Max(p => p.Ordem) + 1
                 : 1;
 
-            portfolioItem.ArtistaId = artistaId;
-            portfolioItem.Ordem = proximaOrdem;
-            portfolioItem.LikeCount = 0;
-            portfolioItem.FavoritoCount = 0;
-            portfolioItem.VisualizacaoCount = 0;
-            portfolioItem.DataCriacao = DateTime.UtcNow;
-
-            artista.PortfolioItens.Add(portfolioItem);
+            foreach (var item in portfolioItens)
+            {
+                item.ArtistaId = artistaId;
+                item.Ordem = proximaOrdem++;
+                item.LikeCount = 0;
+                item.FavoritoCount = 0;
+                item.VisualizacaoCount = 0;
+                item.DataCriacao = DateTime.UtcNow;
+                artista.PortfolioItens.Add(item);
+            }
 
             await _context.SaveChangesAsync();
         }

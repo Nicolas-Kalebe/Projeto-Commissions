@@ -29,6 +29,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IInteracaoRepository, InteracaoRepository>();
+builder.Services.AddScoped<IInteracaoService, InteracaoService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IBucketService, BucketService>();

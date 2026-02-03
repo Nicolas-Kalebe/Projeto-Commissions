@@ -18,7 +18,7 @@ namespace SMT.Back.Comissoes.Controllers
         private readonly IUsuarioService _usuarioService;
         private readonly IAuthService _authService;
 
-        public InteracaoController(IInteracaoService interacaoService, IUsuarioService usuarioService, AuthService authService)
+        public InteracaoController(IInteracaoService interacaoService, IUsuarioService usuarioService, IAuthService authService)
         {
             _interacaoService = interacaoService;
             _usuarioService = usuarioService;
