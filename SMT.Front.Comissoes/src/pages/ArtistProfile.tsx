@@ -3,7 +3,16 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -13,6 +22,7 @@ import {
 } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
+import { Textarea } from "@/components/ui/textarea"
 import { arts, priceSheets, users } from "@/data"
 import { PriceSheetRow } from "@/components/profile/PriceSheetRow"
 import {
@@ -29,6 +39,8 @@ import { useToast } from "@/hooks/use-toast"
 import {
   Bookmark,
   Heart,
+  Instagram,
+  Link,
   MessageCircle,
   Pencil,
   Star,
@@ -76,6 +88,40 @@ type BackendPortfolioItem = {
   dataCriacao?: string
 }
 
+type SocialLinkKey =
+  | "twitter"
+  | "instagram"
+  | "tiktok"
+  | "youtube"
+  | "twitch"
+  | "artstation"
+
+type ProfileOverrides = {
+  displayName?: string
+  bio?: string
+  avatarUrl?: string
+  coverUrl?: string
+  pronounsBadge?: string
+  roleBadge?: string
+  deliveryBadge?: string
+  styleDescription?: string
+  styleTags?: string[]
+  socialLinks?: Partial<Record<SocialLinkKey, string>>
+}
+
+type ProfileDraft = {
+  displayName: string
+  bio: string
+  avatarUrl: string
+  coverUrl: string
+  pronounsBadge: string
+  roleBadge: string
+  deliveryBadge: string
+  styleDescription: string
+  styleTags: string
+  socialLinks: Record<SocialLinkKey, string>
+}
+
 const readField = <T,>(source: Record<string, unknown>, ...keys: string[]) => {
   for (const key of keys) {
     const value = source[key]
@@ -83,6 +129,12 @@ const readField = <T,>(source: Record<string, unknown>, ...keys: string[]) => {
   }
   return undefined
 }
+
+const splitCommaList = (value: string) =>
+  value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
 
 const parsePortfolioItems = (value: unknown): BackendPortfolioItem[] => {
   if (!Array.isArray(value)) return []
@@ -292,11 +344,17 @@ export function ArtistProfile({
   const [showServices, setShowServices] = useState(true)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [backendProfile, setBackendProfile] = useState<BackendArtistProfile | null>(null)
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
+  const [profileOverrides, setProfileOverrides] = useState<ProfileOverrides | null>(null)
+  const [profileDraft, setProfileDraft] = useState<ProfileDraft | null>(null)
+  const [draftAvatarPreview, setDraftAvatarPreview] = useState("")
+  const [draftCoverPreview, setDraftCoverPreview] = useState("")
   const { toast } = useToast()
   const fallbackArtist = users.find((user) => user.id === "art-1")
   const artist = !isMockUser && currentUser ? currentUser : fallbackArtist
   const isOwnerProfile = Boolean(!isMockUser && currentUser?.id && artist?.id && currentUser.id === artist.id)
   const isRealUser = Boolean(!isMockUser && currentUser)
+  const canEditProfile = isOwnerProfile || isMockUser || isRealUser
 
   useEffect(() => {
     if (!isRealUser) {
@@ -511,17 +569,17 @@ export function ArtistProfile({
     return null
   }
 
-  const profileBio = isMockUser
+  const baseProfileBio = isMockUser
     ? artist.bio
     : artist.bio?.trim()
       ? artist.bio
-      : "Bio ainda não informada."
-  const styleDescription = isMockUser
-    ? "Traço leve com foco em expressões, paleta suave e detalhes delicados para personagens e cenas."
+      : "Bio ainda n?o informada."
+  const baseStyleDescription = isMockUser
+    ? "Tra?o leve com foco em express?es, paleta suave e detalhes delicados para personagens e cenas."
     : backendProfile?.estilo?.trim()
       ? backendProfile.estilo
-      : "Estilo ainda não informado."
-  const styleTags = isMockUser
+      : "Estilo ainda n?o informado."
+  const baseStyleTags = isMockUser
     ? ["Lineart suave", "Cores pasteis", "Chibi"]
     : (backendProfile?.tipoArtista
       ? backendProfile.tipoArtista
@@ -529,16 +587,60 @@ export function ArtistProfile({
         .map((tag) => tag.trim())
         .filter(Boolean)
       : [])
-  const coverImageUrl =
+  const baseCoverImageUrl =
     !isMockUser && typeof backendProfile?.portifolioUrl === "string" && backendProfile.portifolioUrl.trim()
       ? backendProfile.portifolioUrl
       : "/mock_arts/test_wide_16_9.png"
-  const handleSource =
+  const baseDisplayName =
     !isMockUser && typeof backendProfile?.usuarioNomePerfil === "string" && backendProfile.usuarioNomePerfil.trim()
       ? backendProfile.usuarioNomePerfil
       : artist.nome
 
-  const initials = artist.nome
+  const resolvedDisplayName = profileOverrides?.displayName ?? baseDisplayName
+  const resolvedBio = profileOverrides?.bio ?? baseProfileBio
+  const resolvedStyleDescription = profileOverrides?.styleDescription ?? baseStyleDescription
+  const resolvedStyleTags =
+    profileOverrides?.styleTags && profileOverrides.styleTags.length > 0
+      ? profileOverrides.styleTags
+      : baseStyleTags
+  const resolvedCoverImageUrl = profileOverrides?.coverUrl ?? baseCoverImageUrl
+  const resolvedAvatarUrl =
+    profileOverrides?.avatarUrl ?? (artist.avatarUrl || backendProfile?.usuarioFotoPerfil || "")
+
+  const baseBadges = {
+    pronounsBadge: "Ela/dela",
+    roleBadge: "Ilustradora",
+    deliveryBadge: "Entrega em 7 dias",
+  }
+  const resolvedBadges = {
+    pronounsBadge: profileOverrides?.pronounsBadge ?? baseBadges.pronounsBadge,
+    roleBadge: profileOverrides?.roleBadge ?? baseBadges.roleBadge,
+    deliveryBadge: profileOverrides?.deliveryBadge ?? baseBadges.deliveryBadge,
+  }
+  const badgeList = [
+    resolvedBadges.pronounsBadge,
+    resolvedBadges.roleBadge,
+    resolvedBadges.deliveryBadge,
+  ].filter(Boolean)
+
+  const baseSocialLinks: Record<SocialLinkKey, string> = {
+    twitter: "https://twitter.com/",
+    instagram: "https://www.instagram.com/",
+    tiktok: "https://www.tiktok.com/",
+    youtube: "https://www.youtube.com/",
+    twitch: "https://www.twitch.tv/",
+    artstation: "https://www.artstation.com/",
+  }
+  const resolvedSocialLinks: Record<SocialLinkKey, string> = {
+    ...baseSocialLinks,
+    ...(profileOverrides?.socialLinks ?? {}),
+  }
+  const handleSource = resolvedDisplayName
+    !isMockUser && typeof backendProfile?.usuarioNomePerfil === "string" && backendProfile.usuarioNomePerfil.trim()
+      ? backendProfile.usuarioNomePerfil
+      : artist.nome
+
+  const initials = resolvedDisplayName
     .split(" ")
     .map((part) => part[0])
     .join("")
@@ -558,12 +660,17 @@ export function ArtistProfile({
   const socialLinks = [
     {
       name: "Twitter",
-      href: "https://twitter.com/",
+      href: resolvedSocialLinks.twitter,
       icon: Twitter,
     },
     {
+      name: "Instagram",
+      href: resolvedSocialLinks.instagram,
+      icon: Instagram,
+    },
+    {
       name: "TikTok",
-      href: "https://www.tiktok.com/",
+      href: resolvedSocialLinks.tiktok,
       icon: (props: React.SVGProps<SVGSVGElement>) => (
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
           <path d="M15.5 3.5c.6 1.6 1.9 2.8 3.5 3.2v3.1c-1.5 0-2.9-.5-4-1.3v5.2a4.9 4.9 0 1 1-4.9-4.9c.4 0 .8 0 1.2.1v3.2a1.8 1.8 0 1 0 1.5 1.8V3.5h2.7z" />
@@ -572,15 +679,131 @@ export function ArtistProfile({
     },
     {
       name: "YouTube",
-      href: "https://www.youtube.com/",
+      href: resolvedSocialLinks.youtube,
       icon: Youtube,
     },
     {
       name: "Twitch",
-      href: "https://www.twitch.tv/",
+      href: resolvedSocialLinks.twitch,
       icon: Twitch,
     },
+    {
+      name: "ArtStation",
+      href: resolvedSocialLinks.artstation,
+      icon: Link,
+    },
   ]
+    .filter((link) => Boolean(link.href))
+
+  useEffect(() => {
+    if (!isEditProfileOpen) return
+    setProfileDraft({
+      displayName: resolvedDisplayName,
+      bio: resolvedBio,
+      avatarUrl: resolvedAvatarUrl,
+      coverUrl: resolvedCoverImageUrl,
+      pronounsBadge: resolvedBadges.pronounsBadge,
+      roleBadge: resolvedBadges.roleBadge,
+      deliveryBadge: resolvedBadges.deliveryBadge,
+      styleDescription: resolvedStyleDescription,
+      styleTags: resolvedStyleTags.join(", "),
+      socialLinks: { ...resolvedSocialLinks },
+    })
+  }, [isEditProfileOpen])
+
+  useEffect(() => {
+    if (isEditProfileOpen) return
+    if (draftAvatarPreview && profileOverrides?.avatarUrl !== draftAvatarPreview) {
+      URL.revokeObjectURL(draftAvatarPreview)
+      setDraftAvatarPreview("")
+    }
+    if (draftCoverPreview && profileOverrides?.coverUrl !== draftCoverPreview) {
+      URL.revokeObjectURL(draftCoverPreview)
+      setDraftCoverPreview("")
+    }
+  }, [
+    isEditProfileOpen,
+    draftAvatarPreview,
+    draftCoverPreview,
+    profileOverrides?.avatarUrl,
+    profileOverrides?.coverUrl,
+  ])
+
+  const updateDraft = (partial: Partial<ProfileDraft>) => {
+    setProfileDraft((prev) => (prev ? { ...prev, ...partial } : prev))
+  }
+
+  const updateDraftSocial = (key: SocialLinkKey, value: string) => {
+    setProfileDraft((prev) =>
+      prev ? { ...prev, socialLinks: { ...prev.socialLinks, [key]: value } } : prev
+    )
+  }
+
+  const handleDraftAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    const previewUrl = URL.createObjectURL(file)
+    setDraftAvatarPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return previewUrl
+    })
+    updateDraft({ avatarUrl: previewUrl })
+  }
+
+  const handleDraftCoverChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    const previewUrl = URL.createObjectURL(file)
+    setDraftCoverPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return previewUrl
+    })
+    updateDraft({ coverUrl: previewUrl })
+  }
+
+  const normalizeOptional = (value: string) => {
+    const trimmed = value.trim()
+    return trimmed ? trimmed : undefined
+  }
+
+  const handleProfileSave = () => {
+    if (!profileDraft) return
+    const socialEntries = Object.entries(profileDraft.socialLinks).flatMap(
+      ([key, value]) => {
+        const trimmed = value.trim()
+        if (!trimmed) return []
+        return [[key, trimmed]] as [SocialLinkKey, string][]
+      }
+    )
+    const nextOverrides: ProfileOverrides = {
+      displayName: normalizeOptional(profileDraft.displayName),
+      bio: normalizeOptional(profileDraft.bio),
+      avatarUrl: normalizeOptional(profileDraft.avatarUrl),
+      coverUrl: normalizeOptional(profileDraft.coverUrl),
+      pronounsBadge: normalizeOptional(profileDraft.pronounsBadge),
+      roleBadge: normalizeOptional(profileDraft.roleBadge),
+      deliveryBadge: normalizeOptional(profileDraft.deliveryBadge),
+      styleDescription: normalizeOptional(profileDraft.styleDescription),
+      styleTags: splitCommaList(profileDraft.styleTags),
+      socialLinks: socialEntries.length > 0 ? Object.fromEntries(socialEntries) : undefined,
+    }
+    if (nextOverrides.styleTags && nextOverrides.styleTags.length === 0) {
+      delete nextOverrides.styleTags
+    }
+    setProfileOverrides(nextOverrides)
+    setIsEditProfileOpen(false)
+    toast({
+      title: "Perfil atualizado",
+      description: "As alteracoes ja aparecem no seu perfil.",
+    })
+    if (onCurrentUserUpdate) {
+      onCurrentUserUpdate({
+        nome: nextOverrides.displayName ?? resolvedDisplayName,
+        avatarUrl: nextOverrides.avatarUrl ?? resolvedAvatarUrl,
+        bio: nextOverrides.bio ?? resolvedBio,
+      })
+    }
+  }
 
   const backendPosts: PortfolioPost[] = (backendProfile?.portfolioItens ?? [])
     .filter((item) => typeof item.urlArquivo === "string" && item.urlArquivo.trim())
@@ -719,7 +942,7 @@ export function ArtistProfile({
     <section className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-6">
       <div className="h-52 w-full overflow-hidden rounded-2xl md:h-64">
         <img
-          src={coverImageUrl}
+          src={resolvedCoverImageUrl}
           alt="Foto de capa"
           className="h-full w-full object-cover"
           loading="lazy"
@@ -813,17 +1036,7 @@ export function ArtistProfile({
                       }}
                     />
                     <div className="absolute bottom-3 right-3 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                      {isOwnerProfile ? (
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="icon-sm"
-                          aria-label="Editar post"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      ) : (
+                      {isOwnerProfile ? null : (
                         <>
                           <Button
                             type="button"
@@ -865,8 +1078,8 @@ export function ArtistProfile({
               <div className="relative">
                 <Avatar className="relative z-10 h-32 w-32">
                   <AvatarImage
-                    src={artist.avatarUrl || backendProfile?.usuarioFotoPerfil || ""}
-                    alt={artist.nome}
+                    src={resolvedAvatarUrl}
+                    alt={resolvedDisplayName}
                   />
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
@@ -898,41 +1111,31 @@ export function ArtistProfile({
                 )}
               </div>
               <div className="space-y-1">
-                <h2 className="text-2xl font-semibold">{artist.nome}</h2>
+                <h2 className="text-2xl font-semibold">{resolvedDisplayName}</h2>
                 <p className="text-sm text-muted-foreground">{handle}</p>
               </div>
-              <p className="text-sm text-muted-foreground">{profileBio}</p>
+              <p className="text-sm text-muted-foreground">{resolvedBio}</p>
             </div>
             <div className="flex w-full flex-wrap justify-center gap-2">
-              <Badge variant="secondary">
-                Ela/dela
-              </Badge>
-              <Badge variant="secondary">
-                Ilustradora
-              </Badge>
-              <Badge variant="secondary">
-                Entrega em 7 dias
-              </Badge>
-              <Badge variant="secondary">
-                Ativo hoje
-              </Badge>
+              {badgeList.length > 0 ? (
+                badgeList.map((badge) => (
+                  <Badge key={badge} variant="secondary">
+                    {badge}
+                  </Badge>
+                ))
+              ) : (
+                <Badge variant="secondary">Sem badges</Badge>
+              )}
             </div>
-            <div className="flex gap-2">
-              {isOwnerProfile ? (
-                <>
-                  <Button className="flex-1 gap-2 px-4">
-                    <Pencil className="h-4 w-4" />
-                    Editar perfil
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    className="flex-1 gap-2"
-                    aria-label="Editar posts"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    Editar posts
-                  </Button>
-                </>
+            <div className="flex">
+              {canEditProfile ? (
+                <Button
+                  className="w-full gap-2 px-4 py-6 text-base"
+                  onClick={() => setIsEditProfileOpen(true)}
+                >
+                  <Pencil className="h-5 w-5" />
+                  Editar perfil
+                </Button>
               ) : (
                 <>
                   <Button className="flex-1 gap-2 px-4">
@@ -959,7 +1162,7 @@ export function ArtistProfile({
                 </span>
                 <span className="text-muted-foreground">Seguidores</span>
               </div>
-              {!isOwnerProfile && (
+              {!canEditProfile && (
                 <div className="flex items-baseline gap-2">
                   <span className="text-base font-semibold">312</span>
                   <span className="text-muted-foreground">Seguindo</span>
@@ -1006,11 +1209,11 @@ export function ArtistProfile({
                 Sobre o estilo
               </div>
               <p className="text-muted-foreground">
-                {styleDescription}
+                {resolvedStyleDescription}
               </p>
               <div className="flex flex-wrap gap-2">
-                {styleTags.length > 0 ? (
-                  styleTags.map((tag) => (
+                {resolvedStyleTags.length > 0 ? (
+                  resolvedStyleTags.map((tag) => (
                     <Badge key={tag} variant="secondary">
                       {tag}
                     </Badge>
@@ -1032,11 +1235,11 @@ export function ArtistProfile({
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <Avatar className="size-10 border border-border/60">
-                      <AvatarImage src={artist.avatarUrl} alt={artist.nome} />
+                      <AvatarImage src={resolvedAvatarUrl} alt={resolvedDisplayName} />
                       <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-semibold">{artist.nome}</p>
+                      <p className="text-sm font-semibold">{resolvedDisplayName}</p>
                       <p className="text-xs text-muted-foreground">{handle}</p>
                     </div>
                   </div>
@@ -1050,18 +1253,7 @@ export function ArtistProfile({
                     {clampedDescription}
                   </p>
                 </div>
-                {isOwnerProfile ? (
-                  <>
-                    <Separator />
-                    <Button
-                      variant="secondary"
-                      className="inline-flex self-start items-center justify-start gap-2"
-                    >
-                      <Pencil className="h-4 w-4" />
-                      Editar post
-                    </Button>
-                  </>
-                ) : activePost?.commissionLink ? (
+                {activePost?.commissionLink && !isOwnerProfile ? (
                   <>
                     <Separator />
                     <Button
@@ -1213,6 +1405,356 @@ export function ArtistProfile({
                 )}
               </div>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
+        <DialogContent className="w-[96vw] max-w-4xl overflow-hidden border border-white/10 bg-neutral-950 p-0 text-white">
+          <div className="flex h-[86vh] flex-col">
+            <DialogHeader className="border-b border-white/10 px-6 py-4">
+              <DialogTitle className="text-white">Editar perfil</DialogTitle>
+              <DialogDescription className="text-white/60">
+                Atualize os dados visiveis do seu perfil.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex-1 overflow-y-auto px-6 py-6">
+              {profileDraft ? (
+                <div className="space-y-8">
+                  <section className="space-y-4">
+                    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                      <div className="relative aspect-[16/7] w-full">
+                        {profileDraft.coverUrl ? (
+                          <img
+                            src={profileDraft.coverUrl}
+                            alt="Preview da capa"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-sm text-white/50">
+                            Sem capa
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                        <div className="absolute right-4 top-4 flex gap-2">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            className="gap-2 bg-white/10 text-white hover:bg-white/20"
+                            onClick={() =>
+                              document.getElementById("draft-cover-input")?.click()
+                            }
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Editar capa
+                          </Button>
+                          <Input
+                            id="draft-cover-input"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleDraftCoverChange}
+                          />
+                        </div>
+                      </div>
+                      <div className="absolute bottom-6 right-6 z-20">
+                        <div className="relative">
+                          <Avatar className="h-40 w-40 border-4 border-neutral-950">
+                            <AvatarImage
+                              src={profileDraft.avatarUrl}
+                              alt={profileDraft.displayName}
+                            />
+                            <AvatarFallback>{initials}</AvatarFallback>
+                          </Avatar>
+                          <Button
+                            type="button"
+                            size="icon-sm"
+                            variant="secondary"
+                            className="absolute -right-2 -bottom-2 h-8 w-8 rounded-full bg-white/10 text-white hover:bg-white/20"
+                            onClick={() =>
+                              document.getElementById("draft-avatar-input")?.click()
+                            }
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Input
+                            id="draft-avatar-input"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleDraftAvatarChange}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid gap-4 pt-10 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label className="text-white/70">
+                          Capa do perfil
+                        </Label>
+                        <p className="text-xs text-white/50">
+                          Use o botao \"Editar capa\" para trocar a imagem.
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white/70">
+                          Foto de perfil
+                        </Label>
+                        <p className="text-xs text-white/50">
+                          Use o botao sobre o avatar para trocar a imagem.
+                        </p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="space-y-4">
+                    <div className="text-sm font-semibold uppercase text-white/60">
+                      Identidade
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-display-name" className="text-white/70">
+                          Nome de exibicao
+                        </Label>
+                        <Input
+                          id="profile-display-name"
+                          value={profileDraft.displayName}
+                          onChange={(event) =>
+                            updateDraft({ displayName: event.target.value })
+                          }
+                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          placeholder="Ex: Camila Araujo"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-pronouns" className="text-white/70">
+                          Pronomes
+                        </Label>
+                        <Select
+                          value={profileDraft.pronounsBadge}
+                          onValueChange={(value) => updateDraft({ pronounsBadge: value })}
+                        >
+                          <SelectTrigger
+                            id="profile-pronouns"
+                            className="border-white/10 bg-white/5 text-white"
+                          >
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Ele/dele">Ele/dele</SelectItem>
+                            <SelectItem value="Ela/dela">Ela/dela</SelectItem>
+                            <SelectItem value="Elu/Delu">Elu/Delu</SelectItem>
+                            <SelectItem value="Prefiro não informar">Prefiro não informar</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-role" className="text-white/70">
+                          Cargo
+                        </Label>
+                        <Select
+                          value={profileDraft.roleBadge}
+                          onValueChange={(value) => updateDraft({ roleBadge: value })}
+                        >
+                          <SelectTrigger
+                            id="profile-role"
+                            className="border-white/10 bg-white/5 text-white"
+                          >
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Ilustradora">Ilustradora</SelectItem>
+                            <SelectItem value="Ilustrador">Ilustrador</SelectItem>
+                            <SelectItem value="Designer">Designer</SelectItem>
+                            <SelectItem value="Concept artist">Concept artist</SelectItem>
+                            <SelectItem value="Animadora">Animadora</SelectItem>
+                            <SelectItem value="Modeladora 3D">Modeladora 3D</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-delivery" className="text-white/70">
+                          Prazo medio de entrega
+                        </Label>
+                        <Select
+                          value={profileDraft.deliveryBadge}
+                          onValueChange={(value) => updateDraft({ deliveryBadge: value })}
+                        >
+                          <SelectTrigger
+                            id="profile-delivery"
+                            className="border-white/10 bg-white/5 text-white"
+                          >
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1-3 dias">1-3 dias</SelectItem>
+                            <SelectItem value="1 semana">1 semana</SelectItem>
+                            <SelectItem value="2-3 semanas">2-3 semanas</SelectItem>
+                            <SelectItem value="1 mes">1 mes</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </section>
+
+                  <Separator />
+
+                  <section className="space-y-4">
+                    <div className="text-sm font-semibold uppercase text-white/60">
+                      Bio e estilo
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="profile-bio" className="text-white/70">
+                        Bio
+                      </Label>
+                      <Textarea
+                        id="profile-bio"
+                        value={profileDraft.bio}
+                        onChange={(event) => updateDraft({ bio: event.target.value })}
+                        rows={4}
+                        className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                        placeholder="Conte um pouco sobre voce e o seu trabalho."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="profile-style" className="text-white/70">
+                        Sobre o estilo
+                      </Label>
+                      <Textarea
+                        id="profile-style"
+                        value={profileDraft.styleDescription}
+                        onChange={(event) =>
+                          updateDraft({ styleDescription: event.target.value })
+                        }
+                        rows={4}
+                        className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                        placeholder="Descreva sua abordagem, tecnicas e referencias."
+                      />
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-style-tags" className="text-white/70">
+                          Tags de estilo
+                        </Label>
+                        <Input
+                          id="profile-style-tags"
+                          value={profileDraft.styleTags}
+                          onChange={(event) =>
+                            updateDraft({ styleTags: event.target.value })
+                          }
+                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          placeholder="Ex: Lineart, Cores pasteis, Chibi"
+                        />
+                      </div>
+                    </div>
+                  </section>
+
+                  <Separator />
+
+                  <section className="space-y-4">
+                    <div className="text-sm font-semibold uppercase text-white/60">
+                      Redes sociais
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-twitter" className="text-white/70">
+                          Twitter/X
+                        </Label>
+                        <Input
+                          id="profile-twitter"
+                          value={profileDraft.socialLinks.twitter}
+                          onChange={(event) =>
+                            updateDraftSocial("twitter", event.target.value)
+                          }
+                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          placeholder="https://twitter.com/"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-instagram" className="text-white/70">
+                          Instagram
+                        </Label>
+                        <Input
+                          id="profile-instagram"
+                          value={profileDraft.socialLinks.instagram}
+                          onChange={(event) =>
+                            updateDraftSocial("instagram", event.target.value)
+                          }
+                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          placeholder="https://www.instagram.com/"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-tiktok" className="text-white/70">
+                          TikTok
+                        </Label>
+                        <Input
+                          id="profile-tiktok"
+                          value={profileDraft.socialLinks.tiktok}
+                          onChange={(event) =>
+                            updateDraftSocial("tiktok", event.target.value)
+                          }
+                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          placeholder="https://www.tiktok.com/"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-youtube" className="text-white/70">
+                          YouTube
+                        </Label>
+                        <Input
+                          id="profile-youtube"
+                          value={profileDraft.socialLinks.youtube}
+                          onChange={(event) =>
+                            updateDraftSocial("youtube", event.target.value)
+                          }
+                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          placeholder="https://www.youtube.com/"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-twitch" className="text-white/70">
+                          Twitch
+                        </Label>
+                        <Input
+                          id="profile-twitch"
+                          value={profileDraft.socialLinks.twitch}
+                          onChange={(event) =>
+                            updateDraftSocial("twitch", event.target.value)
+                          }
+                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          placeholder="https://www.twitch.tv/"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="profile-artstation" className="text-white/70">
+                          ArtStation
+                        </Label>
+                        <Input
+                          id="profile-artstation"
+                          value={profileDraft.socialLinks.artstation}
+                          onChange={(event) =>
+                            updateDraftSocial("artstation", event.target.value)
+                          }
+                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          placeholder="https://www.artstation.com/"
+                        />
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              ) : null}
+            </div>
+
+            <DialogFooter className="border-t border-white/10 px-6 py-4">
+              <Button
+                className="ml-auto bg-white text-black hover:bg-white/90"
+                onClick={handleProfileSave}
+              >
+                Salvar
+              </Button>
+            </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>
