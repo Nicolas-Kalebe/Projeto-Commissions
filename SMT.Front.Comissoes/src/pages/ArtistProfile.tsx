@@ -364,11 +364,18 @@ export function ArtistProfile({
   const [serviceDescription, setServiceDescription] = useState("")
   const [serviceTerms, setServiceTerms] = useState("")
   const [serviceImages, setServiceImages] = useState<File[]>([])
+  const [serviceDragIndex, setServiceDragIndex] = useState<number | null>(null)
+  const [serviceDragOverIndex, setServiceDragOverIndex] = useState<number | null>(null)
+  const [servicePreviewUrls, setServicePreviewUrls] = useState<
+    { file: File; url: string }[]
+  >([])
   const [addedServices, setAddedServices] = useState<ServiceSheet[]>([])
   const [isAddPortfolioOpen, setIsAddPortfolioOpen] = useState(false)
   const [portfolioTitle, setPortfolioTitle] = useState("")
   const [portfolioDescription, setPortfolioDescription] = useState("")
   const [portfolioImages, setPortfolioImages] = useState<File[]>([])
+  const [portfolioDragIndex, setPortfolioDragIndex] = useState<number | null>(null)
+  const [portfolioDragOverIndex, setPortfolioDragOverIndex] = useState<number | null>(null)
   const [portfolioPreviewUrls, setPortfolioPreviewUrls] = useState<
     { file: File; url: string }[]
   >([])
@@ -831,6 +838,17 @@ export function ArtistProfile({
     }
   }, [isAddServiceOpen])
 
+  useEffect(() => {
+    const next = serviceImages.map((file) => ({
+      file,
+      url: URL.createObjectURL(file),
+    }))
+    setServicePreviewUrls(next)
+    return () => {
+      next.forEach((item) => URL.revokeObjectURL(item.url))
+    }
+  }, [serviceImages])
+
   const updateDraft = (partial: Partial<ProfileDraft>) => {
     setProfileDraft((prev) => (prev ? { ...prev, ...partial } : prev))
   }
@@ -1137,18 +1155,61 @@ export function ArtistProfile({
     setPortfolioImages((prev) => prev.filter((_, current) => current !== index))
   }
 
+  const handleMovePortfolioImage = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return
+    setPortfolioImages((prev) => {
+      if (
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= prev.length ||
+        toIndex >= prev.length
+      ) {
+        return prev
+      }
+      const next = [...prev]
+      const [moved] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, moved)
+      return next
+    })
+  }
+
   const resetServiceDialog = () => {
     setServiceTitle("")
     setServicePrice("")
     setServiceDescription("")
     setServiceTerms("")
     setServiceImages([])
+    setServicePreviewUrls([])
+    setServiceDragIndex(null)
+    setServiceDragOverIndex(null)
   }
 
   const handleServiceImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
     event.target.value = ""
     setServiceImages(files)
+  }
+
+  const handleRemoveServiceImage = (index: number) => {
+    setServiceImages((prev) => prev.filter((_, current) => current !== index))
+  }
+
+  const handleMoveServiceImage = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return
+    setServiceImages((prev) => {
+      if (
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= prev.length ||
+        toIndex >= prev.length
+      ) {
+        return prev
+      }
+      const next = [...prev]
+      const [moved] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, moved)
+      return next
+    })
   }
 
   const handlePortfolioImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -2295,14 +2356,14 @@ export function ArtistProfile({
       </Dialog>
 
       <Dialog open={isAddServiceOpen} onOpenChange={setIsAddServiceOpen}>
-        <DialogContent className="w-[92vw] max-w-lg">
+        <DialogContent className="w-[94vw] max-w-2xl">
           <DialogHeader>
             <DialogTitle>Adicionar serviço</DialogTitle>
             <DialogDescription>
               Crie um novo serviço com valor, descrição, termos e imagens.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
             <div className="space-y-2">
               <Label htmlFor="service-title">Titulo</Label>
               <Input
@@ -2393,12 +2454,67 @@ export function ArtistProfile({
                   onChange={handleServiceImageChange}
                 />
               </div>
-              {serviceImages.length > 0 ? (
-                <ul className="space-y-1 text-xs text-muted-foreground">
-                  {serviceImages.map((file) => (
-                    <li key={`${file.name}-${file.lastModified}`}>{file.name}</li>
-                  ))}
-                </ul>
+              {servicePreviewUrls.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Arraste as imagens para ordenar.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {servicePreviewUrls.map((item, index) => (
+                      <div
+                        key={`${item.file.name}-${item.file.lastModified}`}
+                        className={`relative h-20 w-20 cursor-grab overflow-hidden rounded-lg border border-border/60 active:cursor-grabbing ${
+                          serviceDragIndex === index ? "opacity-50" : ""
+                        } ${
+                          serviceDragOverIndex === index &&
+                          serviceDragIndex !== null &&
+                          serviceDragIndex !== index
+                            ? "ring-2 ring-foreground/60"
+                            : ""
+                        }`}
+                        draggable
+                        onDragStart={(event) => {
+                          setServiceDragIndex(index)
+                          setServiceDragOverIndex(index)
+                          event.dataTransfer.effectAllowed = "move"
+                        }}
+                        onDragOver={(event) => {
+                          event.preventDefault()
+                          event.dataTransfer.dropEffect = "move"
+                          if (serviceDragOverIndex !== index) {
+                            setServiceDragOverIndex(index)
+                          }
+                        }}
+                        onDrop={(event) => {
+                          event.preventDefault()
+                          if (serviceDragIndex === null) return
+                          handleMoveServiceImage(serviceDragIndex, index)
+                          setServiceDragIndex(null)
+                          setServiceDragOverIndex(null)
+                        }}
+                        onDragEnd={() => {
+                          setServiceDragIndex(null)
+                          setServiceDragOverIndex(null)
+                        }}
+                        aria-grabbed={serviceDragIndex === index}
+                      >
+                        <img
+                          src={item.url}
+                          alt={item.file.name}
+                          className="h-full w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-1 top-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-black/70 text-xs font-semibold text-white hover:bg-black/80"
+                          onClick={() => handleRemoveServiceImage(index)}
+                          aria-label="Remover imagem"
+                        >
+                          x
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ) : null}
             </div>
           </div>
@@ -2493,27 +2609,65 @@ export function ArtistProfile({
                 />
               </div>
               {portfolioPreviewUrls.length > 0 ? (
-                <div className="flex flex-wrap gap-3">
-                  {portfolioPreviewUrls.map((item, index) => (
-                    <div
-                      key={`${item.file.name}-${item.file.lastModified}`}
-                      className="relative h-22 w-22 overflow-hidden rounded-lg border border-border/60"
-                    >
-                      <img
-                        src={item.url}
-                        alt={item.file.name}
-                        className="h-full w-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-1 top-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-black/70 text-xs font-semibold text-white hover:bg-black/80"
-                        onClick={() => handleRemovePortfolioImage(index)}
-                        aria-label="Remover imagem"
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Arraste as imagens para ordenar.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {portfolioPreviewUrls.map((item, index) => (
+                      <div
+                        key={`${item.file.name}-${item.file.lastModified}`}
+                        className={`relative h-22 w-22 cursor-grab overflow-hidden rounded-lg border border-border/60 active:cursor-grabbing ${
+                          portfolioDragIndex === index ? "opacity-50" : ""
+                        } ${
+                          portfolioDragOverIndex === index &&
+                          portfolioDragIndex !== null &&
+                          portfolioDragIndex !== index
+                            ? "ring-2 ring-foreground/60"
+                            : ""
+                        }`}
+                        draggable
+                        onDragStart={(event) => {
+                          setPortfolioDragIndex(index)
+                          setPortfolioDragOverIndex(index)
+                          event.dataTransfer.effectAllowed = "move"
+                        }}
+                        onDragOver={(event) => {
+                          event.preventDefault()
+                          event.dataTransfer.dropEffect = "move"
+                          if (portfolioDragOverIndex !== index) {
+                            setPortfolioDragOverIndex(index)
+                          }
+                        }}
+                        onDrop={(event) => {
+                          event.preventDefault()
+                          if (portfolioDragIndex === null) return
+                          handleMovePortfolioImage(portfolioDragIndex, index)
+                          setPortfolioDragIndex(null)
+                          setPortfolioDragOverIndex(null)
+                        }}
+                        onDragEnd={() => {
+                          setPortfolioDragIndex(null)
+                          setPortfolioDragOverIndex(null)
+                        }}
+                        aria-grabbed={portfolioDragIndex === index}
                       >
-                        x
-                      </button>
-                    </div>
-                  ))}
+                        <img
+                          src={item.url}
+                          alt={item.file.name}
+                          className="h-full w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-1 top-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-black/70 text-xs font-semibold text-white hover:bg-black/80"
+                          onClick={() => handleRemovePortfolioImage(index)}
+                          aria-label="Remover imagem"
+                        >
+                          x
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : null}
             </div>
