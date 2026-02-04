@@ -1,4 +1,4 @@
-Ôªøimport type {
+import type {
   Art,
   CommissionStatus,
   ModerationReport,
@@ -13,7 +13,7 @@ export const users: User[] = [
     nome: "MockUser-1",
     role: "artista",
     avatarUrl:
-      "/mock_arts/anime_neon.png",
+      "/mock_arts/mock_1.jpg",
     bio: "Ilustradora digital focada em fantasia suave e personagens expressivos.",
     seguidores: 12840,
     destaque: "Especialista em retratos anime.",
@@ -23,8 +23,8 @@ export const users: User[] = [
     nome: "Renato Kaori",
     role: "artista",
     avatarUrl:
-      "/mock_arts/anime_neon.png",
-    bio: "Diretor de arte com foco em sci-fi e composi√ß√µes cinematogr√°ficas.",
+      "/mock_arts/mock_1.jpg",
+    bio: "Diretor de arte com foco em sci-fi e composiÁıes cinematogr·ficas.",
     seguidores: 9420,
   },
   {
@@ -32,22 +32,22 @@ export const users: User[] = [
     nome: "Marina Souza",
     role: "cliente",
     avatarUrl:
-      "/mock_arts/fantasy_landscape.png",
+      "/mock_arts/mock_1.jpg",
     bio: "Colecionadora e apoiadora de artistas independentes.",
     seguidores: 120,
   },
 ]
 
-export const arts: Art[] = [
+const baseArts: Art[] = [
   {
     id: "artwork-1",
     titulo: "Noite Neon",
     imageUrl:
-      "/mock_arts/cyberpunk_char.png",
+      "/mock_arts/mock_2.jpg",
     images: [
-      "/mock_arts/cyberpunk_char.png",
-      "/mock_arts/anime_neon.png",
-      "/mock_arts/comic_hero.png",
+      "/mock_arts/mock_2.jpg",
+      "/mock_arts/mock_1.jpg",
+      "/mock_arts/mock_3.jpg",
     ],
     artistId: "art-1",
     tags: ["#Neon", "#Retrato", "#Anime"],
@@ -57,9 +57,9 @@ export const arts: Art[] = [
   },
   {
     id: "artwork-2",
-    titulo: "Guardi√£o Floral",
+    titulo: "Guardi„o Floral",
     imageUrl:
-      "/mock_arts/abstract_shapes.png",
+      "/mock_arts/mock_3.jpg",
     artistId: "art-1",
     tags: ["#Fantasy", "#Painterly", "#Detail"],
     nsfw: false,
@@ -69,11 +69,11 @@ export const arts: Art[] = [
     id: "artwork-3",
     titulo: "Pixel Drift",
     imageUrl:
-      "/mock_arts/render_3d.png",
+      "/mock_arts/mock_2.jpg",
     images: [
-      "/mock_arts/render_3d.png",
-      "/mock_arts/pixel_city.png",
-      "/mock_arts/abstract_shapes.png",
+      "/mock_arts/mock_2.jpg",
+      "/mock_arts/mock_2.jpg",
+      "/mock_arts/mock_3.jpg",
     ],
     artistId: "art-2",
     tags: ["#PixelArt", "#Retro", "#Cidade"],
@@ -84,7 +84,7 @@ export const arts: Art[] = [
     id: "artwork-4",
     titulo: "Luar Secreto",
     imageUrl:
-      "/mock_arts/oil_portrait.png",
+      "/mock_arts/mock_3.jpg",
     artistId: "art-1",
     tags: ["#Sensual", "#LuzSuave", "#Retrato"],
     nsfw: true,
@@ -94,11 +94,11 @@ export const arts: Art[] = [
     id: "artwork-5",
     titulo: "Catedral Astral",
     imageUrl:
-      "/mock_arts/charcoal_tree.png",
+      "/mock_arts/mock_3.jpg",
     images: [
-      "/mock_arts/charcoal_tree.png",
-      "/mock_arts/fantasy_landscape.png",
-      "/mock_arts/watercolor_meadow.png",
+      "/mock_arts/mock_3.jpg",
+      "/mock_arts/mock_1.jpg",
+      "/mock_arts/mock_1.jpg",
     ],
     artistId: "art-2",
     tags: ["#SciFi", "#Matte", "#Arquitetura"],
@@ -110,7 +110,7 @@ export const arts: Art[] = [
     id: "artwork-6",
     titulo: "Club 97",
     imageUrl:
-      "/mock_arts/sketch_dragon.png",
+      "/mock_arts/mock_3.jpg",
     artistId: "art-2",
     tags: ["#Cyber", "#Night", "#Mood"],
     nsfw: true,
@@ -120,14 +120,14 @@ export const arts: Art[] = [
     id: "artwork-7",
     titulo: "Viagem Dourada",
     imageUrl:
-      "/mock_arts/watercolor_meadow.png",
+      "/mock_arts/mock_1.jpg",
     images: [
-      "/mock_arts/watercolor_meadow.png",
-      "/mock_arts/fantasy_landscape.png",
-      "/mock_arts/low_poly.png",
+      "/mock_arts/mock_1.jpg",
+      "/mock_arts/mock_1.jpg",
+      "/mock_arts/mock_2.jpg",
     ],
     artistId: "art-1",
-    tags: ["#Concept", "#Ilustra√ß√£o", "#Luz"],
+    tags: ["#Concept", "#IlustraÁ„o", "#Luz"],
     nsfw: false,
     preco: 140,
   },
@@ -135,7 +135,7 @@ export const arts: Art[] = [
     id: "artwork-8",
     titulo: "Linha Calma",
     imageUrl:
-      "/mock_arts/sketch_dragon.png",
+      "/mock_arts/mock_3.jpg",
     artistId: "art-1",
     tags: ["#Sketch", "#Mono", "#Minimal"],
     nsfw: false,
@@ -145,7 +145,7 @@ export const arts: Art[] = [
     id: "artwork-9",
     titulo: "Campo Vertical",
     imageUrl:
-      "/mock_arts/low_poly.png",
+      "/mock_arts/mock_2.jpg",
     artistId: "art-1",
     tags: ["#Landscape", "#Vertical", "#Soft"],
     nsfw: false,
@@ -155,11 +155,11 @@ export const arts: Art[] = [
     id: "artwork-10",
     titulo: "Luz Larga",
     imageUrl:
-      "/mock_arts/comic_hero.png",
+      "/mock_arts/mock_3.jpg",
     images: [
-      "/mock_arts/comic_hero.png",
-      "/mock_arts/test_wide_16_9.png",
-      "/mock_arts/test_ultrawide_21_9.png",
+      "/mock_arts/mock_3.jpg",
+      "/mock_arts/mock_2.jpg",
+      "/mock_arts/mock_3.jpg",
     ],
     artistId: "art-1",
     tags: ["#Wide", "#Glow", "#Atmosphere"],
@@ -171,7 +171,7 @@ export const arts: Art[] = [
     id: "artwork-11",
     titulo: "Retrato Alto",
     imageUrl:
-      "/mock_arts/oil_portrait.png",
+      "/mock_arts/mock_3.jpg",
     artistId: "art-1",
     tags: ["#Portrait", "#Moody", "#Detail"],
     nsfw: false,
@@ -181,7 +181,7 @@ export const arts: Art[] = [
     id: "artwork-12",
     titulo: "Panorama Frio",
     imageUrl:
-      "/mock_arts/cyberpunk_char.png",
+      "/mock_arts/mock_2.jpg",
     artistId: "art-1",
     tags: ["#Panorama", "#Blue", "#Calm"],
     nsfw: false,
@@ -191,7 +191,7 @@ export const arts: Art[] = [
     id: "artwork-13",
     titulo: "Aurora Serena",
     imageUrl:
-      "/mock_arts/watercolor_meadow.png",
+      "/mock_arts/mock_1.jpg",
     artistId: "art-1",
     tags: ["#Soft", "#Nature", "#Glow"],
     nsfw: false,
@@ -201,7 +201,7 @@ export const arts: Art[] = [
     id: "artwork-14",
     titulo: "Rosas de Nevoa",
     imageUrl:
-      "/mock_arts/render_3d.png",
+      "/mock_arts/mock_2.jpg",
     artistId: "art-1",
     tags: ["#Mood", "#Light", "#Portrait"],
     nsfw: false,
@@ -211,7 +211,7 @@ export const arts: Art[] = [
     id: "artwork-15",
     titulo: "Brisa Azul",
     imageUrl:
-      "/mock_arts/low_poly.png",
+      "/mock_arts/mock_2.jpg",
     artistId: "art-1",
     tags: ["#Sky", "#Soft", "#Pastel"],
     nsfw: false,
@@ -221,7 +221,7 @@ export const arts: Art[] = [
     id: "artwork-16",
     titulo: "Silencio Claro",
     imageUrl:
-      "/mock_arts/oil_portrait.png",
+      "/mock_arts/mock_3.jpg",
     artistId: "art-1",
     tags: ["#Landscape", "#Calm", "#Light"],
     nsfw: false,
@@ -231,7 +231,7 @@ export const arts: Art[] = [
     id: "artwork-17",
     titulo: "Caminho Dourado",
     imageUrl:
-      "/mock_arts/abstract_shapes.png",
+      "/mock_arts/mock_3.jpg",
     artistId: "art-1",
     tags: ["#Golden", "#Warm", "#Trail"],
     nsfw: false,
@@ -241,7 +241,7 @@ export const arts: Art[] = [
     id: "artwork-18",
     titulo: "Maresia Suave",
     imageUrl:
-      "/mock_arts/comic_hero.png",
+      "/mock_arts/mock_3.jpg",
     artistId: "art-1",
     tags: ["#Sea", "#Blue", "#Soft"],
     nsfw: false,
@@ -251,7 +251,7 @@ export const arts: Art[] = [
     id: "artwork-19",
     titulo: "Brilho da Manha",
     imageUrl:
-      "/mock_arts/render_3d.png",
+      "/mock_arts/mock_2.jpg",
     artistId: "art-1",
     tags: ["#Sunrise", "#Light", "#Dreamy"],
     nsfw: false,
@@ -261,7 +261,7 @@ export const arts: Art[] = [
     id: "artwork-20",
     titulo: "Jardim Silente",
     imageUrl:
-      "/mock_arts/sketch_dragon.png",
+      "/mock_arts/mock_3.jpg",
     artistId: "art-1",
     tags: ["#Garden", "#Soft", "#Detail"],
     nsfw: false,
@@ -271,7 +271,7 @@ export const arts: Art[] = [
   {
     id: "artwork-21",
     titulo: "Floresta Encantada",
-    imageUrl: "/mock_arts/fantasy_landscape.png",
+    imageUrl: "/mock_arts/mock_1.jpg",
     artistId: "art-1",
     tags: ["#Fantasy", "#Nature", "#Magic"],
     nsfw: false,
@@ -279,8 +279,8 @@ export const arts: Art[] = [
   },
   {
     id: "artwork-22",
-    titulo: "Guerreiro Cibern√©tico",
-    imageUrl: "/mock_arts/cyberpunk_char.png",
+    titulo: "Guerreiro CibernÈtico",
+    imageUrl: "/mock_arts/mock_2.jpg",
     artistId: "art-1",
     tags: ["#SciFi", "#Cyber", "#Character"],
     nsfw: false,
@@ -289,7 +289,7 @@ export const arts: Art[] = [
   {
     id: "artwork-23",
     titulo: "Retrato Realista",
-    imageUrl: "/mock_arts/oil_portrait.png",
+    imageUrl: "/mock_arts/mock_3.jpg",
     artistId: "art-1",
     tags: ["#Portrait", "#Realism", "#Oil"],
     nsfw: false,
@@ -298,7 +298,7 @@ export const arts: Art[] = [
   {
     id: "artwork-24",
     titulo: "Cidade 8-bit",
-    imageUrl: "/mock_arts/pixel_city.png",
+    imageUrl: "/mock_arts/mock_2.jpg",
     artistId: "art-2",
     tags: ["#PixelArt", "#Retro", "#City"],
     nsfw: false,
@@ -307,7 +307,7 @@ export const arts: Art[] = [
   {
     id: "artwork-25",
     titulo: "Vale Perdido",
-    imageUrl: "/mock_arts/low_poly.png",
+    imageUrl: "/mock_arts/mock_2.jpg",
     artistId: "art-1",
     tags: ["#Fantasy", "#Landscape", "#LowPoly"],
     nsfw: false,
@@ -316,7 +316,7 @@ export const arts: Art[] = [
   {
     id: "artwork-26",
     titulo: "Princesa Guerreira",
-    imageUrl: "/mock_arts/anime_neon.png",
+    imageUrl: "/mock_arts/mock_1.jpg",
     artistId: "art-1",
     tags: ["#Portrait", "#Anime", "#Character"],
     nsfw: false,
@@ -325,7 +325,7 @@ export const arts: Art[] = [
   {
     id: "artwork-27",
     titulo: "Nave Espacial",
-    imageUrl: "/mock_arts/render_3d.png",
+    imageUrl: "/mock_arts/mock_2.jpg",
     artistId: "art-2",
     tags: ["#SciFi", "#Space", "#3D"],
     nsfw: false,
@@ -334,7 +334,7 @@ export const arts: Art[] = [
   {
     id: "artwork-28",
     titulo: "Masmorra Escura",
-    imageUrl: "/mock_arts/sketch_dragon.png",
+    imageUrl: "/mock_arts/mock_3.jpg",
     artistId: "art-1",
     tags: ["#Fantasy", "#Sketch", "#Dark"],
     nsfw: true,
@@ -342,8 +342,8 @@ export const arts: Art[] = [
   },
   {
     id: "artwork-29",
-    titulo: "Backup de Mem√≥ria",
-    imageUrl: "/mock_arts/abstract_shapes.png",
+    titulo: "Backup de MemÛria",
+    imageUrl: "/mock_arts/mock_3.jpg",
     artistId: "art-2",
     tags: ["#SciFi", "#Abstract", "#Data"],
     nsfw: false,
@@ -351,14 +351,68 @@ export const arts: Art[] = [
   },
   {
     id: "artwork-30",
-    titulo: "Her√≥i Cl√°ssico",
-    imageUrl: "/mock_arts/comic_hero.png",
+    titulo: "HerÛi Cl·ssico",
+    imageUrl: "/mock_arts/mock_3.jpg",
     artistId: "art-1",
     tags: ["#Portrait", "#Comic", "#Character"],
     nsfw: false,
     preco: 110,
   },
 ]
+const mockFeedImagePool = [
+  "/mock_arts/mock_1.jpg",
+  "/mock_arts/mock_2.jpg",
+  "/mock_arts/mock_3.jpg",
+  "/mock_arts/mock_4.gif",
+  "/mock_arts/mock_5.jpg",
+  "/mock_arts/mock_6.jpg",
+  "/mock_arts/mock_7.jpg",
+  "/mock_arts/mock_8.gif",
+  "/mock_arts/mock_9.gif",
+  "/mock_arts/mock_10.jpg",
+  "/mock_arts/mock_11.jpg",
+  "/mock_arts/mock_12.jpg",
+  "/mock_arts/mock_13.jpg",
+  "/mock_arts/mock_14.jpg",
+  "/mock_arts/mock_15.jpg",
+  "/mock_arts/mock_16.jpg",
+  "/mock_arts/mock_17.jpg",
+  "/mock_arts/mock_18.jpg",
+  "/mock_arts/mock_19.jpg",
+  "/mock_arts/mock_20.jpg",
+  "/mock_arts/mock_21.jpg",
+]
+
+const shuffle = <T,>(values: T[]) => {
+  const arr = [...values]
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const tmp = arr[i]
+    arr[i] = arr[j]
+    arr[j] = tmp
+  }
+  return arr
+}
+
+const remixFeedArts = (artworks: Art[]): Art[] => {
+  const shuffled = shuffle(mockFeedImagePool)
+  const pick = (index: number) => shuffled[index % shuffled.length]
+
+  return artworks.map((art, index) => {
+    const primary = pick(index)
+    const gallery = [primary, pick(index + 7), pick(index + 13)].filter(
+      (item, itemIndex, array) => array.indexOf(item) === itemIndex
+    )
+
+    return {
+      ...art,
+      imageUrl: primary,
+      images: gallery,
+    }
+  })
+}
+
+export const arts: Art[] = remixFeedArts(baseArts)
 
 export const priceSheets: PriceSheet[] = [
   {
@@ -368,22 +422,22 @@ export const priceSheets: PriceSheet[] = [
     descricao:
       "## Headshot Anime Premium\nFeito para **avatar**, redes sociais e comissoes rapidas, com foco em expressividade e acabamento limpo.\n\n### O que voce recebe\n- **Pintura completa** com luz suave\n- Ajustes finos de cor, olhos, cabelo e acessorios\n- Arquivo final em **alta resolucao** + versao para redes\n\n### Como funciona\n- Envie referencias ou moodboard\n- Aprovacao do esboco e lineart\n- Entrega final em **ate 7 dias**\n\n### Observacoes\n- Fundo simples incluso\n- Uso comercial sob consulta",
     imageUrl:
-      "/mock_arts/cyberpunk_char.png",
+      "/mock_arts/mock_2.jpg",
   },
   {
     id: "ps-single-vertical",
     titulo: "Vertical 9x16",
     preco: 160,
     descricao: "Arte vertical com foco em enquadramento e luz suave.",
-    imageUrl: "/mock_arts/test_tall_9_16.png",
+    imageUrl: "/mock_arts/mock_3.jpg",
   },
   {
     id: "ps-2",
     titulo: "Meio Corpo",
     preco: 120,
-    descricao: "Ilustra√ß√£o detalhada at√© o torso com luz cinematogr√°fica.",
+    descricao: "IlustraÁ„o detalhada atÈ o torso com luz cinematogr·fica.",
     imageUrl:
-      "/mock_arts/fantasy_landscape.png",
+      "/mock_arts/mock_1.jpg",
   },
   {
     id: "ps-3",
@@ -391,7 +445,7 @@ export const priceSheets: PriceSheet[] = [
     preco: 250,
     descricao: "Personagem em ambiente completo com props e atmosfera.",
     imageUrl:
-      "/mock_arts/charcoal_tree.png",
+      "/mock_arts/mock_3.jpg",
   },
   {
     id: "ps-4",
@@ -399,15 +453,15 @@ export const priceSheets: PriceSheet[] = [
     preco: 40,
     descricao: "Chibi rapido com foco em carisma e paleta pastel.",
     imageUrl:
-      "/mock_arts/anime_neon.png",
+      "/mock_arts/mock_1.jpg",
   },
   {
     id: "ps-5",
     titulo: "Emote Pack (3)",
     preco: 70,
-    descricao: "Tres emotes prontos para stream com varia√ß√µes de humor.",
+    descricao: "Tres emotes prontos para stream com variaÁıes de humor.",
     imageUrl:
-      "/mock_arts/sketch_dragon.png",
+      "/mock_arts/mock_3.jpg",
   },
   {
     id: "ps-6",
@@ -415,7 +469,7 @@ export const priceSheets: PriceSheet[] = [
     preco: 180,
     descricao: "Arte vertical para story/poster com foco em luz suave.",
     imageUrl:
-      "/mock_arts/low_poly.png",
+      "/mock_arts/mock_2.jpg",
   },
 ]
 
@@ -423,21 +477,21 @@ export const commissionStatuses: CommissionStatus[] = [
   {
     id: "pagamento",
     titulo: "Pagamento Realizado",
-    descricao: "Valor bloqueado em seguran√ßa.",
+    descricao: "Valor bloqueado em seguranÁa.",
   },
   {
     id: "producao",
-    titulo: "Em Produ√ß√£o",
+    titulo: "Em ProduÁ„o",
     descricao: "Artista trabalhando na entrega.",
   },
   {
     id: "entrega",
     titulo: "Entrega Final",
-    descricao: "Arquivo aguardando libera√ß√£o.",
+    descricao: "Arquivo aguardando liberaÁ„o.",
   },
   {
     id: "aprovacao",
-    titulo: "Aprova√ß√£o",
+    titulo: "AprovaÁ„o",
     descricao: "Pagamento liberado ao artista.",
   },
 ]
@@ -446,7 +500,7 @@ export const moderationReports: ModerationReport[] = [
   {
     id: "rep-1",
     conteudo: "Luar Secreto",
-    motivo: "Conte√∫do sens√≠vel sem aviso",
+    motivo: "Conte˙do sensÌvel sem aviso",
     autor: "Luna Azevedo",
     status: "novo",
   },
@@ -460,7 +514,7 @@ export const moderationReports: ModerationReport[] = [
   {
     id: "rep-3",
     conteudo: "Catedral Astral",
-    motivo: "Poss√≠vel pl√°gio",
+    motivo: "PossÌvel pl·gio",
     autor: "Renato Kaori",
     status: "revisado",
   },
@@ -471,7 +525,7 @@ export const notifications: NotificationItem[] = [
   {
     id: "not-1",
     titulo: "Nova proposta recebida",
-    descricao: "Marina Souza enviou detalhes para uma comiss√£o.",
+    descricao: "Marina Souza enviou detalhes para uma comiss„o.",
     data: new Date().toISOString(), // Hoje
     lida: false,
     tipo: "pedido",
@@ -480,22 +534,22 @@ export const notifications: NotificationItem[] = [
     id: "not-2",
     titulo: "Pagamento confirmado",
     descricao: "Seu pedido #2345 teve o pagamento validado.",
-    data: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 horas atr√°s
+    data: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 horas atr·s
     lida: false,
     tipo: "sistema",
   },
   {
     id: "not-3",
     titulo: "Novo seguidor",
-    descricao: "Pedro Silva come√ßou a te seguir.",
-    data: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 horas atr√°s
+    descricao: "Pedro Silva comeÁou a te seguir.",
+    data: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 horas atr·s
     lida: true,
     tipo: "social",
   },
   // Ontem
   {
     id: "not-4",
-    titulo: "Atualiza√ß√£o de status",
+    titulo: "AtualizaÁ„o de status",
     descricao: "O artista iniciou o rascunho do seu pedido.",
     data: new Date(Date.now() - 1000 * 60 * 60 * 25).toISOString(), // Ontem
     lida: true,
@@ -503,36 +557,36 @@ export const notifications: NotificationItem[] = [
   },
   {
     id: "not-5",
-    titulo: "Coment√°rio na sua arte",
-    descricao: "Ana Clara comentou: 'Ficou incr√≠vel!'",
+    titulo: "Coment·rio na sua arte",
+    descricao: "Ana Clara comentou: 'Ficou incrÌvel!'",
     data: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString(), // Ontem
     lida: true,
     tipo: "social",
   },
-  // Essa Semana (3 dias atr√°s)
+  // Essa Semana (3 dias atr·s)
   {
     id: "not-6",
-    titulo: "Promo√ß√£o de Outono",
-    descricao: "Aproveite 20% de desconto em comiss√µes selecionadas.",
-    data: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 dias atr√°s
+    titulo: "PromoÁ„o de Outono",
+    descricao: "Aproveite 20% de desconto em comissıes selecionadas.",
+    data: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 dias atr·s
     lida: true,
     tipo: "sistema",
   },
-  // Semana Passada (8 dias atr√°s)
+  // Semana Passada (8 dias atr·s)
   {
     id: "not-7",
-    titulo: "Pedido Conclu√≠do",
-    descricao: "Sua arte #9981 est√° pronta para download.",
-    data: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8).toISOString(), // 8 dias atr√°s
+    titulo: "Pedido ConcluÌdo",
+    descricao: "Sua arte #9981 est· pronta para download.",
+    data: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8).toISOString(), // 8 dias atr·s
     lida: true,
     tipo: "pedido",
   },
-  // M√™s Passado (35 dias atr√°s)
+  // MÍs Passado (35 dias atr·s)
   {
     id: "not-8",
     titulo: "Bem-vindo!",
-    descricao: "Obrigado por se juntar √† nossa plataforma.",
-    data: new Date(Date.now() - 1000 * 60 * 60 * 24 * 35).toISOString(), // 35 dias atr√°s
+    descricao: "Obrigado por se juntar ‡ nossa plataforma.",
+    data: new Date(Date.now() - 1000 * 60 * 60 * 24 * 35).toISOString(), // 35 dias atr·s
     lida: true,
     tipo: "sistema",
   },
@@ -540,7 +594,7 @@ export const notifications: NotificationItem[] = [
 
 export const categoryFilters = [
   { key: "categorias", label: "Categorias", icon: "category" },
-  { key: "ilustracao", label: "Ilustracao", icon: "brush", tags: ["#Ilustra√ß√£o"] },
+  { key: "ilustracao", label: "Ilustracao", icon: "brush", tags: ["#IlustraÁ„o"] },
   { key: "anime", label: "Anime", icon: "face", tags: ["#Anime"] },
   { key: "pixel", label: "Pixel Art", icon: "grid_on", tags: ["#PixelArt"] },
   { key: "realismo", label: "Realismo", icon: "visibility", tags: ["#Detail"] },
@@ -714,3 +768,4 @@ export const messages: import("@/types").Message[] = [
     status: "enviado",
   },
 ]
+

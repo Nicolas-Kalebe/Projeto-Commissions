@@ -1,4 +1,4 @@
-﻿import { useState } from "react"
+import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -142,7 +142,7 @@ export function DashboardPage() {
         tags: art.tags ?? [],
         images: [
           art.imageUrl,
-          ...(index % 2 === 0 ? ["/mock_arts/test_wide_16_9.png"] : []),
+          ...(index % 2 === 0 ? ["/mock_arts/mock_2.jpg"] : []),
         ],
       }))
   )
@@ -646,7 +646,7 @@ export function DashboardPage() {
                         <div className="md:w-5/12">
                           <div className="h-full w-full overflow-hidden rounded-lg border border-border/60 aspect-video">
                             <img
-                              src="/mock_arts/wallhaven-mlzdrk.jpg"
+                              src="/mock_arts/mock_3.jpg"
                               alt="Arte da ultima postagem"
                               className="h-full w-full object-cover"
                             />
@@ -696,8 +696,8 @@ export function DashboardPage() {
                       <img
                         src={
                           highlightMode === "views"
-                            ? "/mock_arts/test_wide_16_9.png"
-                            : "/mock_arts/test_tall_9_16.png"
+                            ? "/mock_arts/mock_2.jpg"
+                            : "/mock_arts/mock_3.jpg"
                         }
                         alt="Arte em destaque"
                         className="mt-4 h-48 w-full rounded-lg object-cover"
@@ -707,7 +707,7 @@ export function DashboardPage() {
                           { label: "Curtidas", value: highlight.likes },
                           { label: "Salvos", value: highlight.saves },
                           { label: "Entradas no perfil", value: highlight.profileEntries },
-                          { label: "Tags", value: highlight.tags.join(" • ") },
+                          { label: "Tags", value: highlight.tags.join(" � ") },
                         ].map((item) => (
                           <div
                             key={item.label}
