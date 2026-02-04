@@ -33,7 +33,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import type { User } from "@/types"
+import type { PriceSheet, User } from "@/types"
 import { API_ROUTES } from "@/constants/apiRoutes"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -285,6 +285,10 @@ type OwnerPriceSheetRowProps = {
   images: string[]
 }
 
+type ServiceSheet = PriceSheet & {
+  images?: string[]
+}
+
 function OwnerPriceSheetRow({ sheet, images }: OwnerPriceSheetRowProps) {
   const image = images[0] ?? sheet.imageUrl
   return (
@@ -354,6 +358,13 @@ export function ArtistProfile({
   const [draftAvatarPreview, setDraftAvatarPreview] = useState("")
   const [draftCoverPreview, setDraftCoverPreview] = useState("")
   const [draftCoverFile, setDraftCoverFile] = useState<File | null>(null)
+  const [isAddServiceOpen, setIsAddServiceOpen] = useState(false)
+  const [serviceTitle, setServiceTitle] = useState("")
+  const [servicePrice, setServicePrice] = useState("")
+  const [serviceDescription, setServiceDescription] = useState("")
+  const [serviceTerms, setServiceTerms] = useState("")
+  const [serviceImages, setServiceImages] = useState<File[]>([])
+  const [addedServices, setAddedServices] = useState<ServiceSheet[]>([])
   const [isAddPortfolioOpen, setIsAddPortfolioOpen] = useState(false)
   const [portfolioTitle, setPortfolioTitle] = useState("")
   const [portfolioDescription, setPortfolioDescription] = useState("")
@@ -801,6 +812,12 @@ export function ArtistProfile({
     }
   }, [isAddPortfolioOpen])
 
+  useEffect(() => {
+    if (!isAddServiceOpen) {
+      resetServiceDialog()
+    }
+  }, [isAddServiceOpen])
+
   const updateDraft = (partial: Partial<ProfileDraft>) => {
     setProfileDraft((prev) => (prev ? { ...prev, ...partial } : prev))
   }
@@ -950,7 +967,10 @@ export function ArtistProfile({
       }
     })
 
-  const activePriceSheets = isMockUser ? priceSheets : []
+  const activePriceSheets: ServiceSheet[] = [
+    ...addedServices,
+    ...(isMockUser ? priceSheets : []),
+  ]
   const visiblePosts = isMockUser
     ? [testSingleImagePost, ...testPortfolioPosts, ...portfolioPosts]
     : backendPosts
@@ -972,6 +992,16 @@ export function ArtistProfile({
       : descriptionText
   const remainingPortfolioChars = descriptionLimit - portfolioDescription.length
   const remainingPortfolioTitleChars = portfolioTitleLimit - portfolioTitle.length
+  const parsedServicePrice = Number.parseFloat(servicePrice.replace(",", "."))
+  const isServicePriceValid =
+    Number.isFinite(parsedServicePrice) &&
+    parsedServicePrice > 0 &&
+    parsedServicePrice <= 99999
+  const serviceTitleLimit = 50
+  const serviceTextLimit = 1000
+  const remainingServiceTitleChars = serviceTitleLimit - serviceTitle.length
+  const remainingServiceDescChars = serviceTextLimit - serviceDescription.length
+  const remainingServiceTermsChars = serviceTextLimit - serviceTerms.length
   const formatPostDate = (value?: string) => {
     if (!value) return ""
     const date = new Date(value)
@@ -996,6 +1026,12 @@ export function ArtistProfile({
     }
   }, [activePostIndex, sortedPosts.length])
   const serviceGalleries = activePriceSheets.map((sheet, index) => {
+    if (sheet.images && sheet.images.length > 0) {
+      return sheet.images
+    }
+    if (sheet.imageUrl) {
+      return [sheet.imageUrl]
+    }
     if (sheet.id === "ps-1") {
       return [
         "/mock_arts/test_wide_16_9.png",
@@ -1013,10 +1049,6 @@ export function ArtistProfile({
       .slice(startIndex, startIndex + 3)
       .map((art) => art.imageUrl)
       .filter(Boolean)
-
-    if (images.length === 0 && sheet.imageUrl) {
-      images.push(sheet.imageUrl)
-    }
 
     return images
   })
@@ -1088,6 +1120,20 @@ export function ArtistProfile({
     setPortfolioImages([])
   }
 
+  const resetServiceDialog = () => {
+    setServiceTitle("")
+    setServicePrice("")
+    setServiceDescription("")
+    setServiceTerms("")
+    setServiceImages([])
+  }
+
+  const handleServiceImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? [])
+    event.target.value = ""
+    setServiceImages(files)
+  }
+
   const handlePortfolioImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
     event.target.value = ""
@@ -1123,6 +1169,31 @@ export function ArtistProfile({
       usuarioFotoCapa,
       usuarioSeguidores: usuarioSeguidores ?? backendProfile?.usuarioSeguidores,
     })
+  }
+
+  const handleServiceSubmit = () => {
+    if (serviceImages.length === 0) return
+    const priceValue = Number.parseFloat(servicePrice.replace(",", "."))
+    if (!Number.isFinite(priceValue) || priceValue <= 0) return
+
+    const title = serviceTitle.trim().slice(0, serviceTitleLimit) || "Novo servico"
+    const description =
+      serviceDescription.trim().slice(0, serviceTextLimit) || "Servico personalizado."
+    const terms = serviceTerms.trim().slice(0, serviceTextLimit) || undefined
+    const imageUrls = serviceImages.map((file) => URL.createObjectURL(file))
+    const newService: ServiceSheet = {
+      id: `local-service-${Date.now()}`,
+      titulo: title,
+      preco: priceValue,
+      descricao: description,
+      termos: terms,
+      imageUrl: imageUrls[0],
+      images: imageUrls,
+    }
+
+    setAddedServices((prev) => [newService, ...prev])
+    setIsAddServiceOpen(false)
+    resetServiceDialog()
   }
 
   const handlePortfolioSubmit = async () => {
@@ -1372,6 +1443,22 @@ export function ArtistProfile({
           {showServices ? (
             activePriceSheets.length > 0 ? (
               <div className="space-y-4">
+                {canEditProfile ? (
+                  <button
+                    type="button"
+                    className="group flex min-h-[220px] w-full items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/40 text-muted-foreground transition hover:border-foreground/40 hover:text-foreground"
+                    onClick={() => setIsAddServiceOpen(true)}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-border/60 text-3xl font-semibold">
+                        +
+                      </div>
+                      <span className="text-sm font-semibold">
+                        Adicionar servi?o
+                      </span>
+                    </div>
+                  </button>
+                ) : null}
                 {activePriceSheets.map((sheet, index) =>
                   isOwnerProfile ? (
                     <OwnerPriceSheetRow
@@ -1390,9 +1477,29 @@ export function ArtistProfile({
                   )
                 )}
               </div>
+            ) : canEditProfile ? (
+              <div className="space-y-4">
+                <button
+                  type="button"
+                  className="group flex min-h-[220px] w-full items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/40 text-muted-foreground transition hover:border-foreground/40 hover:text-foreground"
+                  onClick={() => setIsAddServiceOpen(true)}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-border/60 text-3xl font-semibold">
+                      +
+                    </div>
+                    <span className="text-sm font-semibold">
+                      Adicionar servi?o
+                    </span>
+                  </div>
+                </button>
+                <div className="rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center text-sm text-muted-foreground">
+                  Nenhum servi?o cadastrado ainda.
+                </div>
+              </div>
             ) : (
               <div className="rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center text-sm text-muted-foreground">
-                Nenhum serviço cadastrado ainda.
+                Nenhum servi?o cadastrado ainda.
               </div>
             )
           ) : (
@@ -1453,7 +1560,7 @@ export function ArtistProfile({
               </div>
             ) : (
               <div className="rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center text-sm text-muted-foreground">
-                Nenhum post no portfólio ainda.
+                Nenhum post no portf?lio ainda.
               </div>
             )
           )}
@@ -2167,6 +2274,138 @@ export function ArtistProfile({
               </Button>
             </DialogFooter>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAddServiceOpen} onOpenChange={setIsAddServiceOpen}>
+        <DialogContent className="w-[92vw] max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Adicionar serviço</DialogTitle>
+            <DialogDescription>
+              Crie um novo serviço com valor, descrição, termos e imagens.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="service-title">Titulo</Label>
+              <Input
+                id="service-title"
+                value={serviceTitle}
+                maxLength={serviceTitleLimit}
+                onChange={(event) =>
+                  setServiceTitle(event.target.value.slice(0, serviceTitleLimit))
+                }
+                placeholder="Ex: Ilustracao completa"
+              />
+              <p className="text-xs text-muted-foreground">
+                {remainingServiceTitleChars} caracteres restantes
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="service-price">Valor (R$)</Label>
+              <Input
+                id="service-price"
+                type="number"
+                min="0"
+                max="99999"
+                step="0.01"
+                value={servicePrice}
+                onChange={(event) => setServicePrice(event.target.value)}
+                placeholder="Ex: 350"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="service-description">
+                Descricao (max {serviceTextLimit} caracteres)
+              </Label>
+              <Textarea
+                id="service-description"
+                value={serviceDescription}
+                maxLength={serviceTextLimit}
+                onChange={(event) =>
+                  setServiceDescription(event.target.value.slice(0, serviceTextLimit))
+                }
+                rows={4}
+                placeholder="Descreva o servico e o que esta incluso."
+              />
+              <p className="text-xs text-muted-foreground">
+                {remainingServiceDescChars} caracteres restantes
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="service-terms">
+                Termos (max {serviceTextLimit} caracteres)
+              </Label>
+              <Textarea
+                id="service-terms"
+                value={serviceTerms}
+                maxLength={serviceTextLimit}
+                onChange={(event) =>
+                  setServiceTerms(event.target.value.slice(0, serviceTextLimit))
+                }
+                rows={4}
+                placeholder="Ex: Prazo, revisoes, uso comercial, formatos de entrega."
+              />
+              <p className="text-xs text-muted-foreground">
+                {remainingServiceTermsChars} caracteres restantes
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Imagens</Label>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() =>
+                    document.getElementById("service-image-input")?.click()
+                  }
+                >
+                  Upar imagens
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  {serviceImages.length > 0
+                    ? `${serviceImages.length} arquivo(s) selecionado(s)`
+                    : "Nenhum arquivo selecionado"}
+                </span>
+                <Input
+                  id="service-image-input"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleServiceImageChange}
+                />
+              </div>
+              {serviceImages.length > 0 ? (
+                <ul className="space-y-1 text-xs text-muted-foreground">
+                  {serviceImages.map((file) => (
+                    <li key={`${file.name}-${file.lastModified}`}>{file.name}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setIsAddServiceOpen(false)
+                resetServiceDialog()
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleServiceSubmit}
+              disabled={
+                !serviceTitle.trim() ||
+                !isServicePriceValid ||
+                serviceImages.length === 0
+              }
+            >
+              Adicionar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

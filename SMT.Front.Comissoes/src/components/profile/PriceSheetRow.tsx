@@ -24,7 +24,7 @@ export function PriceSheetRow({
   const [detailsOpen, setDetailsOpen] = useState(false)
   const hasImages = images.length > 0
   const currentImage = hasImages ? images[0] : null
-  const terms = useMemo(
+  const defaultTerms = useMemo(
     () =>
       [
         "### Revisoes",
@@ -44,6 +44,10 @@ export function PriceSheetRow({
         "- Mudancas grandes apos pintura final podem gerar taxa.",
       ].join("\n"),
     []
+  )
+  const terms = useMemo(
+    () => (sheet.termos?.trim() ? sheet.termos : defaultTerms),
+    [sheet.termos, defaultTerms]
   )
   const description = useMemo(() => sheet.descricao, [sheet.descricao])
 

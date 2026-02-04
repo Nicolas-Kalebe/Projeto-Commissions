@@ -28,6 +28,7 @@ export interface PriceSheet {
   preco: number
   descricao: string
   imageUrl?: string
+  termos?: string
 }
 
 export interface CommissionStatus {
