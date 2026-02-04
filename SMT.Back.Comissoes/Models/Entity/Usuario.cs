@@ -27,7 +27,6 @@ namespace SMT.Back.Comissoes.Models.Entity
         public StatusEnum Status { get; set; } = StatusEnum.Ativo; // Status do usuário (Ativo ou Inativo)
         [NotMapped]
         public int Seguidores { get; set; }
-        public ICollection<Interacao> Interacoes { get; set; }
         public ICollection<RedeSocial> RedesSociais { get; set; } = new List<RedeSocial>();
     }
 }

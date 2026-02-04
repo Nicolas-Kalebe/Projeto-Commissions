@@ -31,6 +31,7 @@ namespace SMT.Back.Comissoes.Controllers
                     (int)System.Net.HttpStatusCode.BadRequest);
             }
             var resultado = await _authService.ValidarTokenGoogle(validarUsuarioGoogleInput.TokenGoogle);
+           
             Log.Information("Token Google validado com sucesso para o usuário: {Email}", resultado.Email);
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
             {

@@ -8,12 +8,12 @@ namespace SMT.Back.Comissoes.Services.Interfaces
     public interface IUsuarioService
     {
         Task CadastrarUsuario(CadastrarUsuarioInput usuarioInput);
-        Task<StatusEnum> ObterStatusUsuario(ObterStatusInput obterStatusInput);
+        Task<StatusEnum> ObterStatusUsuario(ValidarUsuarioGoogleInput obterStatusInput);
         Task CadastrarArtista(CadastrarArtistaInput cadastrarArtistaInput);
-        Task<Artista> ObterPerfilArtista(ObterArtistaInput obterArtistaInput);
+        Task<Artista> ObterPerfilArtista(ValidarUsuarioGoogleInput obterArtistaInput);
         Task CadastrarPortfolioAsync(CadastrarPortfolioInput atualizarPortfolioInput);
         Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput);
-        Task<Usuario> ObterUsuarioPorToken(ObterTokenGoogleInput obterTokenGoogleInput);
+        Task<Usuario> ObterUsuarioPorToken(ValidarUsuarioGoogleInput obterTokenGoogleInput);
         Task AtualizarRedesSociais(AtualizarRedesSociaisInput atualizarRedesSociaisInput);
 
     }

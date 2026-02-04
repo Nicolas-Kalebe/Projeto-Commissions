@@ -9,9 +9,8 @@ namespace SMT.Back.Comissoes.Models.Entity
         public int Id { get; set; }
         public int ArtistaId { get; set; }
         [ForeignKey(nameof(ArtistaId))]
-        public Artista Artista { get; set; }
-        public string Titulo { get; set; }
-        public string Conteudo { get; set; }
+        public string Titulo { get; set; } = string.Empty;
+        public string Conteudo { get; set; } = string.Empty;
         public DateTime DataCriacao { get; set; }
         public DateTime DataAtualizacao { get; set; }
     }

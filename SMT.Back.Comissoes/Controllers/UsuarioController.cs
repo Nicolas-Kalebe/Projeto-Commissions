@@ -50,7 +50,7 @@ namespace SMT.Back.Comissoes.Controllers
         //}
 
         [HttpPost]
-        public async Task<IActionResult> ObterStatusUsuario([FromBody] ObterStatusInput obterStatusInput)
+        public async Task<IActionResult> ObterStatusUsuario([FromBody] ValidarUsuarioGoogleInput obterStatusInput)
         {
             var statusUsuario = await _usuarioService.ObterStatusUsuario(obterStatusInput);
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
@@ -74,7 +74,7 @@ namespace SMT.Back.Comissoes.Controllers
             });
         }
         [HttpPost]
-        public async Task<IActionResult> ObterPerfilArtista([FromBody] ObterArtistaInput obterArtistaInput)
+        public async Task<IActionResult> ObterPerfilArtista([FromBody] ValidarUsuarioGoogleInput obterArtistaInput)
         {
             var artista = await _usuarioService.ObterPerfilArtista(obterArtistaInput);
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
@@ -86,7 +86,7 @@ namespace SMT.Back.Comissoes.Controllers
             });
         }
         [HttpPost]
-        public async Task<IActionResult> ObterUsuarioPorToken([FromBody] ObterTokenGoogleInput obterTokenGoogleInput)
+        public async Task<IActionResult> ObterUsuarioPorToken([FromBody] ValidarUsuarioGoogleInput obterTokenGoogleInput)
         {
             var usuario = await _usuarioService.ObterUsuarioPorToken(obterTokenGoogleInput);
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>

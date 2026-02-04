@@ -8,10 +8,9 @@ namespace SMT.Back.Comissoes.Models.Entity
     {
         [Key]
         public int Id { get; set; }
-        public int PortfolioItemId { get; set; }
         [ForeignKey(nameof(PortfolioItemId))]
-        [JsonIgnore]
-        public PortfolioItem PortfolioItem { get; set; }
+        public int PortfolioItemId { get; set; }
+        [Required]
         public string UrlArquivo { get; set; } = string.Empty;
         public int Ordem { get; set; } // ordem das imagens (1ª, 2ª, etc)
         public bool Principal { get; set; } // imagem de capa

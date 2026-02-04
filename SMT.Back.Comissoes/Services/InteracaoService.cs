@@ -15,29 +15,32 @@ namespace SMT.Back.Comissoes.Services
             _repository = repository;
         }
 
-        public async Task LikeAsync(int usuarioId, int portfolioItemId)
+        public async Task CurtirAsync(int usuarioId, int alvoId, TipoAlvoInteracaoEnum tipoAlvo)
         {
-            await AddUniqueInteraction(usuarioId, portfolioItemId, TipoAlvoInteracaoEnum.PortfolioItem, TipoInteracaoEnum.Like);
+            await AddUniqueInteraction(usuarioId, alvoId, tipoAlvo, TipoInteracaoEnum.Curtida);
+        }
+        public async Task DescurtirAsync(int usuarioId, int alvoId, TipoAlvoInteracaoEnum tipoAlvo)
+        {
+            await RemoveInteraction(usuarioId, alvoId, tipoAlvo, TipoInteracaoEnum.Curtida);
+        }
+        public async Task SalvarAsync(int usuarioId, int alvoId, TipoAlvoInteracaoEnum tipoAlvo)
+        {
+            await AddUniqueInteraction(usuarioId, alvoId, tipoAlvo, TipoInteracaoEnum.Salvamento);
         }
 
-        public async Task FavoritarAsync(int usuarioId, int alvoId, TipoAlvoInteracaoEnum tipoAlvo)
+        public async Task RemoverSalvarAsync(int usuarioId, int alvoId, TipoAlvoInteracaoEnum tipoAlvo)
         {
-            await AddUniqueInteraction(usuarioId, alvoId, tipoAlvo, TipoInteracaoEnum.Favorito);
+            await RemoveInteraction(usuarioId, alvoId, tipoAlvo, TipoInteracaoEnum.Salvamento);
         }
 
-        public async Task DesfavoritarAsync(int usuarioId, int alvoId, TipoAlvoInteracaoEnum tipoAlvo)
+        public async Task SeguirAsync(int usuarioId, int UsuarioAlvoId)
         {
-            await RemoveInteraction(usuarioId, alvoId, tipoAlvo, TipoInteracaoEnum.Favorito);
+            await AddUniqueInteraction(usuarioId, UsuarioAlvoId, TipoAlvoInteracaoEnum.Usuario, TipoInteracaoEnum.Seguimento);
         }
 
-        public async Task SeguirAsync(int usuarioId, int perfilId)
+        public async Task DeixarDeSeguirAsync(int usuarioId, int UsuarioAlvoId)
         {
-            await AddUniqueInteraction(usuarioId, perfilId, TipoAlvoInteracaoEnum.PerfilArtista, TipoInteracaoEnum.Seguir);
-        }
-
-        public async Task DeixarDeSeguirAsync(int usuarioId, int perfilId)
-        {
-            await RemoveInteraction(usuarioId, perfilId, TipoAlvoInteracaoEnum.PerfilArtista, TipoInteracaoEnum.Seguir);
+            await RemoveInteraction(usuarioId, UsuarioAlvoId, TipoAlvoInteracaoEnum.Usuario, TipoInteracaoEnum.Seguimento);
         }
 
         public async Task AvaliarAsync(int usuarioId, int perfilId, int valor)

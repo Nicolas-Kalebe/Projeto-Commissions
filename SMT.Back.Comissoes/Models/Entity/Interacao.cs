@@ -1,12 +1,15 @@
 ﻿using SMT.Back.Comissoes.Models.Enum;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SMT.Back.Comissoes.Models.Entity
 {
     public class Interacao
     {
+        [Key]
         public int Id { get; set; }
+        [ForeignKey(nameof(UsuarioId))]
         public int UsuarioId { get; set; }
-        public Usuario Usuario { get; set; }
         public TipoInteracaoEnum TipoInteracao { get; set; } // Like, Favorito        
         public TipoAlvoInteracaoEnum TipoAlvoInteracao { get; set; } // PortfolioItem, Post, PerfilArtista
         public int AlvoId { get; set; }

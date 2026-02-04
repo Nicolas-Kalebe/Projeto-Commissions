@@ -2,7 +2,7 @@
 {
     public class CadastrarPortfolioInput
     {
-        public ObterArtistaInput GoogleToken { get; set; }
+        public ValidarUsuarioGoogleInput TokenGoogle { get; set; } 
         public List<IFormFile>? Imagens { get; set; }
         public string? Titulo { get; set; }
         public string? Descricao { get; set; }

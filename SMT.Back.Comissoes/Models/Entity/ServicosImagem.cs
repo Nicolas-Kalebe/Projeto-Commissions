@@ -4,6 +4,6 @@
     {
         public int Id { get; set; }
         public int ServicoId { get; set; }
-        public string UrlImagem { get; set; }
+        public string UrlImagem { get; set; } = string.Empty;
     }
 }

@@ -2,7 +2,7 @@
 {
     public class ValidarUsuarioGoogleInput
     {
-        public string TokenGoogle { get; set; }
+        public string TokenGoogle { get; set; } = string.Empty;
 
     }
 }

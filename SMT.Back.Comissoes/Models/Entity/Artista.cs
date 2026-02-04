@@ -10,7 +10,6 @@ namespace SMT.Back.Comissoes.Models.Entity
         [Required]
         public int UsuarioId { get; set; }
         [ForeignKey(nameof(UsuarioId))]
-        public Usuario Usuario { get; set; }
         public string? Estilo { get; set; }
         public string? TipoArtista { get; set; }
         public ICollection<PortfolioItem> PortfolioItens { get; set; } = new List<PortfolioItem>();

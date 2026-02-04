@@ -1,8 +1,8 @@
 ﻿namespace SMT.Back.Comissoes.DTO.Input.Interacao
 {
-    public class InteracaoPortfolioInput
+    public class InteracaoSeguimentoInput
     {
         public string GoogleToken { get; set; } = string.Empty;
-        public int PortfolioItemId { get; set; }
+        public int AlvoUsuarioId { get; set; }
     }
 }

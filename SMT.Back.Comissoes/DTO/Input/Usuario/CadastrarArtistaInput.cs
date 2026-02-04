@@ -2,7 +2,7 @@
 {
     public class CadastrarArtistaInput
     {
-        public int PerfilId { get; set; }
+        public int UsuarioId { get; set; }
 
     }
 }

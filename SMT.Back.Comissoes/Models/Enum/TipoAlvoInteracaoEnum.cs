@@ -4,6 +4,7 @@
     {
         PortfolioItem = 1,
         Post = 2,
-        PerfilArtista = 3
+        PerfilArtista = 3,
+        Usuario = 4
     }
 }

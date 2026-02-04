@@ -36,12 +36,12 @@ namespace SMT.Back.Comissoes.Repositories
             await _context.Usuarios.AddAsync(usuario);
             await _context.SaveChangesAsync();
         }
-        
+
         public async Task<StatusEnum> ObterStatusUsuario(string email)
         {
             var usuario = await _context.Usuarios
                 .FirstOrDefaultAsync(u => u.Email == email);
-            if(usuario != null)
+            if (usuario != null)
             {
                 return usuario.Status;
             }
@@ -53,7 +53,6 @@ namespace SMT.Back.Comissoes.Repositories
                 .FirstOrDefaultAsync(u => u.Id == id);
             if (usuario == null)
             {
-                Log.Error($"Usuário com ID {id} não encontrado.");
                 throw new ExcecaoPersonalizada(
                     ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
                     $"Usuário com Id:{id} não encontrado",
@@ -68,19 +67,25 @@ namespace SMT.Back.Comissoes.Repositories
             var usuario = await _context.Usuarios
                 .Include(u => u.RedesSociais)
                 .FirstOrDefaultAsync(u => u.Email == email);
+            if (usuario == null)
+            {
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
+                    $"Usuário com Email:{email} não encontrado",
+                    () => Log.Error($"Erro: Usuário com Email {email} não foi localizado no banco de dados."),
+                    (int)System.Net.HttpStatusCode.NotFound
+                );
+            }
             return usuario;
         }
         public async Task<Artista> ObterArtistaPorUsuarioId(int usuarioId)
         {
-
             var artista = await _context.Artistas
                 .AsNoTracking()
-                .Include(a => a.Usuario)
-                    .ThenInclude(u => u.RedesSociais)
                 .Include(a => a.PortfolioItens)
                     .ThenInclude(p => p.Imagens)
                 .FirstOrDefaultAsync(a => a.UsuarioId == usuarioId);
-            if(artista == null)
+            if (artista == null)
             {
                 throw new ExcecaoPersonalizada(
                     ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
@@ -120,16 +125,17 @@ namespace SMT.Back.Comissoes.Repositories
             {
                 throw new ExcecaoPersonalizada(
                     ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
-                    $"Usuário com Id:{usuario.Id} não encontrado",
-                    () => Log.Error($"Erro: Usuário com ID {usuario.Id} não foi localizado no banco de dados."),
+                    $"Usuário com Id:{usuarioId} não encontrado",
+                    () => Log.Error($"Erro: Usuário com ID {usuarioId} não foi localizado no banco de dados."),
                     (int)System.Net.HttpStatusCode.NotFound
                 );
             }
             if (tipoFotoPerfilEnum == TipoFotoPerfilEnum.FotoCapa) usuario.FotoCapa = fotoPerfilUrl;
-                else if (tipoFotoPerfilEnum == TipoFotoPerfilEnum.FotoPerfil){
+            else if (tipoFotoPerfilEnum == TipoFotoPerfilEnum.FotoPerfil)
+            {
                 usuario.FotoPerfil = fotoPerfilUrl;
-                }
-                await _context.SaveChangesAsync();
+            }
+            await _context.SaveChangesAsync();
         }
         public async Task AtualizarRedesSociais(RedeSocial redesSociais)
         {
@@ -144,6 +150,25 @@ namespace SMT.Back.Comissoes.Repositories
                 );
             }
             usuario.RedesSociais.Add(redesSociais);
+            await _context.SaveChangesAsync();
+        }
+        public async Task AtualizarInformacoesIdentidadeUsuario(Usuario usuarioAtualizado)
+        {
+            var usuario = await _context.Usuarios.FindAsync(usuarioAtualizado.Id);
+            if (usuario == null)
+            {
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
+                    $"Usuário com Id:{usuarioAtualizado.Id} não encontrado",
+                    () => Log.Error($"Erro: Usuário com ID {usuarioAtualizado.Id} não foi localizado no banco de dados."),
+                    (int)System.Net.HttpStatusCode.NotFound
+                );
+            }
+            // Atualiza os campos desejados
+            usuario.NomePerfil = usuarioAtualizado.NomePerfil;
+            usuario.Bio = usuarioAtualizado.Bio;
+            usuario.Celular = usuarioAtualizado.Celular;
+            // Adicione outros campos conforme necessário
             await _context.SaveChangesAsync();
         }
     }
