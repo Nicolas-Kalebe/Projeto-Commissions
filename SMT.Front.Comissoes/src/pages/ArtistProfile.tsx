@@ -153,14 +153,15 @@ const splitCommaList = (value: string) =>
 const normalizeSocialHandle = (value: string) => {
   const trimmed = value.trim()
   if (!trimmed) return ""
-  if (trimmed.startsWith("@")) return trimmed
+  const stripAt = (input: string) => input.replace(/^@+/, "")
+  if (trimmed.startsWith("@")) return stripAt(trimmed)
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
     try {
       const url = new URL(trimmed)
       const path = url.pathname.replace(/\/+$/, "")
       const lastSegment = path.split("/").filter(Boolean).pop() ?? ""
       if (!lastSegment) return ""
-      return lastSegment.startsWith("@") ? lastSegment : `@${lastSegment}`
+      return stripAt(lastSegment)
     } catch {
       // fallthrough
     }
@@ -168,7 +169,7 @@ const normalizeSocialHandle = (value: string) => {
   if (trimmed.startsWith("www.")) {
     return normalizeSocialHandle(`https://${trimmed}`)
   }
-  return `@${trimmed}`
+  return stripAt(trimmed)
 }
 
 const mapSocialKey = (value: string): SocialLinkKey | null => {
@@ -218,7 +219,7 @@ const normalizeSocialLinkMap = (
 }
 
 const buildSocialHref = (key: SocialLinkKey, value: string) => {
-  const handle = normalizeSocialHandle(value).replace(/^@+/, "")
+  const handle = normalizeSocialHandle(value)
   if (!handle) return ""
   switch (key) {
     case "twitter":
@@ -520,6 +521,9 @@ export function ArtistProfile({
     const usuarioFotoPerfil = readField<string>(resultado, "fotoPerfil", "FotoPerfil")
     const usuarioFotoCapa = readField<string>(resultado, "fotoCapa", "FotoCapa")
     const usuarioSeguidores = readField<number>(resultado, "seguidores", "Seguidores")
+    const redesSociais = readField<unknown>(resultado, "redesSociais", "RedesSociais")
+    const socialLinks = parseSocialLinks(redesSociais)
+    const hasSocialLinks = Object.keys(socialLinks).length > 0
     setBackendProfile((prev) => ({
       avaliacao: prev?.avaliacao,
       estilo: prev?.estilo,
@@ -532,6 +536,7 @@ export function ArtistProfile({
       usuarioFotoPerfil,
       usuarioFotoCapa,
       usuarioSeguidores: usuarioSeguidores ?? prev?.usuarioSeguidores,
+      socialLinks: hasSocialLinks ? socialLinks : prev?.socialLinks,
     }))
   }
 
@@ -1978,7 +1983,7 @@ const activePriceSheets: ServiceSheet[] = [
               </div>
             </div>
             <div className="text-center text-xs font-semibold uppercase text-muted-foreground">
-              Redes do Artista
+              Redes sociais
             </div>
             <div className="flex flex-wrap justify-center gap-2">
               {socialLinks.map((link) => (
@@ -2482,7 +2487,7 @@ const activePriceSheets: ServiceSheet[] = [
                             updateDraftSocial("twitter", normalizeSocialHandle(event.target.value))
                           }
                           className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                          placeholder="@seuusuario"
+                          placeholder="seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2496,7 +2501,7 @@ const activePriceSheets: ServiceSheet[] = [
                             updateDraftSocial("instagram", normalizeSocialHandle(event.target.value))
                           }
                           className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                          placeholder="@seuusuario"
+                          placeholder="seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2510,7 +2515,7 @@ const activePriceSheets: ServiceSheet[] = [
                             updateDraftSocial("tiktok", normalizeSocialHandle(event.target.value))
                           }
                           className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                          placeholder="@seuusuario"
+                          placeholder="seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2524,7 +2529,7 @@ const activePriceSheets: ServiceSheet[] = [
                             updateDraftSocial("youtube", normalizeSocialHandle(event.target.value))
                           }
                           className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                          placeholder="@seuusuario"
+                          placeholder="seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2538,7 +2543,7 @@ const activePriceSheets: ServiceSheet[] = [
                             updateDraftSocial("twitch", normalizeSocialHandle(event.target.value))
                           }
                           className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                          placeholder="@seuusuario"
+                          placeholder="seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2552,7 +2557,7 @@ const activePriceSheets: ServiceSheet[] = [
                             updateDraftSocial("artstation", normalizeSocialHandle(event.target.value))
                           }
                           className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                          placeholder="@seuusuario"
+                          placeholder="seuusuario"
                         />
                       </div>
                     </div>
