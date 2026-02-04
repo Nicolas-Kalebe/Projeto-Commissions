@@ -226,21 +226,16 @@ namespace SMT.Back.Comissoes.Services
                 return pathCompleto;
             }
         }
-        public async Task CadastrarPortfolioAsync(CadastrarPortfolioInput input)
+        public async Task CadastrarPortfolioAsync(CadastrarPortfolioInput cadastrarPortfolioInput)
         {
-            var artista = await ObterPerfilArtista(input.GoogleToken);
+            var artista = await ObterPerfilArtista(cadastrarPortfolioInput.GoogleToken);
 
-            var imagens = input.Imagens?
+            var imagens = cadastrarPortfolioInput.Imagens?
                 .Where(i => i != null && i.Length > 0)
                 .ToList();
 
             if (imagens == null || imagens.Count == 0)
-            {
-                if (imagens == null || input.Imagens.Count == 0)
-                    throw new ArgumentException("Nenhuma imagem enviada.");
-
-                imagens = new List<IFormFile> { input.Imagem };
-            }
+                throw new ArgumentException("Nenhuma imagem enviada.");
 
             // validação de tipo
             foreach (var imagem in imagens)
@@ -255,10 +250,10 @@ namespace SMT.Back.Comissoes.Services
 
             var portfolioItem = new PortfolioItem
             {
-                Titulo = input.Titulo ?? string.Empty,
-                Descricao = input.Descricao ?? string.Empty,
+                Titulo = cadastrarPortfolioInput.Titulo ?? string.Empty,
+                Descricao = cadastrarPortfolioInput.Descricao ?? string.Empty,
                 ArtistaId = artista.Id,
-                Hashtags = input.Hashtags ?? new List<string>(),
+                Hashtags = cadastrarPortfolioInput.Hashtags ?? new List<string>(),
                 //TipoServico = TipoServicoEnum.,
                 DataCriacao = DateTime.UtcNow,
                 Imagens = new List<PortfolioItemImagem>()
