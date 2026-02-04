@@ -239,6 +239,15 @@ const buildSocialHref = (key: SocialLinkKey, value: string) => {
   }
 }
 
+const emptySocialLinks: Record<SocialLinkKey, string> = {
+  twitter: "",
+  instagram: "",
+  tiktok: "",
+  youtube: "",
+  twitch: "",
+  artstation: "",
+}
+
 const parsePortfolioImages = (value: unknown): BackendPortfolioItemImagem[] => {
   if (!Array.isArray(value)) return []
   return value.flatMap((entry) => {
@@ -509,6 +518,8 @@ export function ArtistProfile({
   const [pulseLikeId, setPulseLikeId] = useState<string | null>(null)
   const [pulseSaveId, setPulseSaveId] = useState<string | null>(null)
   const { toast } = useToast()
+  const portfolioHashtagsLimit = 10
+  const portfolioHashtagLengthLimit = 15
   const fallbackArtist = users.find((user) => user.id === "art-1")
   const artist = !isMockUser && currentUser ? currentUser : fallbackArtist
   const isOwnerProfile = Boolean(!isMockUser && currentUser?.id && artist?.id && currentUser.id === artist.id)
@@ -868,21 +879,26 @@ export function ArtistProfile({
     ? resolvedSocialLinks
     : backendProfile?.socialLinks ?? {}
 
-  const socialLinks = [
+  const socialLinks: Array<{
+    key: SocialLinkKey
+    name: string
+    handle?: string
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  }> = [
     {
-      key: "twitter",
+      key: "twitter" as SocialLinkKey,
       name: "Twitter",
       handle: availableSocialLinks.twitter,
       icon: Twitter,
     },
     {
-      key: "instagram",
+      key: "instagram" as SocialLinkKey,
       name: "Instagram",
       handle: availableSocialLinks.instagram,
       icon: Instagram,
     },
     {
-      key: "tiktok",
+      key: "tiktok" as SocialLinkKey,
       name: "TikTok",
       handle: availableSocialLinks.tiktok,
       icon: (props: React.SVGProps<SVGSVGElement>) => (
@@ -892,19 +908,19 @@ export function ArtistProfile({
       ),
     },
     {
-      key: "youtube",
+      key: "youtube" as SocialLinkKey,
       name: "YouTube",
       handle: availableSocialLinks.youtube,
       icon: Youtube,
     },
     {
-      key: "twitch",
+      key: "twitch" as SocialLinkKey,
       name: "Twitch",
       handle: availableSocialLinks.twitch,
       icon: Twitch,
     },
     {
-      key: "artstation",
+      key: "artstation" as SocialLinkKey,
       name: "ArtStation",
       handle: availableSocialLinks.artstation,
       icon: Link,
@@ -924,7 +940,7 @@ export function ArtistProfile({
       deliveryBadge: resolvedBadges.deliveryBadge,
       styleDescription: resolvedStyleDescription,
       styleTags: resolvedStyleTags.join(", "),
-      socialLinks: { ...resolvedSocialLinks },
+      socialLinks: { ...emptySocialLinks, ...resolvedSocialLinks },
     })
     setDraftCoverFile(null)
   }, [isEditProfileOpen])
@@ -1111,8 +1127,8 @@ export function ArtistProfile({
     }
   }
 
-  const backendPosts: PortfolioPost[] = (backendProfile?.portfolioItens ?? [])
-    .map((item, index) => {
+  const backendPosts: PortfolioPost[] = (backendProfile?.portfolioItens ?? []).reduce(
+    (acc, item, index) => {
       const titulo = item.titulo?.trim() ? item.titulo : "Post do portfolio"
       const descricao = item.descricao?.trim() ? item.descricao : ""
       const orderedImages = (item.imagens ?? [])
@@ -1129,10 +1145,10 @@ export function ArtistProfile({
         orderedImages.length > 0
           ? orderedImages
           : [item.urlArquivo?.trim() ?? ""].filter(Boolean)
-      if (images.length === 0) return null
+      if (images.length === 0) return acc
       const tags = (item.hashtags ?? []).filter(Boolean)
       const popularidade = item.visualizacaoCount ?? item.likeCount ?? 0
-      return {
+      acc.push({
         id: item.id ? `portfolio-${item.id}` : `portfolio-${index}`,
         titulo,
         descricao,
@@ -1143,9 +1159,11 @@ export function ArtistProfile({
         saves: item.favoritoCount ?? 0,
         createdAt: item.dataCriacao ?? undefined,
         backendId: item.id,
-      }
-    })
-    .filter((item): item is PortfolioPost => Boolean(item))
+      })
+      return acc
+    },
+    [] as PortfolioPost[]
+  )
 
 const activePriceSheets: ServiceSheet[] = [
     ...addedServices,
@@ -1172,6 +1190,7 @@ const activePriceSheets: ServiceSheet[] = [
       : descriptionText
   const remainingPortfolioChars = descriptionLimit - portfolioDescription.length
   const remainingPortfolioTitleChars = portfolioTitleLimit - portfolioTitle.length
+  const remainingPortfolioHashtags = portfolioHashtagsLimit - portfolioHashtags.length
   const parsedServicePrice = Number.parseFloat(servicePrice.replace(",", "."))
   const isServicePriceValid =
     Number.isFinite(parsedServicePrice) &&
@@ -1305,9 +1324,9 @@ const activePriceSheets: ServiceSheet[] = [
   const normalizePortfolioTag = (value: string) => {
     const trimmed = value.trim()
     if (!trimmed) return null
-    const tag = trimmed.startsWith("#") ? trimmed : `#${trimmed}`
-    if (tag === "#") return null
-    return tag
+    const withoutPrefix = trimmed.replace(/^#+/, "").trim()
+    if (!withoutPrefix) return null
+    return `#${withoutPrefix.slice(0, portfolioHashtagLengthLimit)}`
   }
 
   const addPortfolioTags = (rawTags: string[]) => {
@@ -1315,6 +1334,7 @@ const activePriceSheets: ServiceSheet[] = [
       const existing = new Set(prev.map((tag) => tag.toLowerCase()))
       const next = [...prev]
       rawTags.forEach((raw) => {
+        if (next.length >= portfolioHashtagsLimit) return
         const normalized = normalizePortfolioTag(raw)
         if (!normalized) return
         const key = normalized.toLowerCase()
@@ -1329,6 +1349,12 @@ const activePriceSheets: ServiceSheet[] = [
   const ensurePortfolioTagPrefix = (value: string) =>
     value.startsWith("#") ? value : `#${value}`
 
+  const clampPortfolioTagInput = (value: string) => {
+    const prefixed = ensurePortfolioTagPrefix(value)
+    const withoutPrefix = prefixed.replace(/^#+/, "")
+    return `#${withoutPrefix.slice(0, portfolioHashtagLengthLimit)}`
+  }
+
   const handlePortfolioTagInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value
     if (!value) {
@@ -1339,10 +1365,10 @@ const activePriceSheets: ServiceSheet[] = [
       const parts = value.split(/\s+/)
       const tail = parts.pop() ?? ""
       addPortfolioTags(parts)
-      setPortfolioTagInput(tail ? ensurePortfolioTagPrefix(tail) : "#")
+      setPortfolioTagInput(tail ? clampPortfolioTagInput(tail) : "#")
       return
     }
-    setPortfolioTagInput(ensurePortfolioTagPrefix(value))
+    setPortfolioTagInput(clampPortfolioTagInput(value))
   }
 
   const handlePortfolioTagKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -1487,10 +1513,15 @@ const activePriceSheets: ServiceSheet[] = [
 
   const handlePortfolioSubmit = async () => {
     if (isMockUser) return
-    if (!portfolioTitle.trim() || portfolioImages.length === 0 || portfolioHashtags.length === 0) {
+    if (
+      !portfolioTitle.trim() ||
+      portfolioImages.length === 0 ||
+      portfolioHashtags.length === 0 ||
+      portfolioHashtags.length > portfolioHashtagsLimit
+    ) {
       toast({
         title: "Campos obrigatorios",
-        description: "Preencha titulo, hashtags e imagens para enviar o portifolio.",
+        description: `Preencha titulo, hashtags e imagens. Maximo de ${portfolioHashtagsLimit} hashtags.`,
         variant: "destructive",
       })
       return
@@ -2029,7 +2060,7 @@ const activePriceSheets: ServiceSheet[] = [
         <DialogContent className="h-[92vh] max-h-[66vh] w-[98vw] max-w-7xl overflow-hidden p-0">
           <div className="h-full min-h-0">
             <div className="grid h-full min-h-0 gap-6 px-6 pb-6 pt-6 lg:grid-cols-[minmax(0,1fr)_840px] lg:items-stretch">
-              <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto pb-12 pr-2">
+              <div className="flex h-full min-h-0 min-w-0 flex-col gap-4 overflow-y-auto pb-12 pr-2">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <Avatar className="size-10 border border-border/60">
@@ -2047,16 +2078,16 @@ const activePriceSheets: ServiceSheet[] = [
                   <h3 className="text-3xl font-semibold">
                     {activePost?.titulo ?? "Post do portifolio"}
                   </h3>
-                  <div className="flex items-end justify-between gap-3">
-                    <p className="text-sm text-muted-foreground">
-                      {clampedDescription}
-                    </p>
-                    {activePost?.createdAt ? (
-                      <span className="shrink-0 text-xs text-muted-foreground">
+                  <p className="min-w-0 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-sm text-muted-foreground">
+                    {clampedDescription}
+                  </p>
+                  {activePost?.createdAt ? (
+                    <div className="flex justify-end">
+                      <span className="text-xs text-muted-foreground">
                         {formatPostDate(activePost.createdAt)}
                       </span>
-                    ) : null}
-                  </div>
+                    </div>
+                  ) : null}
                 </div>
                 {activePost?.commissionLink && !isOwnerProfile ? (
                   <>
@@ -2816,10 +2847,15 @@ const activePriceSheets: ServiceSheet[] = [
                 onKeyDown={handlePortfolioTagKeyDown}
                 onBlur={handlePortfolioTagBlur}
                 placeholder="#ilustracao #anime"
+                maxLength={portfolioHashtagLengthLimit + 1}
+                disabled={portfolioHashtags.length >= portfolioHashtagsLimit}
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Separe as hashtags com espaco.
+                Separe com espaco. Max {portfolioHashtagsLimit} hashtags, ate {portfolioHashtagLengthLimit} caracteres cada.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {remainingPortfolioHashtags} hashtag(s) restante(s)
               </p>
               {portfolioHashtags.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
@@ -2947,7 +2983,8 @@ const activePriceSheets: ServiceSheet[] = [
                 isUploadingPortfolio ||
                 !portfolioTitle.trim() ||
                 portfolioImages.length === 0 ||
-                portfolioHashtags.length === 0
+                portfolioHashtags.length === 0 ||
+                portfolioHashtags.length > portfolioHashtagsLimit
               }
             >
               {isUploadingPortfolio ? "Enviando..." : "Enviar"}
