@@ -131,16 +131,33 @@ namespace SMT.Back.Comissoes.Services
         {
             var userGoogle = await _authService.ValidarTokenGoogle(atualizarPerfilUsuarioInput.TokenGoogle);
             var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
-            
-            var usuarioAtualizado = new Usuario
-            {
-                Id = usuario.Id,
-                NomePerfil = atualizarPerfilUsuarioInput.NomePerfil ?? usuario.NomePerfil,
-                Bio = atualizarPerfilUsuarioInput.Bio ?? usuario.Bio,
-                EstiloDescricao = atualizarPerfilUsuarioInput.EstiloDescricao ?? usuario.EstiloDescricao
-            };
 
-            await _usuarioRepository.AtualizarPerfilUsuario(usuarioAtualizado);
+            var novoNomePerfil = atualizarPerfilUsuarioInput.NomePerfil?.Trim();
+            var novaBio = atualizarPerfilUsuarioInput.Bio?.Trim();
+            var novoEstilo = atualizarPerfilUsuarioInput.EstiloDescricao?.Trim();
+
+            if (!string.IsNullOrWhiteSpace(novoNomePerfil) &&
+            !novoNomePerfil.Equals(usuario.NomePerfil, StringComparison.OrdinalIgnoreCase))
+            {
+                var nomeJaExiste = await _usuarioRepository.VerificaUsuarioExistePorNomePerfil(novoNomePerfil);
+                if (nomeJaExiste)
+                    throw new ExcecaoPersonalizada(
+                        ConstantesCodigoRetornoPadrao.DuplicidadeEncontrada,
+                        "Já existe um usuário com este nome de perfil.",
+                        () => Log.Error("Nome de perfil já em uso: {NomePerfil}", novoNomePerfil),
+                        (int)HttpStatusCode.Conflict
+                    );
+            }
+
+            if (novaBio != null)
+                usuario.Bio = novaBio;
+
+            if (novoEstilo != null)
+                usuario.EstiloDescricao = novoEstilo;
+
+            usuario.DataAtualizacao = DateTime.UtcNow;
+
+            await _usuarioRepository.AtualizarPerfilUsuario(usuario);
         }
         public async Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput)
         {

@@ -50,7 +50,7 @@ namespace SMT.Back.Comissoes.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DescurtirPortfolio([FromBody] InteracaoCurtidaInput interacaoCurtidaInput)
+        public async Task<IActionResult> Descurtir([FromBody] InteracaoCurtidaInput interacaoCurtidaInput)
         {
             if (interacaoCurtidaInput.TipoAlvoInteracao != TipoAlvoInteracaoEnum.PortfolioItem &&
                 interacaoCurtidaInput.TipoAlvoInteracao != TipoAlvoInteracaoEnum.Post)
@@ -98,8 +98,8 @@ namespace SMT.Back.Comissoes.Controllers
             });
         }
 
-        [HttpPost]
-        public async Task<IActionResult> RemoverSalvar([FromBody] InteracaoSalvamentoInput interacaoSalvamentoInput)
+        [HttpDelete]
+        public async Task<IActionResult> RemoverSalvamento([FromBody] InteracaoSalvamentoInput interacaoSalvamentoInput)
         {
             if (interacaoSalvamentoInput.TipoAlvoInteracao != TipoAlvoInteracaoEnum.PortfolioItem &&
                 interacaoSalvamentoInput.TipoAlvoInteracao != TipoAlvoInteracaoEnum.Post)
@@ -138,7 +138,7 @@ namespace SMT.Back.Comissoes.Controllers
             });
         }
 
-        [HttpPost]
+        [HttpDelete]
         public async Task<IActionResult> DeixarDeSeguir([FromBody] InteracaoSeguimentoInput interacaoSeguimentoInput)
         {
             var usuarioId = await ObterUsuarioId(interacaoSeguimentoInput.GoogleToken);
