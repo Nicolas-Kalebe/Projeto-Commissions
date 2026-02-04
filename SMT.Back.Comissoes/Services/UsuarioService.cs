@@ -236,7 +236,7 @@ namespace SMT.Back.Comissoes.Services
 
             if (imagens == null || imagens.Count == 0)
             {
-                if (input.Imagem == null || input.Imagem.Length == 0)
+                if (imagens == null || input.Imagens.Count == 0)
                     throw new ArgumentException("Nenhuma imagem enviada.");
 
                 imagens = new List<IFormFile> { input.Imagem };
