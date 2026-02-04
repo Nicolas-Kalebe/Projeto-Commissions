@@ -20,6 +20,7 @@ public class BucketService : IBucketService
     public async Task<string> UploadAsync(IFormFile file, string path)
     {
         using var stream = file.OpenReadStream();
+        path = $"{path}-{Guid.NewGuid():N}";
 
         var request = new PutObjectRequest
         {
@@ -31,7 +32,7 @@ public class BucketService : IBucketService
 
         await _s3.PutObjectAsync(request);
 
-        return $"{_baseUrl}/{path}-{Guid.NewGuid():N}";
+        return $"{_baseUrl}/{path}";
     }
 
     public async Task DeleteAsync(string path)
