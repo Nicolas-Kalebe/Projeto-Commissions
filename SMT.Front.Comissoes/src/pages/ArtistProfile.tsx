@@ -369,6 +369,9 @@ export function ArtistProfile({
   const [portfolioTitle, setPortfolioTitle] = useState("")
   const [portfolioDescription, setPortfolioDescription] = useState("")
   const [portfolioImages, setPortfolioImages] = useState<File[]>([])
+  const [portfolioPreviewUrls, setPortfolioPreviewUrls] = useState<
+    { file: File; url: string }[]
+  >([])
   const [isUploadingPortfolio, setIsUploadingPortfolio] = useState(false)
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({})
   const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({})
@@ -811,6 +814,16 @@ export function ArtistProfile({
       resetPortfolioDialog()
     }
   }, [isAddPortfolioOpen])
+  useEffect(() => {
+    const next = portfolioImages.map((file) => ({
+      file,
+      url: URL.createObjectURL(file),
+    }))
+    setPortfolioPreviewUrls(next)
+    return () => {
+      next.forEach((item) => URL.revokeObjectURL(item.url))
+    }
+  }, [portfolioImages])
 
   useEffect(() => {
     if (!isAddServiceOpen) {
@@ -1118,6 +1131,10 @@ export function ArtistProfile({
     setPortfolioTitle("")
     setPortfolioDescription("")
     setPortfolioImages([])
+  }
+
+  const handleRemovePortfolioImage = (index: number) => {
+    setPortfolioImages((prev) => prev.filter((_, current) => current !== index))
   }
 
   const resetServiceDialog = () => {
@@ -2410,14 +2427,14 @@ export function ArtistProfile({
       </Dialog>
 
       <Dialog open={isAddPortfolioOpen} onOpenChange={setIsAddPortfolioOpen}>
-        <DialogContent className="w-[92vw] max-w-lg">
+        <DialogContent className="w-[94vw] max-w-2xl">
           <DialogHeader>
             <DialogTitle>Adicionar no portifolio</DialogTitle>
             <DialogDescription>
               Envie uma ou mais imagens para o seu portifolio.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
             <div className="space-y-2">
               <Label htmlFor="portfolio-title">Titulo</Label>
               <Input
@@ -2475,12 +2492,29 @@ export function ArtistProfile({
                   onChange={handlePortfolioImageChange}
                 />
               </div>
-              {portfolioImages.length > 0 ? (
-                <ul className="space-y-1 text-xs text-muted-foreground">
-                  {portfolioImages.map((file) => (
-                    <li key={`${file.name}-${file.lastModified}`}>{file.name}</li>
+              {portfolioPreviewUrls.length > 0 ? (
+                <div className="flex flex-wrap gap-3">
+                  {portfolioPreviewUrls.map((item, index) => (
+                    <div
+                      key={`${item.file.name}-${item.file.lastModified}`}
+                      className="relative h-22 w-22 overflow-hidden rounded-lg border border-border/60"
+                    >
+                      <img
+                        src={item.url}
+                        alt={item.file.name}
+                        className="h-full w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-1 top-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-black/70 text-xs font-semibold text-white hover:bg-black/80"
+                        onClick={() => handleRemovePortfolioImage(index)}
+                        aria-label="Remover imagem"
+                      >
+                        x
+                      </button>
+                    </div>
                   ))}
-                </ul>
+                </div>
               ) : null}
             </div>
           </div>
