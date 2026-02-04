@@ -72,11 +72,22 @@ namespace SMT.Back.Comissoes.Repositories
         }
         public async Task<Artista> ObterArtistaPorUsuarioId(int usuarioId)
         {
+
             var artista = await _context.Artistas
                 .AsNoTracking()
                 .Include(a => a.Usuario)
                 .Include(a => a.PortfolioItens)
+                    .ThenInclude(p => p.Imagens)
                 .FirstOrDefaultAsync(a => a.UsuarioId == usuarioId);
+            if(artista == null)
+            {
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
+                    $"Artista com UsuarioId:{usuarioId} não encontrado",
+                    () => Log.Error($"Erro: Artista com UsuarioID {usuarioId} não foi localizado no banco de dados."),
+                    (int)System.Net.HttpStatusCode.NotFound
+                );
+            }
             return artista;
         }
 
