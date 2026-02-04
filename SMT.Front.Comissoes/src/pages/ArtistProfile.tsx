@@ -83,12 +83,22 @@ type BackendPortfolioItem = {
   artistaId?: number
   titulo?: string
   descricao?: string
+  hashtags?: string[]
   urlArquivo?: string
+  imagens?: BackendPortfolioItemImagem[]
   ordem?: number
   likeCount?: number
   favoritoCount?: number
   visualizacaoCount?: number
   dataCriacao?: string
+}
+
+type BackendPortfolioItemImagem = {
+  id?: number
+  portfolioItemId?: number
+  urlArquivo?: string
+  ordem?: number
+  principal?: boolean
 }
 
 type SocialLinkKey =
@@ -139,7 +149,7 @@ const splitCommaList = (value: string) =>
     .map((item) => item.trim())
     .filter(Boolean)
 
-const parsePortfolioItems = (value: unknown): BackendPortfolioItem[] => {
+const parsePortfolioImages = (value: unknown): BackendPortfolioItemImagem[] => {
   if (!Array.isArray(value)) return []
   return value.flatMap((entry) => {
     if (!entry || typeof entry !== "object") return []
@@ -147,10 +157,31 @@ const parsePortfolioItems = (value: unknown): BackendPortfolioItem[] => {
     return [
       {
         id: readField<number>(record, "id", "Id"),
+        portfolioItemId: readField<number>(record, "portfolioItemId", "PortfolioItemId"),
+        urlArquivo: readField<string>(record, "urlArquivo", "UrlArquivo"),
+        ordem: readField<number>(record, "ordem", "Ordem"),
+        principal: readField<boolean>(record, "principal", "Principal"),
+      },
+    ]
+  })
+}
+
+const parsePortfolioItems = (value: unknown): BackendPortfolioItem[] => {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return []
+    const record = entry as Record<string, unknown>
+    const imagens = parsePortfolioImages(readField<unknown>(record, "imagens", "Imagens"))
+    const hashtags = readField<string[]>(record, "hashtags", "Hashtags")
+    return [
+      {
+        id: readField<number>(record, "id", "Id"),
         artistaId: readField<number>(record, "artistaId", "ArtistaId"),
         titulo: readField<string>(record, "titulo", "Titulo"),
         descricao: readField<string>(record, "descricao", "Descricao"),
+        hashtags: Array.isArray(hashtags) ? hashtags.filter(Boolean) : undefined,
         urlArquivo: readField<string>(record, "urlArquivo", "UrlArquivo"),
+        imagens: imagens.length > 0 ? imagens : undefined,
         ordem: readField<number>(record, "ordem", "Ordem"),
         likeCount: readField<number>(record, "likeCount", "LikeCount"),
         favoritoCount: readField<number>(record, "favoritoCount", "FavoritoCount"),
@@ -978,17 +1009,31 @@ export function ArtistProfile({
   }
 
   const backendPosts: PortfolioPost[] = (backendProfile?.portfolioItens ?? [])
-    .filter((item) => typeof item.urlArquivo === "string" && item.urlArquivo.trim())
     .map((item, index) => {
-      const titulo = item.titulo?.trim() ? item.titulo : "Post do portfólio"
+      const titulo = item.titulo?.trim() ? item.titulo : "Post do portfolio"
       const descricao = item.descricao?.trim() ? item.descricao : ""
-      const images = [item.urlArquivo?.trim() ?? ""].filter(Boolean)
+      const orderedImages = (item.imagens ?? [])
+        .slice()
+        .sort((a, b) => {
+          const aPrincipal = a.principal ? 1 : 0
+          const bPrincipal = b.principal ? 1 : 0
+          if (aPrincipal !== bPrincipal) return bPrincipal - aPrincipal
+          return (a.ordem ?? 0) - (b.ordem ?? 0)
+        })
+        .map((image) => image.urlArquivo?.trim() ?? "")
+        .filter(Boolean)
+      const images =
+        orderedImages.length > 0
+          ? orderedImages
+          : [item.urlArquivo?.trim() ?? ""].filter(Boolean)
+      if (images.length === 0) return null
+      const tags = (item.hashtags ?? []).filter(Boolean)
       const popularidade = item.visualizacaoCount ?? item.likeCount ?? 0
       return {
         id: item.id ? `portfolio-${item.id}` : `portfolio-${index}`,
         titulo,
         descricao,
-        tags: [],
+        tags,
         images,
         popularidade,
         likes: item.likeCount ?? 0,
@@ -997,8 +1042,9 @@ export function ArtistProfile({
         backendId: item.id,
       }
     })
+    .filter((item): item is PortfolioPost => Boolean(item))
 
-  const activePriceSheets: ServiceSheet[] = [
+const activePriceSheets: ServiceSheet[] = [
     ...addedServices,
     ...(isMockUser ? priceSheets : []),
   ]
