@@ -370,6 +370,7 @@ export function ArtistProfile({
   const [portfolioDescription, setPortfolioDescription] = useState("")
   const [portfolioImages, setPortfolioImages] = useState<File[]>([])
   const [portfolioDragIndex, setPortfolioDragIndex] = useState<number | null>(null)
+  const [portfolioDragOverIndex, setPortfolioDragOverIndex] = useState<number | null>(null)
   const [portfolioPreviewUrls, setPortfolioPreviewUrls] = useState<
     { file: File; url: string }[]
   >([])
@@ -2520,23 +2521,39 @@ export function ArtistProfile({
                     {portfolioPreviewUrls.map((item, index) => (
                       <div
                         key={`${item.file.name}-${item.file.lastModified}`}
-                        className="relative h-20 w-20 cursor-grab overflow-hidden rounded-lg border border-border/60 active:cursor-grabbing"
+                        className={`relative h-22 w-22 cursor-grab overflow-hidden rounded-lg border border-border/60 active:cursor-grabbing ${
+                          portfolioDragIndex === index ? "opacity-50" : ""
+                        } ${
+                          portfolioDragOverIndex === index &&
+                          portfolioDragIndex !== null &&
+                          portfolioDragIndex !== index
+                            ? "ring-2 ring-foreground/60"
+                            : ""
+                        }`}
                         draggable
                         onDragStart={(event) => {
                           setPortfolioDragIndex(index)
+                          setPortfolioDragOverIndex(index)
                           event.dataTransfer.effectAllowed = "move"
                         }}
                         onDragOver={(event) => {
                           event.preventDefault()
                           event.dataTransfer.dropEffect = "move"
+                          if (portfolioDragOverIndex !== index) {
+                            setPortfolioDragOverIndex(index)
+                          }
                         }}
                         onDrop={(event) => {
                           event.preventDefault()
                           if (portfolioDragIndex === null) return
                           handleMovePortfolioImage(portfolioDragIndex, index)
                           setPortfolioDragIndex(null)
+                          setPortfolioDragOverIndex(null)
                         }}
-                        onDragEnd={() => setPortfolioDragIndex(null)}
+                        onDragEnd={() => {
+                          setPortfolioDragIndex(null)
+                          setPortfolioDragOverIndex(null)
+                        }}
                         aria-grabbed={portfolioDragIndex === index}
                       >
                         <img
