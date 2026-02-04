@@ -75,6 +75,7 @@ type BackendArtistProfile = {
   usuarioNome?: string
   usuarioFotoPerfil?: string
   usuarioSeguidores?: number
+  socialLinks?: Partial<Record<SocialLinkKey, string>>
   portfolioItens?: BackendPortfolioItem[]
 }
 
@@ -148,6 +149,94 @@ const splitCommaList = (value: string) =>
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean)
+
+const normalizeSocialHandle = (value: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return ""
+  if (trimmed.startsWith("@")) return trimmed
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    try {
+      const url = new URL(trimmed)
+      const path = url.pathname.replace(/\/+$/, "")
+      const lastSegment = path.split("/").filter(Boolean).pop() ?? ""
+      if (!lastSegment) return ""
+      return lastSegment.startsWith("@") ? lastSegment : `@${lastSegment}`
+    } catch {
+      // fallthrough
+    }
+  }
+  if (trimmed.startsWith("www.")) {
+    return normalizeSocialHandle(`https://${trimmed}`)
+  }
+  return `@${trimmed}`
+}
+
+const mapSocialKey = (value: string): SocialLinkKey | null => {
+  const normalized = value
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[^a-z]/g, "")
+  if (!normalized) return null
+  if (normalized.includes("twitter") || normalized === "x") return "twitter"
+  if (normalized.includes("instagram")) return "instagram"
+  if (normalized.includes("tiktok")) return "tiktok"
+  if (normalized.includes("youtube")) return "youtube"
+  if (normalized.includes("twitch")) return "twitch"
+  if (normalized.includes("artstation")) return "artstation"
+  return null
+}
+
+const parseSocialLinks = (value: unknown): Partial<Record<SocialLinkKey, string>> => {
+  if (!Array.isArray(value)) return {}
+  const result: Partial<Record<SocialLinkKey, string>> = {}
+  value.forEach((entry) => {
+    if (!entry || typeof entry !== "object") return
+    const record = entry as Record<string, unknown>
+    const titulo = readField<string>(record, "titulo", "Titulo")
+    const url = readField<string>(record, "url", "Url")
+    if (!titulo || !url) return
+    const key = mapSocialKey(titulo)
+    if (!key) return
+    const handle = normalizeSocialHandle(url)
+    if (!handle) return
+    result[key] = handle
+  })
+  return result
+}
+
+const normalizeSocialLinkMap = (
+  links: Partial<Record<SocialLinkKey, string>>
+): Partial<Record<SocialLinkKey, string>> => {
+  const result: Partial<Record<SocialLinkKey, string>> = {}
+  Object.entries(links).forEach(([key, value]) => {
+    if (!value) return
+    const handle = normalizeSocialHandle(value)
+    if (!handle) return
+    result[key as SocialLinkKey] = handle
+  })
+  return result
+}
+
+const buildSocialHref = (key: SocialLinkKey, value: string) => {
+  const handle = normalizeSocialHandle(value).replace(/^@+/, "")
+  if (!handle) return ""
+  switch (key) {
+    case "twitter":
+      return `https://x.com/${handle}`
+    case "instagram":
+      return `https://www.instagram.com/${handle}`
+    case "tiktok":
+      return `https://www.tiktok.com/@${handle}`
+    case "youtube":
+      return `https://www.youtube.com/@${handle}`
+    case "twitch":
+      return `https://www.twitch.tv/${handle}`
+    case "artstation":
+      return `https://www.artstation.com/${handle}`
+    default:
+      return ""
+  }
+}
 
 const parsePortfolioImages = (value: unknown): BackendPortfolioItemImagem[] => {
   if (!Array.isArray(value)) return []
@@ -405,6 +494,8 @@ export function ArtistProfile({
   const [portfolioTitle, setPortfolioTitle] = useState("")
   const [portfolioDescription, setPortfolioDescription] = useState("")
   const [portfolioImages, setPortfolioImages] = useState<File[]>([])
+  const [portfolioHashtags, setPortfolioHashtags] = useState<string[]>([])
+  const [portfolioTagInput, setPortfolioTagInput] = useState("#")
   const [portfolioDragIndex, setPortfolioDragIndex] = useState<number | null>(null)
   const [portfolioDragOverIndex, setPortfolioDragOverIndex] = useState<number | null>(null)
   const [portfolioPreviewUrls, setPortfolioPreviewUrls] = useState<
@@ -508,6 +599,8 @@ export function ArtistProfile({
         const usuarioFotoPerfil = readField<string>(usuarioObj, "fotoPerfil", "FotoPerfil")
         const usuarioFotoCapa = readField<string>(usuarioObj, "fotoCapa", "FotoCapa")
         const usuarioSeguidores = readField<number>(usuarioObj, "seguidores", "Seguidores")
+        const redesSociais = readField<unknown>(usuarioObj, "redesSociais", "RedesSociais")
+        const socialLinks = parseSocialLinks(redesSociais)
 
         if (!isActive) return
         setBackendProfile({
@@ -522,6 +615,7 @@ export function ArtistProfile({
           usuarioFotoPerfil,
           usuarioFotoCapa,
           usuarioSeguidores,
+          socialLinks,
         })
         await fetchUsuarioPorToken(tokenGoogle)
       } catch {
@@ -737,18 +831,12 @@ export function ArtistProfile({
     resolvedBadges.deliveryBadge,
   ].filter(Boolean)
 
-  const baseSocialLinks: Record<SocialLinkKey, string> = {
-    twitter: "https://twitter.com/",
-    instagram: "https://www.instagram.com/",
-    tiktok: "https://www.tiktok.com/",
-    youtube: "https://www.youtube.com/",
-    twitch: "https://www.twitch.tv/",
-    artstation: "https://www.artstation.com/",
-  }
-  const resolvedSocialLinks: Record<SocialLinkKey, string> = {
-    ...baseSocialLinks,
+  const baseSocialLinks: Partial<Record<SocialLinkKey, string>> = {}
+  const resolvedSocialLinks = normalizeSocialLinkMap({
+    ...(backendProfile?.socialLinks ?? {}),
     ...(profileOverrides?.socialLinks ?? {}),
-  }
+    ...baseSocialLinks,
+  })
   const handleSource = resolvedDisplayName
     !isMockUser && typeof backendProfile?.usuarioNomePerfil === "string" && backendProfile.usuarioNomePerfil.trim()
       ? backendProfile.usuarioNomePerfil
@@ -771,20 +859,27 @@ export function ArtistProfile({
       ? backendProfile.usuarioSeguidores
       : undefined
 
+  const availableSocialLinks = isMockUser
+    ? resolvedSocialLinks
+    : backendProfile?.socialLinks ?? {}
+
   const socialLinks = [
     {
+      key: "twitter",
       name: "Twitter",
-      href: resolvedSocialLinks.twitter,
+      handle: availableSocialLinks.twitter,
       icon: Twitter,
     },
     {
+      key: "instagram",
       name: "Instagram",
-      href: resolvedSocialLinks.instagram,
+      handle: availableSocialLinks.instagram,
       icon: Instagram,
     },
     {
+      key: "tiktok",
       name: "TikTok",
-      href: resolvedSocialLinks.tiktok,
+      handle: availableSocialLinks.tiktok,
       icon: (props: React.SVGProps<SVGSVGElement>) => (
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
           <path d="M15.5 3.5c.6 1.6 1.9 2.8 3.5 3.2v3.1c-1.5 0-2.9-.5-4-1.3v5.2a4.9 4.9 0 1 1-4.9-4.9c.4 0 .8 0 1.2.1v3.2a1.8 1.8 0 1 0 1.5 1.8V3.5h2.7z" />
@@ -792,22 +887,25 @@ export function ArtistProfile({
       ),
     },
     {
+      key: "youtube",
       name: "YouTube",
-      href: resolvedSocialLinks.youtube,
+      handle: availableSocialLinks.youtube,
       icon: Youtube,
     },
     {
+      key: "twitch",
       name: "Twitch",
-      href: resolvedSocialLinks.twitch,
+      handle: availableSocialLinks.twitch,
       icon: Twitch,
     },
     {
+      key: "artstation",
       name: "ArtStation",
-      href: resolvedSocialLinks.artstation,
+      handle: availableSocialLinks.artstation,
       icon: Link,
     },
   ]
-    .filter((link) => Boolean(link.href))
+    .filter((link) => Boolean(link.handle))
 
   useEffect(() => {
     if (!isEditProfileOpen) return
@@ -923,7 +1021,7 @@ export function ArtistProfile({
     if (!profileDraft) return
     const socialEntries = Object.entries(profileDraft.socialLinks).flatMap(
       ([key, value]) => {
-        const trimmed = value.trim()
+        const trimmed = normalizeSocialHandle(value)
         if (!trimmed) return []
         return [[key, trimmed]] as [SocialLinkKey, string][]
       }
@@ -1195,6 +1293,68 @@ const activePriceSheets: ServiceSheet[] = [
     setPortfolioTitle("")
     setPortfolioDescription("")
     setPortfolioImages([])
+    setPortfolioHashtags([])
+    setPortfolioTagInput("#")
+  }
+
+  const normalizePortfolioTag = (value: string) => {
+    const trimmed = value.trim()
+    if (!trimmed) return null
+    const tag = trimmed.startsWith("#") ? trimmed : `#${trimmed}`
+    if (tag === "#") return null
+    return tag
+  }
+
+  const addPortfolioTags = (rawTags: string[]) => {
+    setPortfolioHashtags((prev) => {
+      const existing = new Set(prev.map((tag) => tag.toLowerCase()))
+      const next = [...prev]
+      rawTags.forEach((raw) => {
+        const normalized = normalizePortfolioTag(raw)
+        if (!normalized) return
+        const key = normalized.toLowerCase()
+        if (existing.has(key)) return
+        existing.add(key)
+        next.push(normalized)
+      })
+      return next
+    })
+  }
+
+  const ensurePortfolioTagPrefix = (value: string) =>
+    value.startsWith("#") ? value : `#${value}`
+
+  const handlePortfolioTagInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value
+    if (!value) {
+      setPortfolioTagInput("#")
+      return
+    }
+    if (value.includes(" ")) {
+      const parts = value.split(/\s+/)
+      const tail = parts.pop() ?? ""
+      addPortfolioTags(parts)
+      setPortfolioTagInput(tail ? ensurePortfolioTagPrefix(tail) : "#")
+      return
+    }
+    setPortfolioTagInput(ensurePortfolioTagPrefix(value))
+  }
+
+  const handlePortfolioTagKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault()
+      addPortfolioTags([portfolioTagInput])
+      setPortfolioTagInput("#")
+    }
+  }
+
+  const handlePortfolioTagBlur = () => {
+    addPortfolioTags([portfolioTagInput])
+    setPortfolioTagInput("#")
+  }
+
+  const handleRemovePortfolioTag = (tagToRemove: string) => {
+    setPortfolioHashtags((prev) => prev.filter((tag) => tag !== tagToRemove))
   }
 
   const handleRemovePortfolioImage = (index: number) => {
@@ -1321,7 +1481,15 @@ const activePriceSheets: ServiceSheet[] = [
   }
 
   const handlePortfolioSubmit = async () => {
-    if (portfolioImages.length === 0 || isMockUser) return
+    if (isMockUser) return
+    if (!portfolioTitle.trim() || portfolioImages.length === 0 || portfolioHashtags.length === 0) {
+      toast({
+        title: "Campos obrigatorios",
+        description: "Preencha titulo, hashtags e imagens para enviar o portifolio.",
+        variant: "destructive",
+      })
+      return
+    }
     const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
     if (!tokenGoogle) {
       toast({
@@ -1337,7 +1505,10 @@ const activePriceSheets: ServiceSheet[] = [
       const formData = new FormData()
       formData.append("GoogleToken.GoogleToken", tokenGoogle)
       portfolioImages.forEach((file) => {
-        formData.append("Imagem", file)
+        formData.append("Imagens", file)
+      })
+      portfolioHashtags.forEach((tag) => {
+        formData.append("Hashtags", tag)
       })
       if (portfolioTitle.trim()) {
         formData.append("Titulo", portfolioTitle.trim())
@@ -1813,14 +1984,16 @@ const activePriceSheets: ServiceSheet[] = [
               {socialLinks.map((link) => (
                 <Button
                   key={link.name}
-                  asChild
                   variant="ghost"
                   size="icon-sm"
                   aria-label={link.name}
+                  onClick={() => {
+                    const href = link.handle ? buildSocialHref(link.key, link.handle) : ""
+                    if (!href) return
+                    window.open(href, "_blank", "noreferrer")
+                  }}
                 >
-                  <a href={link.href} target="_blank" rel="noreferrer">
-                    <link.icon className="h-4 w-4" />
-                  </a>
+                  <link.icon className="h-4 w-4" />
                 </Button>
               ))}
             </div>
@@ -2306,10 +2479,10 @@ const activePriceSheets: ServiceSheet[] = [
                           id="profile-twitter"
                           value={profileDraft.socialLinks.twitter}
                           onChange={(event) =>
-                            updateDraftSocial("twitter", event.target.value)
+                            updateDraftSocial("twitter", normalizeSocialHandle(event.target.value))
                           }
                           className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                          placeholder="https://twitter.com/"
+                          placeholder="@seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2320,10 +2493,10 @@ const activePriceSheets: ServiceSheet[] = [
                           id="profile-instagram"
                           value={profileDraft.socialLinks.instagram}
                           onChange={(event) =>
-                            updateDraftSocial("instagram", event.target.value)
+                            updateDraftSocial("instagram", normalizeSocialHandle(event.target.value))
                           }
                           className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                          placeholder="https://www.instagram.com/"
+                          placeholder="@seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2334,10 +2507,10 @@ const activePriceSheets: ServiceSheet[] = [
                           id="profile-tiktok"
                           value={profileDraft.socialLinks.tiktok}
                           onChange={(event) =>
-                            updateDraftSocial("tiktok", event.target.value)
+                            updateDraftSocial("tiktok", normalizeSocialHandle(event.target.value))
                           }
                           className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                          placeholder="https://www.tiktok.com/"
+                          placeholder="@seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2348,10 +2521,10 @@ const activePriceSheets: ServiceSheet[] = [
                           id="profile-youtube"
                           value={profileDraft.socialLinks.youtube}
                           onChange={(event) =>
-                            updateDraftSocial("youtube", event.target.value)
+                            updateDraftSocial("youtube", normalizeSocialHandle(event.target.value))
                           }
                           className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                          placeholder="https://www.youtube.com/"
+                          placeholder="@seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2362,10 +2535,10 @@ const activePriceSheets: ServiceSheet[] = [
                           id="profile-twitch"
                           value={profileDraft.socialLinks.twitch}
                           onChange={(event) =>
-                            updateDraftSocial("twitch", event.target.value)
+                            updateDraftSocial("twitch", normalizeSocialHandle(event.target.value))
                           }
                           className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                          placeholder="https://www.twitch.tv/"
+                          placeholder="@seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2376,10 +2549,10 @@ const activePriceSheets: ServiceSheet[] = [
                           id="profile-artstation"
                           value={profileDraft.socialLinks.artstation}
                           onChange={(event) =>
-                            updateDraftSocial("artstation", event.target.value)
+                            updateDraftSocial("artstation", normalizeSocialHandle(event.target.value))
                           }
                           className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
-                          placeholder="https://www.artstation.com/"
+                          placeholder="@seuusuario"
                         />
                       </div>
                     </div>
@@ -2598,7 +2771,7 @@ const activePriceSheets: ServiceSheet[] = [
           </DialogHeader>
           <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
             <div className="space-y-2">
-              <Label htmlFor="portfolio-title">Titulo</Label>
+              <Label htmlFor="portfolio-title">Titulo *</Label>
               <Input
                 id="portfolio-title"
                 value={portfolioTitle}
@@ -2606,6 +2779,7 @@ const activePriceSheets: ServiceSheet[] = [
                   setPortfolioTitle(event.target.value.slice(0, portfolioTitleLimit))
                 }
                 placeholder="Ex: Cenario ilustrado"
+                required
               />
               <p className="text-xs text-muted-foreground">
                 {remainingPortfolioTitleChars} caracteres restantes
@@ -2629,7 +2803,40 @@ const activePriceSheets: ServiceSheet[] = [
               </p>
             </div>
             <div className="space-y-2">
-              <Label>Imagens</Label>
+              <Label htmlFor="portfolio-hashtags">Hashtags *</Label>
+              <Input
+                id="portfolio-hashtags"
+                value={portfolioTagInput}
+                onChange={handlePortfolioTagInputChange}
+                onKeyDown={handlePortfolioTagKeyDown}
+                onBlur={handlePortfolioTagBlur}
+                placeholder="#ilustracao #anime"
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                Separe as hashtags com espaco.
+              </p>
+              {portfolioHashtags.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {portfolioHashtags.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => handleRemovePortfolioTag(tag)}
+                      className="flex items-center gap-2 rounded-full border border-foreground/20 px-3 py-1 text-xs text-foreground/80 hover:border-foreground/40"
+                      aria-label={`Remover ${tag}`}
+                    >
+                      <span>{tag}</span>
+                      <span className="text-[10px] font-semibold leading-none text-foreground/60">
+                        x
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <Label>Imagens *</Label>
               <div className="flex flex-wrap items-center gap-3">
                 <Button
                   type="button"
@@ -2652,6 +2859,7 @@ const activePriceSheets: ServiceSheet[] = [
                   multiple
                   className="hidden"
                   onChange={handlePortfolioImageChange}
+                  required
                 />
               </div>
               {portfolioPreviewUrls.length > 0 ? (
@@ -2730,7 +2938,12 @@ const activePriceSheets: ServiceSheet[] = [
             </Button>
             <Button
               onClick={handlePortfolioSubmit}
-              disabled={portfolioImages.length === 0 || isUploadingPortfolio}
+              disabled={
+                isUploadingPortfolio ||
+                !portfolioTitle.trim() ||
+                portfolioImages.length === 0 ||
+                portfolioHashtags.length === 0
+              }
             >
               {isUploadingPortfolio ? "Enviando..." : "Enviar"}
             </Button>
