@@ -1,11 +1,13 @@
-﻿using SMT.Back.Comissoes.Models.Entity;
-using SMT.Back.Comissoes.Utils;
-using Serilog;
-using SMT.Back.Comissoes.Repositories.Interfaces;
-using SMT.Back.Comissoes.Models.Enum;
-using SMT.Back.Comissoes.Services.Interfaces;
-using SMT.Back.Comissoes.DTO.Input.UsuarioController;
+﻿using Serilog;
 using SMT.Back.Comissoes.DTO.Input.Usuario;
+using SMT.Back.Comissoes.DTO.Input.UsuarioController;
+using SMT.Back.Comissoes.Models.Entity;
+using SMT.Back.Comissoes.Models.Enum;
+using SMT.Back.Comissoes.Repositories.Interfaces;
+using SMT.Back.Comissoes.Services.Interfaces;
+using SMT.Back.Comissoes.Utils;
+using System.Net;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SMT.Back.Comissoes.Services
 {
@@ -165,13 +167,14 @@ namespace SMT.Back.Comissoes.Services
             {
                 foreach (var item in artista.PortfolioItens)
                 {
-                    if (!string.IsNullOrWhiteSpace(item.UrlArquivo))
+                    for(int j = 0; j < item.Imagens.Count; j++)
                     {
-                        var signedUrl = _bucketService.GetPresignedUrl(item.UrlArquivo, TimeSpan.FromHours(6));
+                        var imagem = item.Imagens.ElementAt(j);
+                        var signedUrl = _bucketService.GetPresignedUrl(imagem.UrlArquivo, TimeSpan.FromHours(6));
                         if (!string.IsNullOrWhiteSpace(signedUrl))
-                            item.UrlArquivo = signedUrl;
+                            imagem.UrlArquivo = signedUrl;
                     }
-                    
+
                     item.LikeCount = await _interacaoRepository.CountAsync(
                         TipoInteracaoEnum.Like,
                         TipoAlvoInteracaoEnum.PortfolioItem,
@@ -185,58 +188,6 @@ namespace SMT.Back.Comissoes.Services
                 }
             }
             return artista;
-        }
-        public async Task CadastrarPortfolioAsync(CadastrarPortfolioInput cadastrarPortfolioInput)
-        {
-            var artista = await ObterPerfilArtista(cadastrarPortfolioInput.GoogleToken);
-
-            var imagens = cadastrarPortfolioInput.Imagens?
-                .Where(imagem => imagem != null && imagem.Length > 0)
-                .ToList();
-
-            if (imagens == null || imagens.Count == 0)
-            {
-                if (cadastrarPortfolioInput.Imagem == null || cadastrarPortfolioInput.Imagem.Length == 0)
-                    throw new ArgumentException("Nenhuma imagem enviada.");
-
-                imagens = new List<IFormFile> { cadastrarPortfolioInput.Imagem };
-            }
-
-            foreach (var imagem in imagens)
-            {
-                if (!imagem.ContentType.StartsWith("image/"))
-                    throw new ExcecaoPersonalizada(
-                        ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
-                        "Tipo de dado inválido, insira uma imagem/gif",
-                        () => Log.Error($"Tipo de dado inválido para imagem de portfolio do artista Email: {artista.Usuario.NomePerfil}"),
-                        (int)System.Net.HttpStatusCode.BadRequest);
-            }
-
-            var portfolioItens = new List<PortfolioItem>();
-            var batchId = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-            for (var i = 0; i < imagens.Count; i++)
-            {
-                var imagem = imagens[i];
-                var titulo = cadastrarPortfolioInput.Titulos != null && i < cadastrarPortfolioInput.Titulos.Count
-                    ? cadastrarPortfolioInput.Titulos[i]
-                    : cadastrarPortfolioInput.Titulo;
-                var descricao = cadastrarPortfolioInput.Descricoes != null && i < cadastrarPortfolioInput.Descricoes.Count
-                    ? cadastrarPortfolioInput.Descricoes[i]
-                    : cadastrarPortfolioInput.Descricao;
-
-                var suffix = $"{batchId}-{(i + 1).ToString("D2")}";
-                var pathBucket = $"portfolios/usuarios/{artista.Usuario.NomePerfil}/{suffix}.webp";
-                var pathCompleto = await _bucketService.UploadAsync(imagem, pathBucket);
-
-                portfolioItens.Add(new PortfolioItem
-                {
-                    Titulo = titulo ?? string.Empty,
-                    Descricao = descricao ?? string.Empty,
-                    UrlArquivo = pathCompleto
-                });
-            }
-
-            await _usuarioRepository.CadastrarPortfolioArtista(artista.Id, portfolioItens);
         }
         public async Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput)
         {
@@ -258,26 +209,80 @@ namespace SMT.Back.Comissoes.Services
                     "Tipo de dado inválido, insira uma imagem/gif",
                     () => Log.Error($"Tipo de dado inválido para foto de perfil do usuário Email: {usuario.NomePerfil}"),
                     (int)System.Net.HttpStatusCode.BadRequest);
-            // Path no bucket organizado por usuário
+
             if (atualizarFotoUsuarioInput.fotoPerfilEnum == TipoFotoPerfilEnum.FotoPerfil)
             {
-            var pathBucket = $"usuarios/{usuario.NomePerfil}/foto_perfil.webp";
-            // Upload da imagem
-            var pathCompleto = await _bucketService.UploadAsync(atualizarFotoUsuarioInput.FotoPerfil, pathBucket);
-            // Atualiza apenas o path no banco            
+                var pathBucket = $"usuarios/{usuario.NomePerfil}/foto_perfil.webp";
+                var pathCompleto = await _bucketService.UploadAsync(atualizarFotoUsuarioInput.FotoPerfil, pathBucket);
 
-            await _usuarioRepository.AtualizarFotoPerfil(usuario.Id, pathCompleto, atualizarFotoUsuarioInput.fotoPerfilEnum);
-            return pathCompleto;
+                await _usuarioRepository.AtualizarFotoPerfil(usuario.Id, pathCompleto, atualizarFotoUsuarioInput.fotoPerfilEnum);
+                return pathCompleto;
             }
             else
             {
                 var pathBucket = $"usuarios/{usuario.NomePerfil}/foto_capa.webp";
-                // Upload da imagem
                 var pathCompleto = await _bucketService.UploadAsync(atualizarFotoUsuarioInput.FotoPerfil, pathBucket);
-                // Atualiza apenas o path no banco            
                 await _usuarioRepository.AtualizarFotoPerfil(usuario.Id, pathCompleto, atualizarFotoUsuarioInput.fotoPerfilEnum);
                 return pathCompleto;
             }
+        }
+        public async Task CadastrarPortfolioAsync(CadastrarPortfolioInput input)
+        {
+            var artista = await ObterPerfilArtista(input.GoogleToken);
+
+            var imagens = input.Imagens?
+                .Where(i => i != null && i.Length > 0)
+                .ToList();
+
+            if (imagens == null || imagens.Count == 0)
+            {
+                if (input.Imagem == null || input.Imagem.Length == 0)
+                    throw new ArgumentException("Nenhuma imagem enviada.");
+
+                imagens = new List<IFormFile> { input.Imagem };
+            }
+
+            // validação de tipo
+            foreach (var imagem in imagens)
+            {
+                if (!imagem.ContentType.StartsWith("image/"))
+                    throw new ExcecaoPersonalizada(
+                        ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
+                        "Tipo de dado inválido, insira uma imagem/gif",
+                        () => Log.Error($"Tipo inválido para portfolio do artista {artista.Usuario.NomePerfil}"),
+                        (int)HttpStatusCode.BadRequest);
+            }
+
+            var portfolioItem = new PortfolioItem
+            {
+                Titulo = input.Titulo ?? string.Empty,
+                Descricao = input.Descricao ?? string.Empty,
+                ArtistaId = artista.Id,
+                Hashtags = input.Hashtags ?? new List<string>(),
+                //TipoServico = TipoServicoEnum.,
+                DataCriacao = DateTime.UtcNow,
+                Imagens = new List<PortfolioItemImagem>()
+            };
+
+            var loteId = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+
+            for (int i = 0; i < imagens.Count; i++)
+            {
+                var imagem = imagens[i];
+
+                var sufixo = $"{loteId}-{(i + 1).ToString("D2")}";
+                var pathBucket = $"portfolios/usuarios/{artista.Usuario.NomePerfil}/{sufixo}.webp";
+
+                var url = await _bucketService.UploadAsync(imagem, pathBucket);
+
+                portfolioItem.Imagens.Add(new PortfolioItemImagem
+                {
+                    UrlArquivo = url,
+                    Ordem = i
+                });
+            }
+
+            await _usuarioRepository.CadastrarPortfolioArtista(artista.Id, portfolioItem);
         }
         public async Task AtualizarRedesSociais(AtualizarRedesSociaisInput atualizarRedesSociaisInput)
         {
@@ -298,5 +303,9 @@ namespace SMT.Back.Comissoes.Services
             };
             await _usuarioRepository.AtualizarRedesSociais(redeSocial);
         }
+        //public async Task CriarServico(criarservico)
+        //{
+
+        //}
     }
 }

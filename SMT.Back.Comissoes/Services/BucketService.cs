@@ -31,7 +31,7 @@ public class BucketService : IBucketService
 
         await _s3.PutObjectAsync(request);
 
-        return $"{_baseUrl}/{path}";
+        return $"{_baseUrl}/{path}-{Guid.NewGuid():N}";
     }
 
     public async Task DeleteAsync(string path)

@@ -6,8 +6,7 @@
         public IFormFile? Imagem { get; set; }
         public List<IFormFile>? Imagens { get; set; }
         public string? Titulo { get; set; }
-        public List<string>? Titulos { get; set; }
         public string? Descricao { get; set; }
-        public List<string>? Descricoes { get; set; }
-        }
+        public List<string>? Hashtags { get; set; }
+    }
 }

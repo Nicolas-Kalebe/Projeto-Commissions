@@ -15,7 +15,8 @@ namespace SMT.Back.Comissoes.Models.Entity
         public Artista Artista { get; set; }
         public string Titulo { get; set; } = string.Empty;
         public string Descricao { get; set; } = string.Empty;
-        public string UrlArquivo { get; set; } = string.Empty;
+        public List<string> Hashtags { get; set; } = new List<string>();
+        public ICollection<PortfolioItemImagem> Imagens { get; set; } = new List<PortfolioItemImagem>();
         public int Ordem { get; set; }
         public int LikeCount { get; set; }
         public int FavoritoCount { get; set; }

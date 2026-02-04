@@ -13,7 +13,7 @@ namespace SMT.Back.Comissoes.Repositories.Interfaces
         Task CadastrarArtista(Artista artista);
         Task<Usuario> ObterUsuarioPorEmail(string email);
         Task<Artista> ObterArtistaPorUsuarioId(int usuarioId);
-        Task CadastrarPortfolioArtista(int artistaId, List<PortfolioItem> portfolioItens);
+        Task CadastrarPortfolioArtista(int artistaId, PortfolioItem portfolioItem);
         Task AtualizarFotoPerfil(int usuarioId, string fotoPerfilUrl, TipoFotoPerfilEnum tipoFotoPerfilEnum);
         Task AtualizarRedesSociais(RedeSocial redesSociais);
     }

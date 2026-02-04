@@ -134,5 +134,17 @@ namespace SMT.Back.Comissoes.Controllers
                 Resultado = "Sucesso ao atualizar dados do usuário."
             });
         }
+        //[HttpPost]
+        //public async Task<IActionResult> CriarServico([FromBody ] CadastrarServicoInput criarServicoInput)
+        //{
+        //    await _usuarioService.CriarServico(criarServicoInput);
+        //    return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
+        //    {
+        //        Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
+        //        StatusHttp = (int)HttpStatusCode.OK,
+        //        Mensagem = "Serviço criado com sucesso.",
+        //        Resultado = "Sucesso ao criar serviço para o artista."
+        //    });
+        //}
     }
 }
