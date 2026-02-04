@@ -369,6 +369,7 @@ export function ArtistProfile({
   const [portfolioTitle, setPortfolioTitle] = useState("")
   const [portfolioDescription, setPortfolioDescription] = useState("")
   const [portfolioImages, setPortfolioImages] = useState<File[]>([])
+  const [portfolioDragIndex, setPortfolioDragIndex] = useState<number | null>(null)
   const [portfolioPreviewUrls, setPortfolioPreviewUrls] = useState<
     { file: File; url: string }[]
   >([])
@@ -1135,6 +1136,24 @@ export function ArtistProfile({
 
   const handleRemovePortfolioImage = (index: number) => {
     setPortfolioImages((prev) => prev.filter((_, current) => current !== index))
+  }
+
+  const handleMovePortfolioImage = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return
+    setPortfolioImages((prev) => {
+      if (
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= prev.length ||
+        toIndex >= prev.length
+      ) {
+        return prev
+      }
+      const next = [...prev]
+      const [moved] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, moved)
+      return next
+    })
   }
 
   const resetServiceDialog = () => {
@@ -2493,27 +2512,49 @@ export function ArtistProfile({
                 />
               </div>
               {portfolioPreviewUrls.length > 0 ? (
-                <div className="flex flex-wrap gap-3">
-                  {portfolioPreviewUrls.map((item, index) => (
-                    <div
-                      key={`${item.file.name}-${item.file.lastModified}`}
-                      className="relative h-22 w-22 overflow-hidden rounded-lg border border-border/60"
-                    >
-                      <img
-                        src={item.url}
-                        alt={item.file.name}
-                        className="h-full w-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-1 top-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-black/70 text-xs font-semibold text-white hover:bg-black/80"
-                        onClick={() => handleRemovePortfolioImage(index)}
-                        aria-label="Remover imagem"
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Arraste as imagens para ordenar.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {portfolioPreviewUrls.map((item, index) => (
+                      <div
+                        key={`${item.file.name}-${item.file.lastModified}`}
+                        className="relative h-20 w-20 cursor-grab overflow-hidden rounded-lg border border-border/60 active:cursor-grabbing"
+                        draggable
+                        onDragStart={(event) => {
+                          setPortfolioDragIndex(index)
+                          event.dataTransfer.effectAllowed = "move"
+                        }}
+                        onDragOver={(event) => {
+                          event.preventDefault()
+                          event.dataTransfer.dropEffect = "move"
+                        }}
+                        onDrop={(event) => {
+                          event.preventDefault()
+                          if (portfolioDragIndex === null) return
+                          handleMovePortfolioImage(portfolioDragIndex, index)
+                          setPortfolioDragIndex(null)
+                        }}
+                        onDragEnd={() => setPortfolioDragIndex(null)}
+                        aria-grabbed={portfolioDragIndex === index}
                       >
-                        x
-                      </button>
-                    </div>
-                  ))}
+                        <img
+                          src={item.url}
+                          alt={item.file.name}
+                          className="h-full w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-1 top-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-black/70 text-xs font-semibold text-white hover:bg-black/80"
+                          onClick={() => handleRemovePortfolioImage(index)}
+                          aria-label="Remover imagem"
+                        >
+                          x
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : null}
             </div>
