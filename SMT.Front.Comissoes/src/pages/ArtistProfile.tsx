@@ -69,6 +69,7 @@ type BackendArtistProfile = {
   estilo?: string
   tipoArtista?: string
   portifolioUrl?: string
+  usuarioFotoCapa?: string
   ativoParaServicos?: boolean
   usuarioNomePerfil?: string
   usuarioNome?: string
@@ -345,16 +346,18 @@ export function ArtistProfile({
   )
   const [showServices, setShowServices] = useState(true)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [isUploadingCover, setIsUploadingCover] = useState(false)
   const [backendProfile, setBackendProfile] = useState<BackendArtistProfile | null>(null)
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
   const [profileOverrides, setProfileOverrides] = useState<ProfileOverrides | null>(null)
   const [profileDraft, setProfileDraft] = useState<ProfileDraft | null>(null)
   const [draftAvatarPreview, setDraftAvatarPreview] = useState("")
   const [draftCoverPreview, setDraftCoverPreview] = useState("")
+  const [draftCoverFile, setDraftCoverFile] = useState<File | null>(null)
   const [isAddPortfolioOpen, setIsAddPortfolioOpen] = useState(false)
   const [portfolioTitle, setPortfolioTitle] = useState("")
   const [portfolioDescription, setPortfolioDescription] = useState("")
-  const [portfolioImage, setPortfolioImage] = useState<File | null>(null)
+  const [portfolioImages, setPortfolioImages] = useState<File[]>([])
   const [isUploadingPortfolio, setIsUploadingPortfolio] = useState(false)
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({})
   const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({})
@@ -367,6 +370,40 @@ export function ArtistProfile({
   const isOwnerProfile = Boolean(!isMockUser && currentUser?.id && artist?.id && currentUser.id === artist.id)
   const isRealUser = Boolean(!isMockUser && currentUser)
   const canEditProfile = isOwnerProfile || isMockUser || isRealUser
+
+  const applyUserFromTokenResponse = (resultado: Record<string, unknown>) => {
+    const usuarioNomePerfil = readField<string>(resultado, "nomePerfil", "NomePerfil")
+    const usuarioNome = readField<string>(resultado, "nome", "Nome")
+    const usuarioFotoPerfil = readField<string>(resultado, "fotoPerfil", "FotoPerfil")
+    const usuarioFotoCapa = readField<string>(resultado, "fotoCapa", "FotoCapa")
+    const usuarioSeguidores = readField<number>(resultado, "seguidores", "Seguidores")
+    setBackendProfile((prev) => ({
+      avaliacao: prev?.avaliacao,
+      estilo: prev?.estilo,
+      tipoArtista: prev?.tipoArtista,
+      portifolioUrl: prev?.portifolioUrl,
+      ativoParaServicos: prev?.ativoParaServicos,
+      portfolioItens: prev?.portfolioItens,
+      usuarioNomePerfil,
+      usuarioNome,
+      usuarioFotoPerfil,
+      usuarioFotoCapa,
+      usuarioSeguidores: usuarioSeguidores ?? prev?.usuarioSeguidores,
+    }))
+  }
+
+  const fetchUsuarioPorToken = async (tokenGoogle: string) => {
+    const response = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ googleToken: tokenGoogle }),
+    })
+    if (!response.ok) return
+    const body = await response.json().catch(() => null)
+    const resultado = body?.resultado ?? body?.Resultado
+    if (!resultado || typeof resultado !== "object") return
+    applyUserFromTokenResponse(resultado as Record<string, unknown>)
+  }
 
   useEffect(() => {
     if (!isRealUser) {
@@ -417,6 +454,7 @@ export function ArtistProfile({
         const usuarioNomePerfil = readField<string>(usuarioObj, "nomePerfil", "NomePerfil")
         const usuarioNome = readField<string>(usuarioObj, "nome", "Nome")
         const usuarioFotoPerfil = readField<string>(usuarioObj, "fotoPerfil", "FotoPerfil")
+        const usuarioFotoCapa = readField<string>(usuarioObj, "fotoCapa", "FotoCapa")
         const usuarioSeguidores = readField<number>(usuarioObj, "seguidores", "Seguidores")
 
         if (!isActive) return
@@ -430,8 +468,10 @@ export function ArtistProfile({
           usuarioNomePerfil,
           usuarioNome,
           usuarioFotoPerfil,
+          usuarioFotoCapa,
           usuarioSeguidores,
         })
+        await fetchUsuarioPorToken(tokenGoogle)
       } catch {
         // Silent fallback to existing profile data
       }
@@ -608,7 +648,9 @@ export function ArtistProfile({
         .filter(Boolean)
       : [])
   const baseCoverImageUrl =
-    !isMockUser && typeof backendProfile?.portifolioUrl === "string" && backendProfile.portifolioUrl.trim()
+    !isMockUser && typeof backendProfile?.usuarioFotoCapa === "string" && backendProfile.usuarioFotoCapa.trim()
+      ? backendProfile.usuarioFotoCapa
+      : !isMockUser && typeof backendProfile?.portifolioUrl === "string" && backendProfile.portifolioUrl.trim()
       ? backendProfile.portifolioUrl
       : "/mock_arts/test_wide_16_9.png"
   const baseDisplayName =
@@ -729,6 +771,7 @@ export function ArtistProfile({
       styleTags: resolvedStyleTags.join(", "),
       socialLinks: { ...resolvedSocialLinks },
     })
+    setDraftCoverFile(null)
   }, [isEditProfileOpen])
 
   useEffect(() => {
@@ -740,6 +783,9 @@ export function ArtistProfile({
     if (draftCoverPreview && profileOverrides?.coverUrl !== draftCoverPreview) {
       URL.revokeObjectURL(draftCoverPreview)
       setDraftCoverPreview("")
+    }
+    if (!isEditProfileOpen) {
+      setDraftCoverFile(null)
     }
   }, [
     isEditProfileOpen,
@@ -778,7 +824,9 @@ export function ArtistProfile({
 
   const handleDraftCoverChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
+    event.target.value = ""
     if (!file) return
+    setDraftCoverFile(file)
     const previewUrl = URL.createObjectURL(file)
     setDraftCoverPreview((prev) => {
       if (prev) URL.revokeObjectURL(prev)
@@ -792,7 +840,7 @@ export function ArtistProfile({
     return trimmed ? trimmed : undefined
   }
 
-  const handleProfileSave = () => {
+  const handleProfileSave = async () => {
     if (!profileDraft) return
     const socialEntries = Object.entries(profileDraft.socialLinks).flatMap(
       ([key, value]) => {
@@ -816,7 +864,57 @@ export function ArtistProfile({
     if (nextOverrides.styleTags && nextOverrides.styleTags.length === 0) {
       delete nextOverrides.styleTags
     }
-    setProfileOverrides(nextOverrides)
+    let updatedCoverUrl = nextOverrides.coverUrl
+    if (draftCoverFile && !isMockUser) {
+      const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
+      if (!tokenGoogle) {
+        toast({
+          title: "Sessao expirada",
+          description: "Faca login novamente para atualizar a capa.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      setIsUploadingCover(true)
+      try {
+        const formData = new FormData()
+        formData.append("TokenGoogle", tokenGoogle)
+        formData.append("FotoPerfil", draftCoverFile)
+        formData.append("fotoPerfilEnum", "2")
+
+        const response = await fetch(API_ROUTES.Usuario.atualizarFotoUsuario, {
+          method: "PATCH",
+          body: formData,
+        })
+
+        if (!response.ok) {
+          throw new Error("Falha ao atualizar a capa.")
+        }
+
+        await refreshBackendProfile(tokenGoogle)
+        updatedCoverUrl = undefined
+        toast({
+          title: "Capa atualizada",
+          description: "Sua nova imagem ja aparece no perfil.",
+        })
+      } catch {
+        toast({
+          title: "Erro ao atualizar",
+          description: "Nao foi possivel enviar a capa agora.",
+          variant: "destructive",
+        })
+        return
+      } finally {
+        setIsUploadingCover(false)
+      }
+    }
+
+    const nextOverridesWithCover = {
+      ...nextOverrides,
+      coverUrl: updatedCoverUrl,
+    }
+    setProfileOverrides(nextOverridesWithCover)
     setIsEditProfileOpen(false)
     toast({
       title: "Perfil atualizado",
@@ -987,17 +1085,17 @@ export function ArtistProfile({
   const resetPortfolioDialog = () => {
     setPortfolioTitle("")
     setPortfolioDescription("")
-    setPortfolioImage(null)
+    setPortfolioImages([])
   }
 
   const handlePortfolioImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null
+    const files = Array.from(event.target.files ?? [])
     event.target.value = ""
-    setPortfolioImage(file)
+    setPortfolioImages(files)
   }
 
   const refreshBackendProfile = async (tokenGoogle: string) => {
-    const response = await fetch(API_ROUTES.Usuario.obterPerfilArtista, {
+    const response = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ googleToken: tokenGoogle }),
@@ -1007,45 +1105,28 @@ export function ArtistProfile({
     const resultado = body?.resultado ?? body?.Resultado
     if (!resultado || typeof resultado !== "object") return
     const resultadoObj = resultado as Record<string, unknown>
-    const usuarioObj =
-      (readField<Record<string, unknown>>(resultadoObj, "usuario", "Usuario") ?? {}) as Record<
-        string,
-        unknown
-      >
-    const avaliacao = readField<number>(resultadoObj, "avaliacao", "Avaliacao")
-    const estilo = readField<string>(resultadoObj, "estilo", "Estilo")
-    const tipoArtista = readField<string>(resultadoObj, "tipoArtista", "TipoArtista")
-    const portifolioUrl = readField<string>(
-      resultadoObj,
-      "portifolioUrl",
-      "PortifolioUrl",
-      "portfolioUrl",
-      "PortfolioUrl"
-    )
-    const ativoParaServicos = readField<boolean>(resultadoObj, "ativoParaServicos", "AtivoParaServicos")
-    const portfolioItens = parsePortfolioItems(
-      readField<unknown>(resultadoObj, "portfolioItens", "PortfolioItens")
-    )
-    const usuarioNomePerfil = readField<string>(usuarioObj, "nomePerfil", "NomePerfil")
-    const usuarioNome = readField<string>(usuarioObj, "nome", "Nome")
-    const usuarioFotoPerfil = readField<string>(usuarioObj, "fotoPerfil", "FotoPerfil")
-    const usuarioSeguidores = readField<number>(usuarioObj, "seguidores", "Seguidores")
+    const usuarioNomePerfil = readField<string>(resultadoObj, "nomePerfil", "NomePerfil")
+    const usuarioNome = readField<string>(resultadoObj, "nome", "Nome")
+    const usuarioFotoPerfil = readField<string>(resultadoObj, "fotoPerfil", "FotoPerfil")
+    const usuarioFotoCapa = readField<string>(resultadoObj, "fotoCapa", "FotoCapa")
+    const usuarioSeguidores = readField<number>(resultadoObj, "seguidores", "Seguidores")
     setBackendProfile({
-      avaliacao,
-      estilo,
-      tipoArtista,
-      portifolioUrl,
-      ativoParaServicos,
-      portfolioItens,
+      avaliacao: backendProfile?.avaliacao,
+      estilo: backendProfile?.estilo,
+      tipoArtista: backendProfile?.tipoArtista,
+      portifolioUrl: backendProfile?.portifolioUrl,
+      ativoParaServicos: backendProfile?.ativoParaServicos,
+      portfolioItens: backendProfile?.portfolioItens,
       usuarioNomePerfil,
       usuarioNome,
       usuarioFotoPerfil,
-      usuarioSeguidores,
+      usuarioFotoCapa,
+      usuarioSeguidores: usuarioSeguidores ?? backendProfile?.usuarioSeguidores,
     })
   }
 
   const handlePortfolioSubmit = async () => {
-    if (!portfolioImage || isMockUser) return
+    if (portfolioImages.length === 0 || isMockUser) return
     const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
     if (!tokenGoogle) {
       toast({
@@ -1060,7 +1141,9 @@ export function ArtistProfile({
     try {
       const formData = new FormData()
       formData.append("GoogleToken.GoogleToken", tokenGoogle)
-      formData.append("Imagem", portfolioImage)
+      portfolioImages.forEach((file) => {
+        formData.append("Imagem", file)
+      })
       if (portfolioTitle.trim()) {
         formData.append("Titulo", portfolioTitle.trim())
       }
@@ -1068,8 +1151,8 @@ export function ArtistProfile({
         formData.append("Descricao", portfolioDescription.trim())
       }
 
-      const response = await fetch(API_ROUTES.Usuario.atualizarPortfolio, {
-        method: "PATCH",
+      const response = await fetch(API_ROUTES.Usuario.cadastrarPortfolio, {
+        method: "POST",
         body: formData,
       })
 
@@ -2078,8 +2161,9 @@ export function ArtistProfile({
               <Button
                 className="ml-auto bg-white text-black hover:bg-white/90"
                 onClick={handleProfileSave}
+                disabled={isUploadingCover}
               >
-                Salvar
+                {isUploadingCover ? "Salvando..." : "Salvar"}
               </Button>
             </DialogFooter>
           </div>
@@ -2091,7 +2175,7 @@ export function ArtistProfile({
           <DialogHeader>
             <DialogTitle>Adicionar no portifolio</DialogTitle>
             <DialogDescription>
-              Envie uma imagem para o seu portifolio.
+              Envie uma ou mais imagens para o seu portifolio.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -2127,7 +2211,7 @@ export function ArtistProfile({
               </p>
             </div>
             <div className="space-y-2">
-              <Label>Imagem</Label>
+              <Label>Imagens</Label>
               <div className="flex flex-wrap items-center gap-3">
                 <Button
                   type="button"
@@ -2136,19 +2220,29 @@ export function ArtistProfile({
                     document.getElementById("portfolio-image-input")?.click()
                   }
                 >
-                  Upar imagem
+                  Upar imagens
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  {portfolioImage ? portfolioImage.name : "Nenhum arquivo selecionado"}
+                  {portfolioImages.length > 0
+                    ? `${portfolioImages.length} arquivo(s) selecionado(s)`
+                    : "Nenhum arquivo selecionado"}
                 </span>
                 <Input
                   id="portfolio-image-input"
                   type="file"
                   accept="image/*"
+                  multiple
                   className="hidden"
                   onChange={handlePortfolioImageChange}
                 />
               </div>
+              {portfolioImages.length > 0 ? (
+                <ul className="space-y-1 text-xs text-muted-foreground">
+                  {portfolioImages.map((file) => (
+                    <li key={`${file.name}-${file.lastModified}`}>{file.name}</li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
           </div>
           <DialogFooter>
@@ -2163,7 +2257,7 @@ export function ArtistProfile({
             </Button>
             <Button
               onClick={handlePortfolioSubmit}
-              disabled={!portfolioImage || isUploadingPortfolio}
+              disabled={portfolioImages.length === 0 || isUploadingPortfolio}
             >
               {isUploadingPortfolio ? "Enviando..." : "Enviar"}
             </Button>

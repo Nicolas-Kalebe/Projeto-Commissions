@@ -11,7 +11,7 @@ export const API_ROUTES = {
     obterUsuarioPorToken: `${API_BASE_URL}/api/Usuario/ObterUsuarioPorToken`,
     obterPerfilArtista: `${API_BASE_URL}/api/Usuario/ObterPerfilArtista`,
     atualizarFotoUsuario: `${API_BASE_URL}/api/Usuario/AtualizarFotoUsuario`,
-    atualizarPortfolio: `${API_BASE_URL}/api/Usuario/AtualizarPortfolio`,
+    cadastrarPortfolio: `${API_BASE_URL}/api/Usuario/CadastrarPortfolio`,
   },
   Interacao: {
     curtirPortfolio: `${API_BASE_URL}/api/Interacao/CurtirPortfolio`,
