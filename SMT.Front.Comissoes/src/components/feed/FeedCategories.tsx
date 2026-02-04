@@ -18,8 +18,14 @@ export function FeedCategories({ activeCategory, onCategoryChange }: FeedCategor
     return (
         <div className="space-y-4">
             <div className="group categories-full-bleed mx-auto w-full max-w-6xl overflow-hidden">
-                <Carousel opts={{ align: "start", slidesToScroll: 'auto' }} className="w-full">
-                    <CarouselContent className="categories-carousel-content gap-3">
+                <Carousel
+                    opts={{ align: "start", slidesToScroll: "auto", dragFree: true, containScroll: "trimSnaps" }}
+                    className="w-full"
+                >
+                    <CarouselContent
+                        viewportClassName="cursor-grab active:cursor-grabbing"
+                        className="categories-carousel-content gap-3"
+                    >
                         {categoryFilters.map((filter) => {
                             const isActive = activeCategory === filter.key
                             return (
