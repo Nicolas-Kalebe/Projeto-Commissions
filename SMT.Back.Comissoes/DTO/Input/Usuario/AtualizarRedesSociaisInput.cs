@@ -6,6 +6,6 @@ namespace SMT.Back.Comissoes.DTO.Input.Usuario
     {
         public string TokenGoogle { get; set; }
         public string RedeSocial { get; set; }
-        public string Url { get; set; }
+        public string Usuario { get; set; }
     }
 }

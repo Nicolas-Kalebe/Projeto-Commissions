@@ -21,6 +21,7 @@ namespace SMT.Back.Comissoes.Models.Entity
         public string? FotoPerfil { get; set; } // Url da foto de perfil do usuário (opcional)
         public string? FotoCapa { get; set; } // Url da foto de capa do usuário (opcional)
         public string? Bio { get; set; } // Biografia do usuário (opcional)
+        public string? EstiloDescricao { get; set; } // Descrição do estilo do usuário (opcional)
         [Required]
         public DateTime DataCriacao { get; set; } // Data de criação do registro
         public DateTime? DataAtualizacao { get; set; } // Data da última atualização do registro (opcional)

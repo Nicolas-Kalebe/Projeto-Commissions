@@ -9,12 +9,13 @@ namespace SMT.Back.Comissoes.Services.Interfaces
     {
         Task CadastrarUsuario(CadastrarUsuarioInput usuarioInput);
         Task<StatusEnum> ObterStatusUsuario(ValidarUsuarioGoogleInput obterStatusInput);
+        Task<Usuario> ObterUsuarioPorToken(ValidarUsuarioGoogleInput obterTokenGoogleInput);
+        Task AtualizarPerfilUsuario(AtualizarPerfilUsuarioInput atualizarPerfilUsuarioInput);
+        Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput);
+        Task AtualizarRedesSociais(AtualizarRedesSociaisInput atualizarRedesSociaisInput);
         Task CadastrarArtista(CadastrarArtistaInput cadastrarArtistaInput);
         Task<Artista> ObterPerfilArtista(ValidarUsuarioGoogleInput obterArtistaInput);
         Task CadastrarPortfolioAsync(CadastrarPortfolioInput atualizarPortfolioInput);
-        Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput);
-        Task<Usuario> ObterUsuarioPorToken(ValidarUsuarioGoogleInput obterTokenGoogleInput);
-        Task AtualizarRedesSociais(AtualizarRedesSociaisInput atualizarRedesSociaisInput);
 
     }
 }

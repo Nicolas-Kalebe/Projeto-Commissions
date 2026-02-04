@@ -127,6 +127,21 @@ namespace SMT.Back.Comissoes.Services
             var usuarioStatus = await _usuarioRepository.ObterStatusUsuario(userGoogle.Email);
             return usuarioStatus;
         }
+        public async Task AtualizarPerfilUsuario(AtualizarPerfilUsuarioInput atualizarPerfilUsuarioInput)
+        {
+            var userGoogle = await _authService.ValidarTokenGoogle(atualizarPerfilUsuarioInput.TokenGoogle);
+            var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
+            
+            var usuarioAtualizado = new Usuario
+            {
+                Id = usuario.Id,
+                NomePerfil = atualizarPerfilUsuarioInput.NomePerfil ?? usuario.NomePerfil,
+                Bio = atualizarPerfilUsuarioInput.Bio ?? usuario.Bio,
+                EstiloDescricao = atualizarPerfilUsuarioInput.EstiloDescricao ?? usuario.EstiloDescricao
+            };
+
+            await _usuarioRepository.AtualizarPerfilUsuario(usuarioAtualizado);
+        }
         public async Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput)
         {
             var userGoogle = await _authService.ValidarTokenGoogle(atualizarFotoUsuarioInput.TokenGoogle);
@@ -166,36 +181,20 @@ namespace SMT.Back.Comissoes.Services
         }
         public async Task CadastrarArtista(CadastrarArtistaInput cadastrarArtistaInput)
         {
-            await _usuarioRepository.ObterUsuarioPorId(cadastrarArtistaInput.UsuarioId);
             var usuario = await _usuarioRepository.ObterUsuarioPorId(cadastrarArtistaInput.UsuarioId);
             var artista = new Artista
             {
                 UsuarioId = usuario.Id,
             };
-            usuario.JaAnunciou = true;
-            await _usuarioRepository.CadastrarArtista(artista);
+            await _usuarioRepository.CadastrarArtista(artista, usuario.Id);
         }
 
         public async Task<Artista> ObterPerfilArtista(ValidarUsuarioGoogleInput obterArtistaInput)
         {
             var userGoogle = await _authService.ValidarTokenGoogle(obterArtistaInput.TokenGoogle);
             var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
-            if (usuario == null)
-                throw new ExcecaoPersonalizada(
-                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
-                    "Usuário não encontrado.",
-                    () => Log.Error("Usuário não encontrado para o email: {Email}", userGoogle.Email),
-                    (int)System.Net.HttpStatusCode.NotFound
-                );
-            var artista = await _usuarioRepository.ObterArtistaPorUsuarioId(usuario.Id);
-            if (artista == null)
-                throw new ExcecaoPersonalizada(
-                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
-                    "Perfil de artista não encontrado para o usuário.",
-                    () => Log.Error("Perfil de artista não encontrado para o usuário ID: {UsuarioId}", usuario.Id),
-                    (int)System.Net.HttpStatusCode.NotFound
-                );
 
+            var artista = await _usuarioRepository.ObterArtistaPorUsuarioId(usuario.Id);
             if (artista.PortfolioItens != null)
             {
                 foreach (var item in artista.PortfolioItens)
@@ -280,17 +279,11 @@ namespace SMT.Back.Comissoes.Services
         {
             var userGoogle = await _authService.ValidarTokenGoogle(atualizarRedesSociaisInput.TokenGoogle);
             var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
-            if (usuario == null)
-                throw new ExcecaoPersonalizada(
-                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
-                    "Usuário não encontrado.",
-                    () => Log.Error($"Usuário não encontrado para o email: {userGoogle.Email}"),
-                    (int)System.Net.HttpStatusCode.NotFound
-                );
+
             var redeSocial = new RedeSocial
             {
                 Titulo = atualizarRedesSociaisInput.RedeSocial,
-                Url = atualizarRedesSociaisInput.Url,
+                Url = atualizarRedesSociaisInput.Usuario,
                 UsuarioId = usuario.Id
             };
             await _usuarioRepository.AtualizarRedesSociais(redeSocial);

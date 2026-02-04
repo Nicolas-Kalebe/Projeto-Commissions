@@ -9,12 +9,13 @@ namespace SMT.Back.Comissoes.Repositories.Interfaces
         Task<bool> VerificaUsuarioExistePorNomePerfil(string nomeUsuario);
         Task CadastrarUsuario(Usuario usuario);
         Task<StatusEnum> ObterStatusUsuario(string email);
-        Task<Usuario> ObterUsuarioPorId(int id);
-        Task CadastrarArtista(Artista artista);
         Task<Usuario> ObterUsuarioPorEmail(string email);
-        Task<Artista> ObterArtistaPorUsuarioId(int usuarioId);
-        Task CadastrarPortfolioArtista(int artistaId, PortfolioItem portfolioItem);
+        Task<Usuario> ObterUsuarioPorId(int id);
+        Task AtualizarPerfilUsuario(Usuario usuarioAtualizado);
         Task AtualizarFotoPerfil(int usuarioId, string fotoPerfilUrl, TipoFotoPerfilEnum tipoFotoPerfilEnum);
         Task AtualizarRedesSociais(RedeSocial redesSociais);
+        Task CadastrarArtista(Artista artista, int usuarioId);
+        Task<Artista> ObterArtistaPorUsuarioId(int usuarioId);
+        Task CadastrarPortfolioArtista(int artistaId, PortfolioItem portfolioItem);
     }
 }
