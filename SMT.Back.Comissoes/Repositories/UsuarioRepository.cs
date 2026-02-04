@@ -76,6 +76,7 @@ namespace SMT.Back.Comissoes.Repositories
             var artista = await _context.Artistas
                 .AsNoTracking()
                 .Include(a => a.Usuario)
+                    .ThenInclude(u => u.RedesSociais)
                 .Include(a => a.PortfolioItens)
                     .ThenInclude(p => p.Imagens)
                 .FirstOrDefaultAsync(a => a.UsuarioId == usuarioId);
