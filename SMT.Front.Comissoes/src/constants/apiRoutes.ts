@@ -10,7 +10,9 @@ export const API_ROUTES = {
     obterStatusUsuario: `${API_BASE_URL}/api/Usuario/ObterStatusUsuario`,
     obterUsuarioPorToken: `${API_BASE_URL}/api/Usuario/ObterUsuarioPorToken`,
     obterPerfilArtista: `${API_BASE_URL}/api/Usuario/ObterPerfilArtista`,
+    atualizarPerfilUsuario: `${API_BASE_URL}/api/Usuario/AtualizarPerfilUsuario`,
     atualizarFotoUsuario: `${API_BASE_URL}/api/Usuario/AtualizarFotoUsuario`,
+    atualizarRedesSociais: `${API_BASE_URL}/api/Usuario/AtualizarRedesSociais`,
     cadastrarPortfolio: `${API_BASE_URL}/api/Usuario/CadastrarPortfolio`,
   },
   Interacao: {

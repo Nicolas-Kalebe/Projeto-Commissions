@@ -248,6 +248,15 @@ const emptySocialLinks: Record<SocialLinkKey, string> = {
   artstation: "",
 }
 
+const socialNetworkTitleMap: Record<SocialLinkKey, string> = {
+  twitter: "Twitter",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  youtube: "YouTube",
+  twitch: "Twitch",
+  artstation: "ArtStation",
+}
+
 const parsePortfolioImages = (value: unknown): BackendPortfolioItemImagem[] => {
   if (!Array.isArray(value)) return []
   return value.flatMap((entry) => {
@@ -481,6 +490,7 @@ export function ArtistProfile({
   const [showServices, setShowServices] = useState(true)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [isUploadingCover, setIsUploadingCover] = useState(false)
+  const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [backendProfile, setBackendProfile] = useState<BackendArtistProfile | null>(null)
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
   const [profileOverrides, setProfileOverrides] = useState<ProfileOverrides | null>(null)
@@ -1062,18 +1072,74 @@ export function ArtistProfile({
     if (nextOverrides.styleTags && nextOverrides.styleTags.length === 0) {
       delete nextOverrides.styleTags
     }
-    let updatedCoverUrl = nextOverrides.coverUrl
-    if (draftCoverFile && !isMockUser) {
-      const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
+
+    const hasPerfilFieldsToSync = Boolean(
+      nextOverrides.displayName || nextOverrides.bio || nextOverrides.styleDescription
+    )
+    const shouldSyncProfileData = !isMockUser && (hasPerfilFieldsToSync || socialEntries.length > 0)
+
+    let tokenGoogle = ""
+    if (!isMockUser && (shouldSyncProfileData || Boolean(draftCoverFile))) {
+      tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
       if (!tokenGoogle) {
         toast({
           title: "Sessao expirada",
-          description: "Faca login novamente para atualizar a capa.",
+          description: "Faca login novamente para salvar suas alteracoes.",
           variant: "destructive",
         })
         return
       }
+    }
 
+    if (shouldSyncProfileData) {
+      setIsSavingProfile(true)
+      try {
+        if (hasPerfilFieldsToSync) {
+          const responsePerfil = await fetch(API_ROUTES.Usuario.atualizarPerfilUsuario, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tokenGoogle,
+              nomePerfil: nextOverrides.displayName,
+              bio: nextOverrides.bio,
+              estiloDescricao: nextOverrides.styleDescription,
+            }),
+          })
+          if (!responsePerfil.ok) {
+            throw new Error("Falha ao atualizar dados do perfil")
+          }
+        }
+
+        for (const [key, handle] of socialEntries) {
+          const response = await fetch(API_ROUTES.Usuario.atualizarRedesSociais, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tokenGoogle,
+              redeSocial: socialNetworkTitleMap[key],
+              usuario: handle,
+            }),
+          })
+          if (!response.ok) {
+            throw new Error(`Falha ao atualizar ${key}`)
+          }
+        }
+
+        await refreshBackendProfile(tokenGoogle)
+      } catch {
+        toast({
+          title: "Erro ao atualizar perfil",
+          description: "Nao foi possivel salvar bio, estilo ou redes sociais agora.",
+          variant: "destructive",
+        })
+        return
+      } finally {
+        setIsSavingProfile(false)
+      }
+    }
+
+    let updatedCoverUrl = nextOverrides.coverUrl
+    if (draftCoverFile && !isMockUser) {
       setIsUploadingCover(true)
       try {
         const formData = new FormData()
@@ -2601,9 +2667,9 @@ const activePriceSheets: ServiceSheet[] = [
               <Button
                 className="ml-auto bg-white text-black hover:bg-white/90"
                 onClick={handleProfileSave}
-                disabled={isUploadingCover}
+                disabled={isUploadingCover || isSavingProfile}
               >
-                {isUploadingCover ? "Salvando..." : "Salvar"}
+                {isUploadingCover || isSavingProfile ? "Salvando..." : "Salvar"}
               </Button>
             </DialogFooter>
           </div>
