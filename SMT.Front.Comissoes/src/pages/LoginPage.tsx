@@ -19,6 +19,36 @@ type GoogleCredentialPayload = {
     name?: string
 }
 
+type GoogleAccountsId = {
+    initialize: (config: {
+        client_id: string
+        use_fedcm_for_prompt?: boolean
+        callback: (response: GoogleCredentialResponse) => void | Promise<void>
+    }) => void
+    renderButton: (parent: HTMLElement, options: { theme: string; size: string; width: number }) => void
+}
+
+type GoogleClient = {
+    accounts?: {
+        id?: GoogleAccountsId
+    }
+}
+
+const parseStatusUsuario = (rawStatus: unknown): number | null => {
+    if (typeof rawStatus === "number" && Number.isFinite(rawStatus)) return rawStatus
+
+    if (typeof rawStatus === "string") {
+        const normalized = rawStatus.trim().toLowerCase()
+        const parsed = Number(normalized)
+        if (!Number.isNaN(parsed)) return parsed
+        if (normalized === "ativo") return 1
+        if (normalized === "inativo") return 2
+        if (normalized === "deletado") return 3
+    }
+
+    return null
+}
+
 const decodeJwtPayload = (token: string): GoogleCredentialPayload | null => {
     try {
         const payload = token.split(".")[1]
@@ -40,11 +70,41 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     }
 
     useEffect(() => {
+    const isUserAlreadyRegistered = async (googleToken: string) => {
+        try {
+            const statusResponse = await fetch(API_ROUTES.Usuario.obterStatusUsuario, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tokenGoogle: googleToken }),
+            })
+
+            if (statusResponse.ok) {
+                const body = await statusResponse.json().catch(() => null)
+                const rawStatus = body?.resultado ?? body?.Resultado
+                const statusUsuario = parseStatusUsuario(rawStatus)
+                if (statusUsuario !== null) return statusUsuario === 1
+            }
+        } catch {
+            // Fallback below.
+        }
+
+        try {
+            const usuarioResponse = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tokenGoogle: googleToken }),
+            })
+            return usuarioResponse.ok
+        } catch {
+            return false
+        }
+    }
+
     const getClientId = () =>
         document.querySelector('meta[name="google-signin-client_id"]')?.getAttribute("content") || "";
 
     const renderGoogleButton = () => {
-        const google = (window as any).google;
+        const google = (window as Window & { google?: GoogleClient }).google;
         // Se o google ou o accounts ainda não existem, paramos aqui
         if (!google?.accounts?.id) return;
 
@@ -58,33 +118,14 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             use_fedcm_for_prompt: false, // Ajuda a silenciar aquele erro 403
             callback: async (response: GoogleCredentialResponse) => {
                 if (response?.credential) {
-                    let statusUsuario: number | null = null
                     const payload = decodeJwtPayload(response.credential);
                     if (payload?.email) localStorage.setItem("google_email", payload.email);
                     if (payload?.picture) localStorage.setItem("google_photo", payload.picture);
                     if (payload?.name) localStorage.setItem("google_name", payload.name);
                     localStorage.setItem("google_token", response.credential);
 
-                    try {
-                        const statusResponse = await fetch(API_ROUTES.Usuario.obterStatusUsuario, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ googleToken: response.credential }),
-                        })
-
-                        if (statusResponse.ok) {
-                            const body = await statusResponse.json().catch(() => null)
-                            const rawStatus = body?.resultado ?? body?.Resultado
-                            const parsedStatus = Number(rawStatus)
-                            if (!Number.isNaN(parsedStatus)) {
-                                statusUsuario = parsedStatus
-                            }
-                        }
-                    } catch {
-                        statusUsuario = null
-                    }
-
-                    if (statusUsuario === 1) {
+                    const usuarioExiste = await isUserAlreadyRegistered(response.credential)
+                    if (usuarioExiste) {
                         onLogin()
                         navigate("/inicio")
                         return

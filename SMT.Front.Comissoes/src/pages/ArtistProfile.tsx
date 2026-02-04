@@ -555,7 +555,7 @@ export function ArtistProfile({
     const response = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ googleToken: tokenGoogle }),
+      body: JSON.stringify({ tokenGoogle }),
     })
     if (!response.ok) return
     const body = await response.json().catch(() => null)
@@ -581,7 +581,7 @@ export function ArtistProfile({
         const response = await fetch(API_ROUTES.Usuario.obterPerfilArtista, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ googleToken: tokenGoogle }),
+          body: JSON.stringify({ tokenGoogle }),
         })
         if (!response.ok) return
 
@@ -1285,7 +1285,7 @@ const activePriceSheets: ServiceSheet[] = [
       const refresh = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ googleToken: tokenGoogle }),
+        body: JSON.stringify({ tokenGoogle }),
       })
 
       if (refresh.ok) {
@@ -1459,7 +1459,7 @@ const activePriceSheets: ServiceSheet[] = [
     const response = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ googleToken: tokenGoogle }),
+      body: JSON.stringify({ tokenGoogle }),
     })
     if (!response.ok) return
     const body = await response.json().catch(() => null)
@@ -1777,11 +1777,11 @@ const activePriceSheets: ServiceSheet[] = [
                 {canEditProfile ? (
                   <button
                     type="button"
-                    className="group flex min-h-[220px] w-full items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/40 text-muted-foreground transition hover:border-foreground/40 hover:text-foreground"
+                    className="group flex min-h-[220px] w-full cursor-pointer items-center justify-center rounded-xl border border-dashed border-zinc-500/60 bg-card/40 text-muted-foreground transition hover:border-zinc-700/70 hover:text-foreground dark:border-border/60 dark:hover:border-foreground/40"
                     onClick={() => setIsAddServiceOpen(true)}
                   >
                     <div className="flex flex-col items-center gap-2">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-border/60 text-3xl font-semibold">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-zinc-500/60 text-3xl font-semibold dark:border-border/60">
                         +
                       </div>
                       <span className="text-sm font-semibold">
@@ -1812,11 +1812,11 @@ const activePriceSheets: ServiceSheet[] = [
               <div className="space-y-4">
                 <button
                   type="button"
-                  className="group flex min-h-[220px] w-full items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/40 text-muted-foreground transition hover:border-foreground/40 hover:text-foreground"
+                  className="group flex min-h-[220px] w-full cursor-pointer items-center justify-center rounded-xl border border-dashed border-zinc-500/60 bg-card/40 text-muted-foreground transition hover:border-zinc-700/70 hover:text-foreground dark:border-border/60 dark:hover:border-foreground/40"
                   onClick={() => setIsAddServiceOpen(true)}
                 >
                   <div className="flex flex-col items-center gap-2">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-border/60 text-3xl font-semibold">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-zinc-500/60 text-3xl font-semibold dark:border-border/60">
                       +
                     </div>
                     <span className="text-sm font-semibold">
@@ -1839,11 +1839,11 @@ const activePriceSheets: ServiceSheet[] = [
                 {canEditProfile && (
                   <button
                     type="button"
-                    className="group flex aspect-[4/3] items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/40 text-muted-foreground transition hover:border-foreground/40 hover:text-foreground"
+                    className="group flex aspect-[4/3] cursor-pointer items-center justify-center rounded-xl border border-dashed border-zinc-500/60 bg-card/40 text-muted-foreground transition hover:border-zinc-700/70 hover:text-foreground dark:border-border/60 dark:hover:border-foreground/40"
                     onClick={() => setIsAddPortfolioOpen(true)}
                   >
                     <div className="flex flex-col items-center gap-2">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-border/60 text-3xl font-semibold">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-zinc-500/60 text-3xl font-semibold dark:border-border/60">
                         +
                       </div>
                       <span className="text-sm font-semibold">

@@ -101,7 +101,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
         const response = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ googleToken: tokenGoogle }),
+          body: JSON.stringify({ tokenGoogle }),
         })
         if (!response.ok) return
         const body = await response.json().catch(() => null)
