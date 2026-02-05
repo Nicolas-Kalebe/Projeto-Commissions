@@ -15,6 +15,7 @@ namespace SMT.Back.Comissoes.Models.Entity
         [Required]
         public CargoArtistaEnum CargoArtista { get; set; }
         public PrazoEntregaEnum? PrazoMedioEntrega { get; set; }
+        public List<string>? TagsArtista { get; set; }
         public ICollection<PortfolioItem> PortfolioItens { get; set; } = new List<PortfolioItem>();
         public double Avaliacao { get; set; }
         public bool AtivoParaServicos { get; set; }

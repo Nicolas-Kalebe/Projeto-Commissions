@@ -7,5 +7,6 @@ namespace SMT.Back.Comissoes.DTO.Input.UsuarioController
         public int UsuarioId { get; set; }
         public CargoArtistaEnum CargoArtista { get; set; }
         public PrazoEntregaEnum? PrazoMedioEntrega { get; set; }
+        public List<string>? TagsArtista { get; set; }
     }
 }

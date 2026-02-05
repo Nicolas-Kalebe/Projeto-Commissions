@@ -16,6 +16,7 @@ namespace SMT.Back.Comissoes.Services.Interfaces
         Task AtualizarRedesSociais(AtualizarRedesSociaisInput atualizarRedesSociaisInput);
         Task CadastrarArtista(CadastrarArtistaInput cadastrarArtistaInput);
         Task<ObterPerfilArtistaOutput> ObterPerfilArtista(ValidarUsuarioGoogleInput obterArtistaInput);
+        Task<AtualizarPerfilArtistaOutput> AtualizarPerfilArtista(AtualizarPerfilArtistaInput atualizarPerfilArtistaInput);
         Task CadastrarPortfolioAsync(CadastrarPortfolioInput atualizarPortfolioInput);
 
     }

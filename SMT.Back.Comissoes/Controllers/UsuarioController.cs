@@ -133,6 +133,18 @@ namespace SMT.Back.Comissoes.Controllers
                 Resultado = artista
             });
         }
+        [HttpPatch]
+        public async Task<IActionResult> AtualizarPerfilArtista([FromBody] AtualizarPerfilArtistaInput atualizarPerfilArtistaInput)
+        {
+            var artista = await _usuarioService.AtualizarPerfilArtista(atualizarPerfilArtistaInput);
+            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
+            {
+                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
+                StatusHttp = (int)HttpStatusCode.OK,
+                Mensagem = "Perfil de artista atualizado com sucesso.",
+                Resultado = artista
+            });
+        }
         [HttpPost]
         public async Task<IActionResult> CadastrarPortfolio([FromForm] CadastrarPortfolioInput cadastrarPortfolioInput)
         {

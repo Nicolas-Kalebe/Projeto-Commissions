@@ -100,6 +100,12 @@ namespace SMT.Back.Comissoes.Repositories
             }
             await _context.SaveChangesAsync();
         }
+        public async Task AtualizarRedesSociais(RedeSocial redesSociais)
+        {
+            var usuario = await _context.Usuarios.FindAsync(redesSociais.UsuarioId);
+            usuario.RedesSociais.Add(redesSociais);
+            await _context.SaveChangesAsync();
+        }
         public async Task CadastrarArtista(Artista artista, int usuarioId)
         {
             var usuario = await _context.Usuarios.FindAsync(usuarioId);
@@ -126,7 +132,11 @@ namespace SMT.Back.Comissoes.Repositories
             }
             return artista;
         }
-
+        public async Task AtualizarPerfilArtista(Artista artista)
+        {
+            _context.Artistas.Update(artista);
+            await _context.SaveChangesAsync();
+        }
         public async Task CadastrarPortfolioArtista(int artistaId, PortfolioItem portfolioItem)
         {
             var artista = await _context.Artistas
@@ -141,13 +151,6 @@ namespace SMT.Back.Comissoes.Repositories
                     (int)System.Net.HttpStatusCode.NotFound
                 );
             artista.PortfolioItens.Add(portfolioItem);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task AtualizarRedesSociais(RedeSocial redesSociais)
-        {
-            var usuario = await _context.Usuarios.FindAsync(redesSociais.UsuarioId);
-            usuario.RedesSociais.Add(redesSociais);
             await _context.SaveChangesAsync();
         }
 

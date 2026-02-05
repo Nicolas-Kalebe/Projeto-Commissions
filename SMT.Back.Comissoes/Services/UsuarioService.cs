@@ -280,7 +280,8 @@ namespace SMT.Back.Comissoes.Services
             {
                 UsuarioId = usuario.Id,
                 CargoArtista = cadastrarArtistaInput.CargoArtista,
-                PrazoMedioEntrega = cadastrarArtistaInput.PrazoMedioEntrega
+                PrazoMedioEntrega = cadastrarArtistaInput.PrazoMedioEntrega,
+                TagsArtista = cadastrarArtistaInput.TagsArtista
             };
 
             await _usuarioRepository.CadastrarArtista(artista, usuario.Id);
@@ -330,6 +331,29 @@ namespace SMT.Back.Comissoes.Services
             };
 
             return obterPerfilArtistaOutput;
+        }
+        public async Task<AtualizarPerfilArtistaOutput> AtualizarPerfilArtista(AtualizarPerfilArtistaInput atualizarPerfilArtistaInput)
+        {
+            
+            var artista = await _usuarioRepository.ObterArtistaPorUsuarioId(atualizarPerfilArtistaInput.UsuarioId);
+
+            if (atualizarPerfilArtistaInput.CargoArtista.HasValue)
+                artista.CargoArtista = atualizarPerfilArtistaInput.CargoArtista ?? artista.CargoArtista;
+            
+            if (atualizarPerfilArtistaInput.PrazoMedioEntrega.HasValue)
+                artista.PrazoMedioEntrega = atualizarPerfilArtistaInput.PrazoMedioEntrega ?? artista.PrazoMedioEntrega;
+            
+            if (atualizarPerfilArtistaInput.EstiloDescricao != null)
+                artista.Estilo = atualizarPerfilArtistaInput.EstiloDescricao;
+            
+            await _usuarioRepository.AtualizarPerfilArtista(artista);
+
+            return new AtualizarPerfilArtistaOutput
+            {
+                CargoArtista = artista.CargoArtista.obterDescricaoEnum(),
+                PrazoMedioEntrega = artista.PrazoMedioEntrega?.obterDescricaoEnum(),
+                EstiloDescricao = artista.Estilo
+            };
         }
         public async Task CadastrarPortfolioAsync(CadastrarPortfolioInput cadastrarPortfolioInput)
         {
