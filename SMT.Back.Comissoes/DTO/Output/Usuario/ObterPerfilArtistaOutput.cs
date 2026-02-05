@@ -13,6 +13,7 @@ namespace SMT.Back.Comissoes.DTO.Output.Usuario
         public string? Estilo { get; set; }
         public string CargoArtista { get; set; } = string.Empty;
         public string? PrazoMedioEntrega { get; set; }
+        public List<string> TagsArtista { get; set; }
         public ICollection<PortfolioItem> PortfolioItens { get; set; } = new List<PortfolioItem>();
         public double Avaliacao { get; set; }
         public bool AtivoParaServicos { get; set; }

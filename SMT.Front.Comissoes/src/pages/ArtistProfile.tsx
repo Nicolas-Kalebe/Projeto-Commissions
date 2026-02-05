@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -23,6 +23,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { arts, priceSheets, users } from "@/data"
 import { PriceSheetRow } from "@/components/profile/PriceSheetRow"
 import {
@@ -65,9 +71,13 @@ type PortfolioPost = {
 }
 
 type BackendArtistProfile = {
+  usuarioId?: number
   avaliacao?: number
   estilo?: string
   tipoArtista?: string
+  cargoArtista?: string
+  prazoMedioEntrega?: string
+  tagsArtista?: string[]
   portifolioUrl?: string
   usuarioFotoCapa?: string
   ativoParaServicos?: boolean
@@ -75,6 +85,8 @@ type BackendArtistProfile = {
   usuarioNome?: string
   usuarioFotoPerfil?: string
   usuarioSeguidores?: number
+  usuarioBio?: string
+  usuarioPronome?: string
   socialLinks?: Partial<Record<SocialLinkKey, string>>
   portfolioItens?: BackendPortfolioItem[]
 }
@@ -136,6 +148,9 @@ type ProfileDraft = {
   socialLinks: Record<SocialLinkKey, string>
 }
 
+const userFetchGuard = { token: "", ts: 0 }
+const artistFetchGuard = { token: "", ts: 0 }
+
 const readField = <T,>(source: Record<string, unknown>, ...keys: string[]) => {
   for (const key of keys) {
     const value = source[key]
@@ -149,6 +164,76 @@ const splitCommaList = (value: string) =>
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean)
+
+const normalizeDraftValue = (value: string) => value.trim()
+
+const normalizeTagsForCompare = (value: string) =>
+  splitCommaList(value)
+    .map((item) => item.toLowerCase())
+    .sort()
+    .join(",")
+
+const normalizePronounLabel = (value?: string) => {
+  if (!value) return undefined
+  const normalized = value.trim().toLowerCase()
+  if (normalized === "ela/dela") return "Ela/dela"
+  if (normalized === "ele/dele") return "Ele/dele"
+  if (normalized === "elu/delu") return "Elu/Delu"
+  if (normalized.includes("não") || normalized.includes("nao")) return "Prefiro não informar"
+  return value
+}
+
+const normalizeRoleLabel = (value?: string) => {
+  if (!value) return undefined
+  const normalized = value.trim().toLowerCase()
+  if (normalized.includes("ilustrador")) return "Ilustrador"
+  if (normalized.includes("designer")) return "Designer"
+  if (normalized.includes("concept")) return "Concept artist"
+  if (normalized.includes("animador")) return "Animadora"
+  if (normalized.includes("3d")) return "Modeladora 3D"
+  return value
+}
+
+const normalizeDeliveryLabel = (value?: string) => {
+  if (!value) return undefined
+  const normalized = value.trim().toLowerCase()
+  if (normalized.includes("três") || normalized.includes("tres")) return "1-3 dias"
+  if (normalized.includes("semana")) return "1 semana"
+  if (normalized.includes("meio")) return "2-3 semanas"
+  if (normalized.includes("trinta") || normalized.includes("mês") || normalized.includes("mes")) return "1 mes"
+  return value
+}
+
+const mapPronomeToEnum = (value?: string) => {
+  if (!value) return undefined
+  const normalized = value.trim().toLowerCase()
+  if (normalized === "ela/dela") return 1
+  if (normalized === "ele/dele") return 2
+  if (normalized === "elu/delu") return 3
+  if (normalized.includes("prefiro") || normalized.includes("não") || normalized.includes("nao")) return 4
+  return undefined
+}
+
+const mapCargoToEnum = (value?: string) => {
+  if (!value) return undefined
+  const normalized = value.trim().toLowerCase()
+  if (normalized.includes("ilustrador")) return 1
+  if (normalized.includes("designer")) return 2
+  if (normalized.includes("concept")) return 3
+  if (normalized.includes("animador")) return 4
+  if (normalized.includes("3d")) return 5
+  return undefined
+}
+
+const mapPrazoToEnum = (value?: string) => {
+  if (!value) return undefined
+  const normalized = value.trim().toLowerCase()
+  if (normalized.includes("1-3") || normalized.includes("três") || normalized.includes("tres")) return 1
+  if (normalized.includes("1 semana") || normalized.includes("semana")) return 2
+  if (normalized.includes("2-3") || normalized.includes("meio")) return 3
+  if (normalized.includes("1 mes") || normalized.includes("mês") || normalized.includes("mes") || normalized.includes("trinta")) return 4
+  return undefined
+}
 
 const normalizeSocialHandle = (value: string) => {
   const trimmed = value.trim()
@@ -372,11 +457,10 @@ function PortfolioPreviewCard({ post, onOpen }: PortfolioPreviewCardProps) {
                   <button
                     key={`${post.id}-dot-${index}`}
                     type="button"
-                    className={`h-1.5 w-1.5 rounded-full transition ${
-                      index === carouselIndex
-                        ? "bg-white"
-                        : "bg-white/50 hover:bg-white/80"
-                    }`}
+                    className={`h-1.5 w-1.5 rounded-full transition ${index === carouselIndex
+                      ? "bg-white"
+                      : "bg-white/50 hover:bg-white/80"
+                      }`}
                     onClick={(event) => {
                       event.stopPropagation()
                       carouselApi?.scrollTo(index)
@@ -495,6 +579,8 @@ export function ArtistProfile({
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
   const [profileOverrides, setProfileOverrides] = useState<ProfileOverrides | null>(null)
   const [profileDraft, setProfileDraft] = useState<ProfileDraft | null>(null)
+  const [profileDraftInitial, setProfileDraftInitial] = useState<ProfileDraft | null>(null)
+  const profileRequestIdRef = useRef(0)
   const [draftAvatarPreview, setDraftAvatarPreview] = useState("")
   const [draftCoverPreview, setDraftCoverPreview] = useState("")
   const [draftCoverFile, setDraftCoverFile] = useState<File | null>(null)
@@ -538,31 +624,46 @@ export function ArtistProfile({
   const canEditProfile = isOwnerProfile || isMockUser || isRealUser
 
   const applyUserFromTokenResponse = (resultado: Record<string, unknown>) => {
+    const usuarioId = readField<number>(resultado, "id", "Id")
     const usuarioNomePerfil = readField<string>(resultado, "nomePerfil", "NomePerfil")
     const usuarioNome = readField<string>(resultado, "nome", "Nome")
     const usuarioFotoPerfil = readField<string>(resultado, "fotoPerfil", "FotoPerfil")
     const usuarioFotoCapa = readField<string>(resultado, "fotoCapa", "FotoCapa")
     const usuarioSeguidores = readField<number>(resultado, "seguidores", "Seguidores")
+    const usuarioBio = readField<string>(resultado, "bio", "Bio")
+    const usuarioPronome = readField<string>(resultado, "pronome", "Pronome")
     const redesSociais = readField<unknown>(resultado, "redesSociais", "RedesSociais")
     const socialLinks = parseSocialLinks(redesSociais)
     const hasSocialLinks = Object.keys(socialLinks).length > 0
     setBackendProfile((prev) => ({
+      usuarioId: usuarioId ?? prev?.usuarioId,
       avaliacao: prev?.avaliacao,
       estilo: prev?.estilo,
       tipoArtista: prev?.tipoArtista,
+      cargoArtista: prev?.cargoArtista,
+      prazoMedioEntrega: prev?.prazoMedioEntrega,
+      tagsArtista: prev?.tagsArtista,
       portifolioUrl: prev?.portifolioUrl,
       ativoParaServicos: prev?.ativoParaServicos,
       portfolioItens: prev?.portfolioItens,
-      usuarioNomePerfil,
-      usuarioNome,
-      usuarioFotoPerfil,
-      usuarioFotoCapa,
+      usuarioNomePerfil: usuarioNomePerfil ?? prev?.usuarioNomePerfil,
+      usuarioNome: usuarioNome ?? prev?.usuarioNome,
+      usuarioFotoPerfil: usuarioFotoPerfil ?? prev?.usuarioFotoPerfil,
+      usuarioFotoCapa: usuarioFotoCapa ?? prev?.usuarioFotoCapa,
       usuarioSeguidores: usuarioSeguidores ?? prev?.usuarioSeguidores,
+      usuarioBio: usuarioBio ?? prev?.usuarioBio,
+      usuarioPronome: usuarioPronome ?? prev?.usuarioPronome,
       socialLinks: hasSocialLinks ? socialLinks : prev?.socialLinks,
     }))
   }
 
-  const fetchUsuarioPorToken = async (tokenGoogle: string) => {
+  const fetchUsuarioPorToken = async (tokenGoogle: string, force = false) => {
+    const now = Date.now()
+    if (!force && userFetchGuard.token === tokenGoogle && now - userFetchGuard.ts < 1500) {
+      return
+    }
+    userFetchGuard.token = tokenGoogle
+    userFetchGuard.ts = now
     const response = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -575,11 +676,8 @@ export function ArtistProfile({
     applyUserFromTokenResponse(resultado as Record<string, unknown>)
   }
 
+
   useEffect(() => {
-    if (!isRealUser) {
-      setBackendProfile(null)
-      return
-    }
     const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
     if (!tokenGoogle) {
       setBackendProfile(null)
@@ -589,27 +687,49 @@ export function ArtistProfile({
     let isActive = true
     const loadProfile = async () => {
       try {
+        const now = Date.now()
+        if (
+          artistFetchGuard.token === tokenGoogle &&
+          now - artistFetchGuard.ts < 1500 &&
+          backendProfile
+        ) {
+          await fetchUsuarioPorToken(tokenGoogle, true)
+          return
+        }
+        const requestId = ++profileRequestIdRef.current
+        artistFetchGuard.token = tokenGoogle
+        artistFetchGuard.ts = now
         const response = await fetch(API_ROUTES.Usuario.obterPerfilArtista, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ tokenGoogle }),
         })
-        if (!response.ok) return
+        if (!response.ok) {
+          return
+        }
 
         const body = await response.json().catch(() => null)
         const resultado = body?.resultado ?? body?.Resultado
-        if (!resultado || typeof resultado !== "object") return
+        if (!resultado || typeof resultado !== "object") {
+          return
+        }
 
         const resultadoObj = resultado as Record<string, unknown>
-        const usuarioObj =
-          (readField<Record<string, unknown>>(resultadoObj, "usuario", "Usuario") ?? {}) as Record<
-            string,
-            unknown
-          >
-
+        const usuarioId = readField<number>(resultadoObj, "usuarioId", "UsuarioId")
         const avaliacao = readField<number>(resultadoObj, "avaliacao", "Avaliacao")
         const estilo = readField<string>(resultadoObj, "estilo", "Estilo")
         const tipoArtista = readField<string>(resultadoObj, "tipoArtista", "TipoArtista")
+        const cargoArtista = readField<string>(resultadoObj, "cargoArtista", "CargoArtista")
+        const prazoMedioEntrega = readField<string>(
+          resultadoObj,
+          "prazoMedioEntrega",
+          "PrazoMedioEntrega"
+        )
+        const tagsArtista = readField<string[]>(
+          resultadoObj,
+          "tagsArtista",
+          "TagsArtista"
+        )
         const portifolioUrl = readField<string>(
           resultadoObj,
           "portifolioUrl",
@@ -621,30 +741,29 @@ export function ArtistProfile({
         const portfolioItens = parsePortfolioItems(
           readField<unknown>(resultadoObj, "portfolioItens", "PortfolioItens")
         )
-        const usuarioNomePerfil = readField<string>(usuarioObj, "nomePerfil", "NomePerfil")
-        const usuarioNome = readField<string>(usuarioObj, "nome", "Nome")
-        const usuarioFotoPerfil = readField<string>(usuarioObj, "fotoPerfil", "FotoPerfil")
-        const usuarioFotoCapa = readField<string>(usuarioObj, "fotoCapa", "FotoCapa")
-        const usuarioSeguidores = readField<number>(usuarioObj, "seguidores", "Seguidores")
-        const redesSociais = readField<unknown>(usuarioObj, "redesSociais", "RedesSociais")
-        const socialLinks = parseSocialLinks(redesSociais)
 
-        if (!isActive) return
-        setBackendProfile({
+        if (!isActive || requestId !== profileRequestIdRef.current) return
+        setBackendProfile((prev) => ({
+          usuarioId: usuarioId ?? prev?.usuarioId,
           avaliacao,
           estilo,
           tipoArtista,
+          cargoArtista,
+          prazoMedioEntrega,
+          tagsArtista,
           portifolioUrl,
           ativoParaServicos,
           portfolioItens,
-          usuarioNomePerfil,
-          usuarioNome,
-          usuarioFotoPerfil,
-          usuarioFotoCapa,
-          usuarioSeguidores,
-          socialLinks,
-        })
-        await fetchUsuarioPorToken(tokenGoogle)
+          usuarioNomePerfil: prev?.usuarioNomePerfil,
+          usuarioNome: prev?.usuarioNome,
+          usuarioFotoPerfil: prev?.usuarioFotoPerfil,
+          usuarioFotoCapa: prev?.usuarioFotoCapa,
+          usuarioSeguidores: prev?.usuarioSeguidores,
+          usuarioBio: prev?.usuarioBio,
+          usuarioPronome: prev?.usuarioPronome,
+          socialLinks: prev?.socialLinks,
+        }))
+        await fetchUsuarioPorToken(tokenGoogle, true)
       } catch {
         // Silent fallback to existing profile data
       }
@@ -654,11 +773,12 @@ export function ArtistProfile({
     return () => {
       isActive = false
     }
-  }, [isRealUser, currentUser?.id])
+  }, [currentUser?.id])
 
   const gallery = isMockUser
     ? arts.filter((art) => art.artistId === "art-1")
     : []
+
   const extendedGallery = [
     ...gallery,
     ...gallery.map((art, index) => ({
@@ -793,6 +913,9 @@ export function ArtistProfile({
       createdAt: new Date().toISOString(),
     },
   ]
+  const isProfileLoading =
+    !isMockUser &&
+    (!backendProfile || (!backendProfile.usuarioNomePerfil && !backendProfile.usuarioNome))
   const ratingValue = isMockUser
     ? 4.8
     : typeof backendProfile?.avaliacao === "number"
@@ -804,32 +927,33 @@ export function ArtistProfile({
 
   const baseProfileBio = isMockUser
     ? artist.bio
-    : artist.bio?.trim()
-      ? artist.bio
-      : "Bio ainda n?o informada."
+    : backendProfile?.usuarioBio?.trim()
+      ? backendProfile.usuarioBio
+      : artist.bio?.trim()
+        ? artist.bio
+        : "Bio ainda n?o informada."
   const baseStyleDescription = isMockUser
     ? "Tra?o leve com foco em express?es, paleta suave e detalhes delicados para personagens e cenas."
     : backendProfile?.estilo?.trim()
       ? backendProfile.estilo
       : "Estilo ainda n?o informado."
-  const baseStyleTags = isMockUser
-    ? ["Lineart suave", "Cores pasteis", "Chibi"]
-    : (backendProfile?.tipoArtista
-      ? backendProfile.tipoArtista
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean)
-      : [])
+  const baseStyleTags = isProfileLoading
+    ? []
+    : isMockUser
+      ? ["Lineart suave", "Cores pasteis", "Chibi"]
+      : (backendProfile?.tagsArtista ?? [])
   const baseCoverImageUrl =
     !isMockUser && typeof backendProfile?.usuarioFotoCapa === "string" && backendProfile.usuarioFotoCapa.trim()
       ? backendProfile.usuarioFotoCapa
       : !isMockUser && typeof backendProfile?.portifolioUrl === "string" && backendProfile.portifolioUrl.trim()
-      ? backendProfile.portifolioUrl
-      : "/mock_arts/mock_2.jpg"
+        ? backendProfile.portifolioUrl
+        : "/mock_arts/mock_2.jpg"
   const baseDisplayName =
     !isMockUser && typeof backendProfile?.usuarioNomePerfil === "string" && backendProfile.usuarioNomePerfil.trim()
       ? backendProfile.usuarioNomePerfil
-      : artist.nome
+      : !isMockUser && typeof backendProfile?.usuarioNome === "string" && backendProfile.usuarioNome.trim()
+        ? backendProfile.usuarioNome
+        : artist.nome
 
   const resolvedDisplayName = profileOverrides?.displayName ?? baseDisplayName
   const resolvedBio = profileOverrides?.bio ?? baseProfileBio
@@ -840,12 +964,13 @@ export function ArtistProfile({
       : baseStyleTags
   const resolvedCoverImageUrl = profileOverrides?.coverUrl ?? baseCoverImageUrl
   const resolvedAvatarUrl =
-    profileOverrides?.avatarUrl ?? (artist.avatarUrl || backendProfile?.usuarioFotoPerfil || "")
+    profileOverrides?.avatarUrl ??
+    (isProfileLoading ? "" : (artist.avatarUrl || backendProfile?.usuarioFotoPerfil || ""))
 
   const baseBadges = {
-    pronounsBadge: "Ela/dela",
-    roleBadge: "Ilustradora",
-    deliveryBadge: "Entrega em 7 dias",
+    pronounsBadge: normalizePronounLabel(backendProfile?.usuarioPronome) ?? "Ela/dela",
+    roleBadge: normalizeRoleLabel(backendProfile?.cargoArtista ?? backendProfile?.tipoArtista) ?? "Ilustradora",
+    deliveryBadge: normalizeDeliveryLabel(backendProfile?.prazoMedioEntrega) ?? "Entrega em 7 dias",
   }
   const resolvedBadges = {
     pronounsBadge: profileOverrides?.pronounsBadge ?? baseBadges.pronounsBadge,
@@ -865,9 +990,6 @@ export function ArtistProfile({
     ...baseSocialLinks,
   })
   const handleSource = resolvedDisplayName
-    !isMockUser && typeof backendProfile?.usuarioNomePerfil === "string" && backendProfile.usuarioNomePerfil.trim()
-      ? backendProfile.usuarioNomePerfil
-      : artist.nome
 
   const initials = resolvedDisplayName
     .split(" ")
@@ -941,18 +1063,24 @@ export function ArtistProfile({
 
   useEffect(() => {
     if (!isEditProfileOpen) return
-    setProfileDraft({
-      displayName: resolvedDisplayName,
-      bio: resolvedBio,
+    const initialDraft: ProfileDraft = {
+      displayName: !isMockUser && backendProfile?.usuarioNomePerfil
+        ? backendProfile.usuarioNomePerfil
+        : artist.nome,
+      bio: backendProfile?.usuarioBio ?? "",
       avatarUrl: resolvedAvatarUrl,
       coverUrl: resolvedCoverImageUrl,
-      pronounsBadge: resolvedBadges.pronounsBadge,
-      roleBadge: resolvedBadges.roleBadge,
-      deliveryBadge: resolvedBadges.deliveryBadge,
-      styleDescription: resolvedStyleDescription,
-      styleTags: resolvedStyleTags.join(", "),
+      pronounsBadge: normalizePronounLabel(backendProfile?.usuarioPronome) ?? "",
+      roleBadge: normalizeRoleLabel(backendProfile?.cargoArtista ?? backendProfile?.tipoArtista) ?? "",
+      deliveryBadge: normalizeDeliveryLabel(backendProfile?.prazoMedioEntrega) ?? "",
+      styleDescription: backendProfile?.estilo ?? "",
+      styleTags: (backendProfile?.tagsArtista ?? []).join(", "),
       socialLinks: { ...emptySocialLinks, ...resolvedSocialLinks },
+    }
+    setProfileDraft({
+      ...initialDraft,
     })
+    setProfileDraftInitial(initialDraft)
     setDraftCoverFile(null)
   }, [isEditProfileOpen])
 
@@ -1051,33 +1179,63 @@ export function ArtistProfile({
 
   const handleProfileSave = async () => {
     if (!profileDraft) return
+    const initialDraft = profileDraftInitial
+    const displayNameChanged =
+      Boolean(initialDraft) &&
+      normalizeDraftValue(profileDraft.displayName) !== normalizeDraftValue(initialDraft!.displayName)
+    const bioChanged =
+      Boolean(initialDraft) &&
+      normalizeDraftValue(profileDraft.bio) !== normalizeDraftValue(initialDraft!.bio)
+    const pronounsChanged =
+      Boolean(initialDraft) &&
+      normalizeDraftValue(profileDraft.pronounsBadge) !== normalizeDraftValue(initialDraft!.pronounsBadge)
+    const styleDescriptionChanged =
+      Boolean(initialDraft) &&
+      normalizeDraftValue(profileDraft.styleDescription) !==
+      normalizeDraftValue(initialDraft!.styleDescription)
+    const roleChanged =
+      Boolean(initialDraft) &&
+      normalizeDraftValue(profileDraft.roleBadge) !== normalizeDraftValue(initialDraft!.roleBadge)
+    const deliveryChanged =
+      Boolean(initialDraft) &&
+      normalizeDraftValue(profileDraft.deliveryBadge) !== normalizeDraftValue(initialDraft!.deliveryBadge)
+    const tagsChanged =
+      Boolean(initialDraft) &&
+      normalizeTagsForCompare(profileDraft.styleTags) !==
+      normalizeTagsForCompare(initialDraft!.styleTags)
+
     const socialEntries = Object.entries(profileDraft.socialLinks).flatMap(
       ([key, value]) => {
         const trimmed = normalizeSocialHandle(value)
         if (!trimmed) return []
+        const current = resolvedSocialLinks[key as SocialLinkKey]
+        if (current && normalizeSocialHandle(current) === trimmed) return []
         return [[key, trimmed]] as [SocialLinkKey, string][]
       }
     )
     const nextOverrides: ProfileOverrides = {
-      displayName: normalizeOptional(profileDraft.displayName),
-      bio: normalizeOptional(profileDraft.bio),
       avatarUrl: normalizeOptional(profileDraft.avatarUrl),
       coverUrl: normalizeOptional(profileDraft.coverUrl),
-      pronounsBadge: normalizeOptional(profileDraft.pronounsBadge),
-      roleBadge: normalizeOptional(profileDraft.roleBadge),
-      deliveryBadge: normalizeOptional(profileDraft.deliveryBadge),
-      styleDescription: normalizeOptional(profileDraft.styleDescription),
-      styleTags: splitCommaList(profileDraft.styleTags),
-      socialLinks: socialEntries.length > 0 ? Object.fromEntries(socialEntries) : undefined,
     }
+    if (displayNameChanged) nextOverrides.displayName = normalizeOptional(profileDraft.displayName)
+    if (bioChanged) nextOverrides.bio = normalizeOptional(profileDraft.bio)
+    if (pronounsChanged) nextOverrides.pronounsBadge = normalizeOptional(profileDraft.pronounsBadge)
+    if (roleChanged) nextOverrides.roleBadge = normalizeOptional(profileDraft.roleBadge)
+    if (deliveryChanged) nextOverrides.deliveryBadge = normalizeOptional(profileDraft.deliveryBadge)
+    if (styleDescriptionChanged)
+      nextOverrides.styleDescription = normalizeOptional(profileDraft.styleDescription)
+    if (tagsChanged) nextOverrides.styleTags = splitCommaList(profileDraft.styleTags)
+    if (socialEntries.length > 0)
+      nextOverrides.socialLinks = Object.fromEntries(socialEntries)
     if (nextOverrides.styleTags && nextOverrides.styleTags.length === 0) {
       delete nextOverrides.styleTags
     }
 
-    const hasPerfilFieldsToSync = Boolean(
-      nextOverrides.displayName || nextOverrides.bio || nextOverrides.styleDescription
+    const hasUsuarioFieldsToSync = Boolean(displayNameChanged || bioChanged || pronounsChanged)
+    const hasArtistaFieldsToSync = Boolean(
+      styleDescriptionChanged || roleChanged || deliveryChanged || tagsChanged
     )
-    const shouldSyncProfileData = !isMockUser && (hasPerfilFieldsToSync || socialEntries.length > 0)
+    const shouldSyncProfileData = !isMockUser && (hasUsuarioFieldsToSync || hasArtistaFieldsToSync || socialEntries.length > 0)
 
     let tokenGoogle = ""
     if (!isMockUser && (shouldSyncProfileData || Boolean(draftCoverFile))) {
@@ -1095,7 +1253,7 @@ export function ArtistProfile({
     if (shouldSyncProfileData) {
       setIsSavingProfile(true)
       try {
-        if (hasPerfilFieldsToSync) {
+        if (hasUsuarioFieldsToSync) {
           const responsePerfil = await fetch(API_ROUTES.Usuario.atualizarPerfilUsuario, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -1103,11 +1261,32 @@ export function ArtistProfile({
               tokenGoogle,
               nomePerfil: nextOverrides.displayName,
               bio: nextOverrides.bio,
-              estiloDescricao: nextOverrides.styleDescription,
+              pronome: mapPronomeToEnum(nextOverrides.pronounsBadge),
             }),
           })
           if (!responsePerfil.ok) {
             throw new Error("Falha ao atualizar dados do perfil")
+          }
+        }
+
+        if (hasArtistaFieldsToSync) {
+          const usuarioId = backendProfile?.usuarioId
+          if (!usuarioId) {
+            throw new Error("UsuarioId nao encontrado para atualizar artista")
+          }
+          const responseArtista = await fetch(API_ROUTES.Usuario.atualizarPerfilArtista, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              usuarioId,
+              estiloDescricao: nextOverrides.styleDescription,
+              prazoMedioEntrega: mapPrazoToEnum(nextOverrides.deliveryBadge),
+              cargoArtista: mapCargoToEnum(nextOverrides.roleBadge),
+              tagsArtista: nextOverrides.styleTags,
+            }),
+          })
+          if (!responseArtista.ok) {
+            throw new Error("Falha ao atualizar dados do artista")
           }
         }
 
@@ -1194,6 +1373,29 @@ export function ArtistProfile({
     }
   }
 
+  const profileHasChanges =
+    Boolean(profileDraft && profileDraftInitial) &&
+    (
+      normalizeDraftValue(profileDraft!.displayName) !==
+      normalizeDraftValue(profileDraftInitial!.displayName) ||
+      normalizeDraftValue(profileDraft!.bio) !== normalizeDraftValue(profileDraftInitial!.bio) ||
+      normalizeDraftValue(profileDraft!.pronounsBadge) !==
+      normalizeDraftValue(profileDraftInitial!.pronounsBadge) ||
+      normalizeDraftValue(profileDraft!.roleBadge) !==
+      normalizeDraftValue(profileDraftInitial!.roleBadge) ||
+      normalizeDraftValue(profileDraft!.deliveryBadge) !==
+      normalizeDraftValue(profileDraftInitial!.deliveryBadge) ||
+      normalizeDraftValue(profileDraft!.styleDescription) !==
+      normalizeDraftValue(profileDraftInitial!.styleDescription) ||
+      normalizeTagsForCompare(profileDraft!.styleTags) !==
+      normalizeTagsForCompare(profileDraftInitial!.styleTags) ||
+      Object.entries(profileDraft!.socialLinks).some(([key, value]) => {
+        const current = profileDraftInitial!.socialLinks[key as SocialLinkKey] ?? ""
+        return normalizeSocialHandle(value) !== normalizeSocialHandle(current)
+      }) ||
+      Boolean(draftCoverFile)
+    )
+
   const backendPosts: PortfolioPost[] = (backendProfile?.portfolioItens ?? []).reduce(
     (acc, item, index) => {
       const titulo = item.titulo?.trim() ? item.titulo : "Post do portfolio"
@@ -1232,7 +1434,7 @@ export function ArtistProfile({
     [] as PortfolioPost[]
   )
 
-const activePriceSheets: ServiceSheet[] = [
+  const activePriceSheets: ServiceSheet[] = [
     ...addedServices,
     ...(isMockUser ? priceSheets : []),
   ]
@@ -1542,25 +1744,7 @@ const activePriceSheets: ServiceSheet[] = [
     const body = await response.json().catch(() => null)
     const resultado = body?.resultado ?? body?.Resultado
     if (!resultado || typeof resultado !== "object") return
-    const resultadoObj = resultado as Record<string, unknown>
-    const usuarioNomePerfil = readField<string>(resultadoObj, "nomePerfil", "NomePerfil")
-    const usuarioNome = readField<string>(resultadoObj, "nome", "Nome")
-    const usuarioFotoPerfil = readField<string>(resultadoObj, "fotoPerfil", "FotoPerfil")
-    const usuarioFotoCapa = readField<string>(resultadoObj, "fotoCapa", "FotoCapa")
-    const usuarioSeguidores = readField<number>(resultadoObj, "seguidores", "Seguidores")
-    setBackendProfile({
-      avaliacao: backendProfile?.avaliacao,
-      estilo: backendProfile?.estilo,
-      tipoArtista: backendProfile?.tipoArtista,
-      portifolioUrl: backendProfile?.portifolioUrl,
-      ativoParaServicos: backendProfile?.ativoParaServicos,
-      portfolioItens: backendProfile?.portfolioItens,
-      usuarioNomePerfil,
-      usuarioNome,
-      usuarioFotoPerfil,
-      usuarioFotoCapa,
-      usuarioSeguidores: usuarioSeguidores ?? backendProfile?.usuarioSeguidores,
-    })
+    applyUserFromTokenResponse(resultado as Record<string, unknown>)
   }
 
   const handleServiceSubmit = () => {
@@ -2090,8 +2274,8 @@ const activePriceSheets: ServiceSheet[] = [
                     <Star
                       key={index}
                       className={`h-3.5 w-2.5 ${index < Math.round(ratingValue)
-                          ? "fill-foreground text-foreground"
-                          : "text-muted-foreground"
+                        ? "fill-foreground text-foreground"
+                        : "text-muted-foreground"
                         }`}
                     />
                   ))}
@@ -2216,9 +2400,8 @@ const activePriceSheets: ServiceSheet[] = [
                     onClick={() => handleLikePost(activePost)}
                   >
                     <Heart
-                      className={`h-4 w-4 transition-transform ${
-                        likedPosts[activePost?.id ?? ""] ? "fill-red-500 text-red-500" : ""
-                      } ${pulseLikeId === activePost?.id ? "scale-110" : ""}`}
+                      className={`h-4 w-4 transition-transform ${likedPosts[activePost?.id ?? ""] ? "fill-red-500 text-red-500" : ""
+                        } ${pulseLikeId === activePost?.id ? "scale-110" : ""}`}
                     />
                     <span className="text-xs font-semibold">
                       {resolveMetrics(activePost).likes.toLocaleString("pt-BR")}
@@ -2231,9 +2414,8 @@ const activePriceSheets: ServiceSheet[] = [
                     onClick={() => handleSavePost(activePost)}
                   >
                     <Bookmark
-                      className={`h-4 w-4 transition-transform ${
-                        savedPosts[activePost?.id ?? ""] ? "fill-sky-500 text-sky-500" : ""
-                      } ${pulseSaveId === activePost?.id ? "scale-110" : ""}`}
+                      className={`h-4 w-4 transition-transform ${savedPosts[activePost?.id ?? ""] ? "fill-sky-500 text-sky-500" : ""
+                        } ${pulseSaveId === activePost?.id ? "scale-110" : ""}`}
                     />
                     <span className="text-xs font-semibold">
                       {resolveMetrics(activePost).saves.toLocaleString("pt-BR")}
@@ -2243,11 +2425,10 @@ const activePriceSheets: ServiceSheet[] = [
               </div>
 
               <div
-                className={`flex h-full flex-col space-y-3 ${
-                  isSingleImagePost
-                    ? "lg:self-center lg:justify-center"
-                    : "lg:sticky lg:bottom-6 lg:self-stretch"
-                }`}
+                className={`flex h-full flex-col space-y-3 ${isSingleImagePost
+                  ? "lg:self-center lg:justify-center"
+                  : "lg:sticky lg:bottom-6 lg:self-stretch"
+                  }`}
               >
                 <div className="relative overflow-hidden rounded-xl border border-border/60 bg-card/70">
                   <div className="aspect-[16/9] w-full">
@@ -2320,11 +2501,10 @@ const activePriceSheets: ServiceSheet[] = [
                       <button
                         key={`${imageUrl}-${index}`}
                         type="button"
-                        className={`overflow-hidden rounded-lg border ${
-                          index === activeImageIndex
-                            ? "border-foreground"
-                            : "border-border/60"
-                        }`}
+                        className={`overflow-hidden rounded-lg border ${index === activeImageIndex
+                          ? "border-foreground"
+                          : "border-border/60"
+                          }`}
                         onClick={() => setActiveImageIndex(index)}
                       >
                         <div className="h-16 w-24">
@@ -2684,13 +2864,25 @@ const activePriceSheets: ServiceSheet[] = [
             </div>
 
             <DialogFooter className="border-t border-white/10 px-6 py-4">
-              <Button
-                className="ml-auto bg-white text-black hover:bg-white/90"
-                onClick={handleProfileSave}
-                disabled={isUploadingCover || isSavingProfile}
-              >
-                {isUploadingCover || isSavingProfile ? "Salvando..." : "Salvar"}
-              </Button>
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={`ml-auto inline-flex ${!profileHasChanges ? "cursor-pointer" : ""}`}>
+                      <Button
+                        className={`bg-white text-black hover:bg-white/90 ${!profileHasChanges ? "opacity-60" : ""
+                          }`}
+                        onClick={handleProfileSave}
+                        disabled={isUploadingCover || isSavingProfile || !profileHasChanges}
+                      >
+                        {isUploadingCover || isSavingProfile ? "Salvando..." : "Salvar"}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {!profileHasChanges ? (
+                    <TooltipContent>Sem alteracoes para salvar.</TooltipContent>
+                  ) : null}
+                </Tooltip>
+              </TooltipProvider>
             </DialogFooter>
           </div>
         </DialogContent>
@@ -2804,15 +2996,13 @@ const activePriceSheets: ServiceSheet[] = [
                     {servicePreviewUrls.map((item, index) => (
                       <div
                         key={`${item.file.name}-${item.file.lastModified}`}
-                        className={`relative h-20 w-20 cursor-grab overflow-hidden rounded-lg border border-border/60 active:cursor-grabbing ${
-                          serviceDragIndex === index ? "opacity-50" : ""
-                        } ${
-                          serviceDragOverIndex === index &&
-                          serviceDragIndex !== null &&
-                          serviceDragIndex !== index
+                        className={`relative h-20 w-20 cursor-grab overflow-hidden rounded-lg border border-border/60 active:cursor-grabbing ${serviceDragIndex === index ? "opacity-50" : ""
+                          } ${serviceDragOverIndex === index &&
+                            serviceDragIndex !== null &&
+                            serviceDragIndex !== index
                             ? "ring-2 ring-foreground/60"
                             : ""
-                        }`}
+                          }`}
                         draggable
                         onDragStart={(event) => {
                           setServiceDragIndex(index)
@@ -3029,15 +3219,13 @@ const activePriceSheets: ServiceSheet[] = [
                     {portfolioPreviewUrls.map((item, index) => (
                       <div
                         key={`${item.file.name}-${item.file.lastModified}`}
-                        className={`relative h-22 w-22 cursor-grab overflow-hidden rounded-lg border border-border/60 active:cursor-grabbing ${
-                          portfolioDragIndex === index ? "opacity-50" : ""
-                        } ${
-                          portfolioDragOverIndex === index &&
-                          portfolioDragIndex !== null &&
-                          portfolioDragIndex !== index
+                        className={`relative h-22 w-22 cursor-grab overflow-hidden rounded-lg border border-border/60 active:cursor-grabbing ${portfolioDragIndex === index ? "opacity-50" : ""
+                          } ${portfolioDragOverIndex === index &&
+                            portfolioDragIndex !== null &&
+                            portfolioDragIndex !== index
                             ? "ring-2 ring-foreground/60"
                             : ""
-                        }`}
+                          }`}
                         draggable
                         onDragStart={(event) => {
                           setPortfolioDragIndex(index)

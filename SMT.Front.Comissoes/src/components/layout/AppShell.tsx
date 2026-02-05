@@ -51,10 +51,18 @@ const isLikelyJwt = (value: string) => value.split(".").length === 3
 export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) {
   const [commissionOpen, setCommissionOpen] = useState(false)
   const [selectedPrice, setSelectedPrice] = useState(100)
-  const [currentUser, setCurrentUser] = useState<User>(() => users[2])
-  const isMockUser = currentUser.id === users[2].id
-    && currentUser.nome === users[2].nome
-    && currentUser.avatarUrl === users[2].avatarUrl
+  const emptyUser: User = {
+    id: "",
+    nome: "",
+    role: "cliente",
+    avatarUrl: "",
+    bio: "",
+    seguidores: 0,
+  }
+  const [currentUser, setCurrentUser] = useState<User>(() => (
+    isAuthenticated ? emptyUser : users[2]
+  ))
+  const isMockUser = !isAuthenticated
   const location = useLocation()
   const viewportRef = useRef<HTMLDivElement>(null)
 
@@ -118,6 +126,10 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
           ?? (resultado as { Id?: unknown }).Id
         const jaAnunciou = (resultado as { jaAnunciou?: unknown; JaAnunciou?: unknown }).jaAnunciou
           ?? (resultado as { JaAnunciou?: unknown }).JaAnunciou
+        const bio = (resultado as { bio?: unknown; Bio?: unknown }).bio
+          ?? (resultado as { Bio?: unknown }).Bio
+        const seguidores = (resultado as { seguidores?: unknown; Seguidores?: unknown }).seguidores
+          ?? (resultado as { Seguidores?: unknown }).Seguidores
 
         if (!isActive) return
         const displayName = resolveDisplayName(nomePerfil, nome, googleName)
@@ -129,8 +141,8 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
             ? resolveUserRole(jaAnunciou)
             : fallbackUser.role,
           avatarUrl: avatarUrl || fallbackUser.avatarUrl,
-          bio: "",
-          seguidores: 0,
+          bio: typeof bio === "string" ? bio : fallbackUser.bio,
+          seguidores: typeof seguidores === "number" ? seguidores : fallbackUser.seguidores,
         })
       } catch {
         // Silent fallback to existing user data

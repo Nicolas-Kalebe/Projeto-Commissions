@@ -324,6 +324,7 @@ namespace SMT.Back.Comissoes.Services
                 Estilo = artista.Estilo,
                 CargoArtista = artista.CargoArtista.obterDescricaoEnum() ?? string.Empty,
                 PrazoMedioEntrega = artista.PrazoMedioEntrega?.obterDescricaoEnum(),
+                TagsArtista = artista.TagsArtista,
                 PortfolioItens = artista.PortfolioItens,
                 Avaliacao = artista.Avaliacao,
                 AtivoParaServicos = artista.AtivoParaServicos,
@@ -346,6 +347,9 @@ namespace SMT.Back.Comissoes.Services
             if (atualizarPerfilArtistaInput.EstiloDescricao != null)
                 artista.Estilo = atualizarPerfilArtistaInput.EstiloDescricao;
             
+            if (atualizarPerfilArtistaInput.TagsArtista != null)
+                artista.TagsArtista = atualizarPerfilArtistaInput.TagsArtista;
+
             await _usuarioRepository.AtualizarPerfilArtista(artista);
 
             return new AtualizarPerfilArtistaOutput
