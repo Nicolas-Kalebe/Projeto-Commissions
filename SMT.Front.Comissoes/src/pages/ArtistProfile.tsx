@@ -516,6 +516,7 @@ export function ArtistProfile({
   const [portfolioImages, setPortfolioImages] = useState<File[]>([])
   const [portfolioHashtags, setPortfolioHashtags] = useState<string[]>([])
   const [portfolioTagInput, setPortfolioTagInput] = useState("#")
+  const [portfolioServiceId, setPortfolioServiceId] = useState("none")
   const [portfolioDragIndex, setPortfolioDragIndex] = useState<number | null>(null)
   const [portfolioDragOverIndex, setPortfolioDragOverIndex] = useState<number | null>(null)
   const [portfolioPreviewUrls, setPortfolioPreviewUrls] = useState<
@@ -1235,6 +1236,15 @@ const activePriceSheets: ServiceSheet[] = [
     ...addedServices,
     ...(isMockUser ? priceSheets : []),
   ]
+  const portfolioServiceOptions = activePriceSheets.map((sheet, index) => ({
+    id: sheet.id,
+    index: index + 1,
+    label: `${index + 1} - ${sheet.titulo}`,
+    priceLabel: sheet.preco.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }),
+  }))
   const visiblePosts = isMockUser
     ? [testSingleImagePost, ...testPortfolioPosts, ...portfolioPosts]
     : backendPosts
@@ -1385,6 +1395,7 @@ const activePriceSheets: ServiceSheet[] = [
     setPortfolioImages([])
     setPortfolioHashtags([])
     setPortfolioTagInput("#")
+    setPortfolioServiceId("none")
   }
 
   const normalizePortfolioTag = (value: string) => {
@@ -1617,6 +1628,15 @@ const activePriceSheets: ServiceSheet[] = [
       }
       if (portfolioDescription.trim()) {
         formData.append("Descricao", portfolioDescription.trim())
+      }
+      if (portfolioServiceId !== "none") {
+        const selectedService = portfolioServiceOptions.find(
+          (option) => option.id === portfolioServiceId
+        )
+        formData.append("ServicoId", portfolioServiceId)
+        if (selectedService) {
+          formData.append("ServicoNumero", String(selectedService.index))
+        }
       }
 
       const response = await fetch(API_ROUTES.Usuario.cadastrarPortfolio, {
@@ -2902,6 +2922,37 @@ const activePriceSheets: ServiceSheet[] = [
               />
               <p className="text-xs text-muted-foreground">
                 {remainingPortfolioChars} caracteres restantes
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="portfolio-service">Vincular a um servico</Label>
+              <Select
+                value={portfolioServiceId}
+                onValueChange={(value) => setPortfolioServiceId(value)}
+              >
+                <SelectTrigger
+                  id="portfolio-service"
+                  className="bg-transparent border-input dark:bg-input/30"
+                >
+                  <SelectValue placeholder="Selecione um servico (opcional)" />
+                </SelectTrigger>
+                <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                  <SelectItem value="none">Sem vinculo</SelectItem>
+                  {portfolioServiceOptions.length > 0 ? (
+                    portfolioServiceOptions.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.label} • {option.priceLabel}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-services" disabled>
+                      Nenhum servico cadastrado
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Selecione o servico que este post representa para criar o link.
               </p>
             </div>
             <div className="space-y-2">
