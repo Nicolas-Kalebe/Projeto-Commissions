@@ -1,4 +1,4 @@
-import { useState } from "react"
+﻿import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -132,6 +132,7 @@ export function DashboardPage() {
   const [analyticsStartDate, setAnalyticsStartDate] = useState("2025-12-30")
   const [analyticsEndDate, setAnalyticsEndDate] = useState("2026-01-26")
   const [analyticsTab, setAnalyticsTab] = useState("visao")
+  const [channelMetric, setChannelMetric] = useState<"views" | "watchTime" | "subscribers">("views")
   const [portfolioPosts, setPortfolioPosts] = useState(() =>
     arts
       .filter((art) => art.artistId === user.id)
@@ -167,6 +168,25 @@ export function DashboardPage() {
       currency: "BRL",
       minimumFractionDigits: 0,
     }).format(value)
+
+  const channelMetrics = {
+    views: {
+      label: "Visualizacoes",
+      value: "0",
+      path: "M0 92 L30 80 L60 76 L90 70 L120 68 L150 62 L180 58 L210 54 L240 46 L270 42 L300 36 L330 30 L360 26 L390 18 L400 14",
+    },
+    watchTime: {
+      label: "Tempo de exibicao",
+      value: "0h",
+      path: "M0 92 L30 90 L60 84 L90 80 L120 72 L150 66 L180 65 L210 60 L240 52 L270 48 L300 42 L330 38 L360 34 L390 28 L400 24",
+    },
+    subscribers: {
+      label: "Inscritos",
+      value: "0",
+      path: "M0 96 L30 95 L60 94 L90 92 L120 90 L150 87 L180 84 L210 80 L240 76 L270 72 L300 64 L330 58 L360 52 L390 42 L400 38",
+    },
+  } as const
+  const selectedChannelMetric = channelMetrics[channelMetric]
 
   return (
     <section className="w-full">
@@ -552,7 +572,6 @@ export function DashboardPage() {
                     <div className="rounded-xl border border-border/60 bg-background/60 p-5">
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className="text-xs text-muted-foreground">Ultimos 28 dias</p>
                           <h3 className="text-base font-semibold">Sem visualizacoes no periodo</h3>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -562,22 +581,47 @@ export function DashboardPage() {
                       </div>
 
                       <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                        {[
-                          { label: "Visualizacoes", value: "0" },
-                          { label: "Tempo de exibicao (horas)", value: "0" },
-                          { label: "Inscritos", value: "0" },
-                        ].map((item) => (
-                          <div
-                            key={item.label}
-                            className="rounded-lg border border-border/60 bg-background/80 p-3 text-center"
+                        {(
+                          [
+                            { key: "views", label: "Visualizacoes", value: channelMetrics.views.value },
+                            { key: "watchTime", label: "Tempo de exibicao", value: channelMetrics.watchTime.value },
+                            { key: "subscribers", label: "Inscritos", value: channelMetrics.subscribers.value },
+                          ] as const
+                        ).map((item) => (
+                          <Button
+                            key={item.key}
+                            type="button"
+                            variant="outline"
+                            className={`h-auto flex-col items-start gap-1 border-border/60 p-3 text-left ${
+                              channelMetric === item.key ? "bg-muted" : ""
+                            }`}
+                            onClick={() => setChannelMetric(item.key)}
                           >
-                            <p className="text-xs text-muted-foreground">{item.label}</p>
-                            <p className="mt-2 text-lg font-semibold">{item.value}</p>
-                          </div>
+                            <span className="text-xs text-muted-foreground">{item.label}</span>
+                            <span className="text-lg font-semibold">{item.value}</span>
+                          </Button>
                         ))}
                       </div>
 
-                      <div className="mt-6 h-48 rounded-lg border border-dashed border-border/70 bg-muted/30" />
+                      <div className="mt-6 rounded-lg border border-border/70 bg-background/60 p-3">
+                        <div className="mb-2 text-xs text-muted-foreground">
+                          {selectedChannelMetric.label}
+                        </div>
+                        <div className="h-40 w-full">
+                          <svg viewBox="0 0 400 120" className="h-full w-full">
+                            <path
+                              d={`${selectedChannelMetric.path} L400 120 L0 120 Z`}
+                              className="fill-primary/15"
+                            />
+                            <path
+                              d={selectedChannelMetric.path}
+                              className="fill-none stroke-primary"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="rounded-xl border border-border/60 bg-background/60 p-5">
@@ -707,7 +751,7 @@ export function DashboardPage() {
                           { label: "Curtidas", value: highlight.likes },
                           { label: "Salvos", value: highlight.saves },
                           { label: "Entradas no perfil", value: highlight.profileEntries },
-                          { label: "Tags", value: highlight.tags.join(" � ") },
+                          { label: "Tags", value: highlight.tags.join(" • ") },
                         ].map((item) => (
                           <div
                             key={item.label}
@@ -1062,4 +1106,5 @@ export function DashboardPage() {
 </section>
   )
 }
+
 

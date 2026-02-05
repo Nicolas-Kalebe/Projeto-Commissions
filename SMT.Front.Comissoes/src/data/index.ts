@@ -593,7 +593,7 @@ export const notifications: NotificationItem[] = [
 ]
 
 export const categoryFilters = [
-  { key: "categorias", label: "Categorias", icon: "category" },
+  { key: "categorias", label: "Todas", icon: "category" },
   { key: "ilustracao", label: "Ilustracao", icon: "brush", tags: ["#Ilustração"] },
   { key: "anime", label: "Anime", icon: "face", tags: ["#Anime"] },
   { key: "pixel", label: "Pixel Art", icon: "grid_on", tags: ["#PixelArt"] },
@@ -768,4 +768,5 @@ export const messages: import("@/types").Message[] = [
     status: "enviado",
   },
 ]
+
 
