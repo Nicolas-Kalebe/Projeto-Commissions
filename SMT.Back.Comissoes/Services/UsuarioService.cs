@@ -293,6 +293,7 @@ namespace SMT.Back.Comissoes.Services
             var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
 
             var artista = await _usuarioRepository.ObterArtistaPorUsuarioId(usuario.Id);
+            var portfolioItensOutput = new List<PortfolioItemOutput>();
             if (artista.PortfolioItens != null)
             {
                 foreach (var item in artista.PortfolioItens)
@@ -315,6 +316,34 @@ namespace SMT.Back.Comissoes.Services
                         TipoAlvoInteracaoEnum.PortfolioItem,
                         item.Id
                     );
+
+                    var curtidoPeloUsuario = await _interacaoRepository.ExistsAsync(i =>
+                        i.UsuarioId == usuario.Id &&
+                        i.AlvoId == item.Id &&
+                        i.TipoAlvoInteracao == TipoAlvoInteracaoEnum.PortfolioItem &&
+                        i.TipoInteracao == TipoInteracaoEnum.Curtida);
+
+                    var salvoPeloUsuario = await _interacaoRepository.ExistsAsync(i =>
+                        i.UsuarioId == usuario.Id &&
+                        i.AlvoId == item.Id &&
+                        i.TipoAlvoInteracao == TipoAlvoInteracaoEnum.PortfolioItem &&
+                        i.TipoInteracao == TipoInteracaoEnum.Salvamento);
+
+                    portfolioItensOutput.Add(new PortfolioItemOutput
+                    {
+                        Id = item.Id,
+                        ArtistaId = item.ArtistaId,
+                        Titulo = item.Titulo,
+                        Descricao = item.Descricao,
+                        Hashtags = item.Hashtags,
+                        Imagens = item.Imagens,
+                        QuantidadeCurtidas = item.QuantidadeCurtidas,
+                        QuantidadeSalvos = item.QuantidadeSalvos,
+                        QuantidadeVisualizacoes = item.QuantidadeVisualizacoes,
+                        DataCriacao = item.DataCriacao,
+                        CurtidoPeloUsuario = curtidoPeloUsuario,
+                        SalvoPeloUsuario = salvoPeloUsuario
+                    });
                 }
             }
             var obterPerfilArtistaOutput = new ObterPerfilArtistaOutput
@@ -325,7 +354,7 @@ namespace SMT.Back.Comissoes.Services
                 CargoArtista = artista.CargoArtista.obterDescricaoEnum() ?? string.Empty,
                 PrazoMedioEntrega = artista.PrazoMedioEntrega?.obterDescricaoEnum(),
                 TagsArtista = artista.TagsArtista,
-                PortfolioItens = artista.PortfolioItens,
+                PortfolioItens = portfolioItensOutput,
                 Avaliacao = artista.Avaliacao,
                 AtivoParaServicos = artista.AtivoParaServicos,
                 Servicos = artista.Servicos
