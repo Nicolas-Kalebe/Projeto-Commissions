@@ -1,16 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
+using SMT.Back.Comissoes.Models.Entity;
 
-namespace SMT.Back.Comissoes.Models.Entity
+namespace SMT.Back.Comissoes.DTO.Output.Usuario
 {
-    public class PortfolioItem
+    public class PortfolioItemOutput
     {
-        [Key]
         public int Id { get; set; }
-        [JsonIgnore]
         public int ArtistaId { get; set; }
-        [ForeignKey(nameof(ArtistaId))]
         public string Titulo { get; set; } = string.Empty;
         public string Descricao { get; set; } = string.Empty;
         public List<string>? Hashtags { get; set; } = new List<string>();
@@ -19,5 +14,7 @@ namespace SMT.Back.Comissoes.Models.Entity
         public int QuantidadeSalvos { get; set; }
         public int QuantidadeVisualizacoes { get; set; }
         public DateTime DataCriacao { get; set; }
+        public bool CurtidoPeloUsuario { get; set; }
+        public bool SalvoPeloUsuario { get; set; }
     }
 }

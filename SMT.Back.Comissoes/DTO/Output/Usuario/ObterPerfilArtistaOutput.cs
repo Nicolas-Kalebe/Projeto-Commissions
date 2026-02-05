@@ -14,7 +14,7 @@ namespace SMT.Back.Comissoes.DTO.Output.Usuario
         public string CargoArtista { get; set; } = string.Empty;
         public string? PrazoMedioEntrega { get; set; }
         public List<string> TagsArtista { get; set; }
-        public ICollection<PortfolioItem> PortfolioItens { get; set; } = new List<PortfolioItem>();
+        public ICollection<PortfolioItemOutput> PortfolioItens { get; set; } = new List<PortfolioItemOutput>();
         public double Avaliacao { get; set; }
         public bool AtivoParaServicos { get; set; }
         public ICollection<Servicos>? Servicos { get; set; }

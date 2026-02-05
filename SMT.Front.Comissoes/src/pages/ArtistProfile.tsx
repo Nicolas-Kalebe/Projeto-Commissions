@@ -104,6 +104,8 @@ type BackendPortfolioItem = {
   favoritoCount?: number
   visualizacaoCount?: number
   dataCriacao?: string
+  curtidoPeloUsuario?: boolean
+  salvoPeloUsuario?: boolean
 }
 
 type BackendPortfolioItemImagem = {
@@ -376,10 +378,38 @@ const parsePortfolioItems = (value: unknown): BackendPortfolioItem[] => {
         urlArquivo: readField<string>(record, "urlArquivo", "UrlArquivo"),
         imagens: imagens.length > 0 ? imagens : undefined,
         ordem: readField<number>(record, "ordem", "Ordem"),
-        likeCount: readField<number>(record, "likeCount", "LikeCount"),
-        favoritoCount: readField<number>(record, "favoritoCount", "FavoritoCount"),
-        visualizacaoCount: readField<number>(record, "visualizacaoCount", "VisualizacaoCount"),
+        likeCount: readField<number>(
+          record,
+          "likeCount",
+          "LikeCount",
+          "quantidadeCurtidas",
+          "QuantidadeCurtidas"
+        ),
+        favoritoCount: readField<number>(
+          record,
+          "favoritoCount",
+          "FavoritoCount",
+          "quantidadeSalvos",
+          "QuantidadeSalvos"
+        ),
+        visualizacaoCount: readField<number>(
+          record,
+          "visualizacaoCount",
+          "VisualizacaoCount",
+          "quantidadeVisualizacoes",
+          "QuantidadeVisualizacoes"
+        ),
         dataCriacao: readField<string>(record, "dataCriacao", "DataCriacao"),
+        curtidoPeloUsuario: readField<boolean>(
+          record,
+          "curtidoPeloUsuario",
+          "CurtidoPeloUsuario"
+        ),
+        salvoPeloUsuario: readField<boolean>(
+          record,
+          "salvoPeloUsuario",
+          "SalvoPeloUsuario"
+        ),
       },
     ]
   })
@@ -479,10 +509,8 @@ function PortfolioPreviewCard({ post, onOpen }: PortfolioPreviewCardProps) {
               loading="lazy"
             />
           )}
-          <div className="pointer-events-none absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
-            <span className="p-3 text-sm font-semibold text-white">
-              {post.titulo}
-            </span>
+          <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
+            {post.titulo}
           </div>
         </div>
       </div>
@@ -1110,6 +1138,28 @@ export function ArtistProfile({
       resetPortfolioDialog()
     }
   }, [isAddPortfolioOpen])
+
+  useEffect(() => {
+    if (isMockUser) return
+    if (!backendProfile?.portfolioItens || backendProfile.portfolioItens.length === 0) return
+    const initialLikes: Record<string, boolean> = {}
+    const initialSaves: Record<string, boolean> = {}
+    backendProfile.portfolioItens.forEach((item) => {
+      if (!item?.id) return
+      if (item.curtidoPeloUsuario) {
+        initialLikes[`portfolio-${item.id}`] = true
+      }
+      if (item.salvoPeloUsuario) {
+        initialSaves[`portfolio-${item.id}`] = true
+      }
+    })
+    if (Object.keys(initialLikes).length > 0) {
+      setLikedPosts((prev) => ({ ...prev, ...initialLikes }))
+    }
+    if (Object.keys(initialSaves).length > 0) {
+      setSavedPosts((prev) => ({ ...prev, ...initialSaves }))
+    }
+  }, [backendProfile?.portfolioItens, isMockUser])
   useEffect(() => {
     const next = portfolioImages.map((file) => ({
       file,
@@ -1859,7 +1909,6 @@ export function ArtistProfile({
 
   const handleLikePost = async (post?: PortfolioPost | null) => {
     if (!post) return
-    if (likedPosts[post.id]) return
     if (!post.backendId) {
       toast({
         title: "Post indisponivel",
@@ -1879,36 +1928,34 @@ export function ArtistProfile({
       return
     }
 
-    setLikedPosts((prev) => ({ ...prev, [post.id]: true }))
+    const isLiked = Boolean(likedPosts[post.id])
+    setLikedPosts((prev) => ({ ...prev, [post.id]: !isLiked }))
     setPostMetrics((prev) => ({
       ...prev,
       [post.id]: {
-        likes: (prev[post.id]?.likes ?? post.likes) + 1,
+        likes: (prev[post.id]?.likes ?? post.likes) + (isLiked ? -1 : 1),
         saves: prev[post.id]?.saves ?? post.saves,
       },
     }))
     triggerPulse(setPulseLikeId, post.id)
 
     try {
-      const response = await fetch(API_ROUTES.Interacao.curtirPortfolio, {
-        method: "POST",
+      const response = await fetch(isLiked ? API_ROUTES.Interacao.descurtir : API_ROUTES.Interacao.curtir, {
+        method: isLiked ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           googleToken: tokenGoogle,
-          portfolioItemId: post.backendId,
+          alvoId: post.backendId,
+          tipoAlvoInteracao: 1,
         }),
       })
       if (!response.ok) throw new Error("Falha ao curtir.")
     } catch {
-      setLikedPosts((prev) => {
-        const next = { ...prev }
-        delete next[post.id]
-        return next
-      })
+      setLikedPosts((prev) => ({ ...prev, [post.id]: isLiked }))
       setPostMetrics((prev) => ({
         ...prev,
         [post.id]: {
-          likes: Math.max(0, (prev[post.id]?.likes ?? post.likes) - 1),
+          likes: Math.max(0, (prev[post.id]?.likes ?? post.likes) + (isLiked ? 1 : -1)),
           saves: prev[post.id]?.saves ?? post.saves,
         },
       }))
@@ -1954,9 +2001,9 @@ export function ArtistProfile({
 
     try {
       const response = await fetch(
-        isSaved ? API_ROUTES.Interacao.desfavoritar : API_ROUTES.Interacao.favoritar,
+        isSaved ? API_ROUTES.Interacao.removerSalvamento : API_ROUTES.Interacao.salvar,
         {
-          method: "POST",
+          method: isSaved ? "DELETE" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             googleToken: tokenGoogle,
@@ -1983,8 +2030,18 @@ export function ArtistProfile({
     }
   }
 
+  const showLoadingOverlay = !isMockUser && isProfileLoading
+
   return (
-    <section className="min-h-[calc(100svh-4rem)] w-full space-y-6 px-6 py-6">
+    <section className="relative min-h-[calc(100svh-4rem)] w-full px-6 py-6">
+      {showLoadingOverlay ? (
+        <div className="absolute inset-0 z-20 flex items-center justify-center">
+          <div className="rounded-xl bg-black/70 px-6 py-4 text-sm font-semibold text-white shadow-lg">
+            Carregando...
+          </div>
+        </div>
+      ) : null}
+      <div className={`space-y-6 ${showLoadingOverlay ? "pointer-events-none blur-sm" : ""}`}>
       <div className="h-52 w-full overflow-hidden rounded-2xl md:h-64">
         <img
           src={resolvedCoverImageUrl}
@@ -2122,7 +2179,9 @@ export function ArtistProfile({
                     </div>
                   </button>
                 )}
-                {sortedPosts.map((post, index) => (
+                {sortedPosts.map((post, index) => {
+                  const metrics = resolveMetrics(post)
+                  return (
                   <div key={post.id} className="group relative">
                     <PortfolioPreviewCard
                       post={post}
@@ -2132,6 +2191,12 @@ export function ArtistProfile({
                         setPostDialogOpen(true)
                       }}
                     />
+                    <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-xs font-semibold text-white">
+                      <Heart
+                        className={`h-3 w-3 ${likedPosts[post.id] ? "fill-red-500 text-red-500" : "text-white/80"}`}
+                      />
+                      <span>{metrics.likes.toLocaleString("pt-BR")}</span>
+                    </div>
                     <div className="absolute bottom-3 right-3 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
                       {isOwnerProfile ? null : (
                         <>
@@ -2157,7 +2222,7 @@ export function ArtistProfile({
                       )}
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             ) : (
               <div className="rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center text-sm text-muted-foreground">
@@ -3298,6 +3363,7 @@ export function ArtistProfile({
         </DialogContent>
       </Dialog>
 
+      </div>
     </section>
   )
 }

@@ -17,8 +17,9 @@ export const API_ROUTES = {
     cadastrarPortfolio: `${API_BASE_URL}/api/Usuario/CadastrarPortfolio`,
   },
   Interacao: {
-    curtirPortfolio: `${API_BASE_URL}/api/Interacao/CurtirPortfolio`,
-    favoritar: `${API_BASE_URL}/api/Interacao/Favoritar`,
-    desfavoritar: `${API_BASE_URL}/api/Interacao/Desfavoritar`,
+    curtir: `${API_BASE_URL}/api/Interacao/Curtir`,
+    descurtir: `${API_BASE_URL}/api/Interacao/Descurtir`,
+    salvar: `${API_BASE_URL}/api/Interacao/Salvar`,
+    removerSalvamento: `${API_BASE_URL}/api/Interacao/RemoverSalvamento`,
   },
 } as const
