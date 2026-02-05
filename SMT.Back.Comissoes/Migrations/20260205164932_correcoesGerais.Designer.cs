@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SMT.Back.Comissoes.Data;
@@ -12,9 +13,11 @@ using SMT.Back.Comissoes.Data;
 namespace SMT.Back.Comissoes.Migrations
 {
     [DbContext(typeof(DbContextClass))]
-    partial class DbContextClassModelSnapshot : ModelSnapshot
+    [Migration("20260205164932_correcoesGerais")]
+    partial class correcoesGerais
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,14 +40,11 @@ namespace SMT.Back.Comissoes.Migrations
                     b.Property<double>("Avaliacao")
                         .HasColumnType("double precision");
 
-                    b.Property<int>("CargoArtista")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Estilo")
                         .HasColumnType("text");
 
-                    b.Property<int?>("PrazoMedioEntrega")
-                        .HasColumnType("integer");
+                    b.Property<string>("TipoArtista")
+                        .HasColumnType("text");
 
                     b.Property<int>("UsuarioId")
                         .HasColumnType("integer");

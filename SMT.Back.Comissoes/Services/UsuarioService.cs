@@ -1,6 +1,7 @@
 ﻿using Serilog;
 using SMT.Back.Comissoes.DTO.Input.Usuario;
 using SMT.Back.Comissoes.DTO.Input.UsuarioController;
+using SMT.Back.Comissoes.DTO.Output.Usuario;
 using SMT.Back.Comissoes.Models.Entity;
 using SMT.Back.Comissoes.Models.Enum;
 using SMT.Back.Comissoes.Repositories.Interfaces;
@@ -56,6 +57,7 @@ namespace SMT.Back.Comissoes.Services
                     () => Log.Error($"Tentativa de cadastro com nome de perfil já existente: {usuarioInput.NomePerfil}"),
                     (int)System.Net.HttpStatusCode.Conflict
                 );
+
             var usuario = new Usuario
             {
                 Nome = userGoogle.Name, // vem do google
@@ -67,6 +69,10 @@ namespace SMT.Back.Comissoes.Services
                 Status = StatusEnum.Ativo,
                 JaAnunciou = false,
             };
+            if (usuarioInput.Pronome.HasValue)
+            {
+                usuario.Pronome = usuarioInput.Pronome;
+            }
 
             await _usuarioRepository.CadastrarUsuario(usuario);
 
@@ -91,7 +97,7 @@ namespace SMT.Back.Comissoes.Services
                 throw;
             }
         }
-        public async Task<Usuario> ObterUsuarioPorToken(ValidarUsuarioGoogleInput obterTokenGoogleInput)
+        public async Task<ObterUsuarioOutput> ObterUsuarioPorToken(ValidarUsuarioGoogleInput obterTokenGoogleInput)
         {
             var userGoogle = await _authService.ValidarTokenGoogle(obterTokenGoogleInput.TokenGoogle);
             var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
@@ -102,6 +108,7 @@ namespace SMT.Back.Comissoes.Services
                     () => Log.Error($"Usuário não encontrado para o email: {userGoogle.Email}"),
                     (int)System.Net.HttpStatusCode.NotFound
                 );
+
             if (!string.IsNullOrWhiteSpace(usuario.FotoPerfil))
             {
                 var signedUrl = _bucketService.GetPresignedUrl(usuario.FotoPerfil, TimeSpan.FromHours(6));
@@ -119,7 +126,26 @@ namespace SMT.Back.Comissoes.Services
                 TipoAlvoInteracaoEnum.Usuario,
                 usuario.Id
             );
-            return usuario;
+
+            return new ObterUsuarioOutput
+            {
+                Id = usuario.Id,
+                Nome = usuario.Nome,
+                NomePerfil = usuario.NomePerfil,
+                JaAnunciou = usuario.JaAnunciou,
+                DataNascimento = usuario.DataNascimento,
+                Email = usuario.Email,
+                Celular = usuario.Celular,
+                FotoPerfil = usuario.FotoPerfil,
+                FotoCapa = usuario.FotoCapa,
+                Bio = usuario.Bio,
+                DataCriacao = usuario.DataCriacao,
+                DataAtualizacao = usuario.DataAtualizacao,
+                Status = usuario.Status,
+                Seguidores = usuario.Seguidores,
+                Pronome = usuario.Pronome?.obterDescricaoEnum(),
+                RedesSociais = usuario.RedesSociais
+            };
         }
         public async Task<StatusEnum> ObterStatusUsuario(ValidarUsuarioGoogleInput obterStatusInput)
         {
@@ -127,38 +153,76 @@ namespace SMT.Back.Comissoes.Services
             var usuarioStatus = await _usuarioRepository.ObterStatusUsuario(userGoogle.Email);
             return usuarioStatus;
         }
-        public async Task AtualizarPerfilUsuario(AtualizarPerfilUsuarioInput atualizarPerfilUsuarioInput)
+        public async Task<AtualizarPerfilUsuarioOutput> AtualizarPerfilUsuario(AtualizarPerfilUsuarioInput atualizarPerfilUsuarioInput)
         {
             var userGoogle = await _authService.ValidarTokenGoogle(atualizarPerfilUsuarioInput.TokenGoogle);
             var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
 
+            Log.Information("AtualizarPerfilUsuario input: NomePerfil='{NomePerfil}', Bio='{Bio}', Pronome='{Pronome}'",
+                atualizarPerfilUsuarioInput.NomePerfil,
+                atualizarPerfilUsuarioInput.Bio,
+                atualizarPerfilUsuarioInput.Pronome);
+
+            if (atualizarPerfilUsuarioInput.NomePerfil is not null && string.IsNullOrWhiteSpace(atualizarPerfilUsuarioInput.NomePerfil))
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.DadoNulo,
+                    "Username não pode ser vazio.",
+                    () => Log.Error($"Nome de perfil vazio para o usuário de email: {userGoogle.Email}."),
+                    (int)HttpStatusCode.BadRequest
+                );
+
+            if (atualizarPerfilUsuarioInput.Bio is not null && string.IsNullOrWhiteSpace(atualizarPerfilUsuarioInput.Bio))
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.DadoNulo,
+                    "Biografia não pode ser vazia",
+                    () => Log.Error($"Biografia vazia para o usuário de email: {userGoogle.Email}."),
+                    (int)HttpStatusCode.BadRequest
+                );
+
             var novoNomePerfil = atualizarPerfilUsuarioInput.NomePerfil?.Trim();
             var novaBio = atualizarPerfilUsuarioInput.Bio?.Trim();
-            var novoEstilo = atualizarPerfilUsuarioInput.EstiloDescricao?.Trim();
 
             if (!string.IsNullOrWhiteSpace(novoNomePerfil) &&
-            !novoNomePerfil.Equals(usuario.NomePerfil, StringComparison.OrdinalIgnoreCase))
+                !novoNomePerfil.Equals(usuario.NomePerfil, StringComparison.OrdinalIgnoreCase))
             {
                 var nomeJaExiste = await _usuarioRepository.VerificaUsuarioExistePorNomePerfil(novoNomePerfil);
                 if (nomeJaExiste)
                     throw new ExcecaoPersonalizada(
                         ConstantesCodigoRetornoPadrao.DuplicidadeEncontrada,
                         "Já existe um usuário com este nome de perfil.",
-                        () => Log.Error("Nome de perfil já em uso: {NomePerfil}", novoNomePerfil),
+                        () => Log.Error($"Nome de perfil já em uso: {novoNomePerfil}"),
                         (int)HttpStatusCode.Conflict
                     );
             }
 
-            if (novaBio != null)
-                usuario.Bio = novaBio;
+            var atualizarPerfilUsuariooutput = new AtualizarPerfilUsuarioOutput();
 
-            if (novoEstilo != null)
-                usuario.EstiloDescricao = novoEstilo;
+            if (novoNomePerfil != null && !novoNomePerfil.Equals(usuario.NomePerfil, StringComparison.OrdinalIgnoreCase))
+            {
+                usuario.NomePerfil = novoNomePerfil;
+                atualizarPerfilUsuariooutput.NomePerfil = usuario.NomePerfil;
+            }
+
+            if (novaBio != null && novaBio != usuario.Bio)
+            {
+                usuario.Bio = novaBio;
+                atualizarPerfilUsuariooutput.Bio = usuario.Bio;
+            }
+
+            if (atualizarPerfilUsuarioInput.Pronome.HasValue &&
+                atualizarPerfilUsuarioInput.Pronome.Value != usuario.Pronome)
+            {
+                usuario.Pronome = atualizarPerfilUsuarioInput.Pronome.Value;
+                atualizarPerfilUsuariooutput.Pronome = usuario.Pronome?.obterDescricaoEnum();
+            }
 
             usuario.DataAtualizacao = DateTime.UtcNow;
 
             await _usuarioRepository.AtualizarPerfilUsuario(usuario);
+
+            return atualizarPerfilUsuariooutput;
         }
+
         public async Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput)
         {
             var userGoogle = await _authService.ValidarTokenGoogle(atualizarFotoUsuarioInput.TokenGoogle);
@@ -196,17 +260,33 @@ namespace SMT.Back.Comissoes.Services
                 return pathCompleto;
             }
         }
+        public async Task AtualizarRedesSociais(AtualizarRedesSociaisInput atualizarRedesSociaisInput)
+        {
+            var userGoogle = await _authService.ValidarTokenGoogle(atualizarRedesSociaisInput.TokenGoogle);
+            var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
+
+            var redeSocial = new RedeSocial
+            {
+                Titulo = atualizarRedesSociaisInput.RedeSocial,
+                Url = atualizarRedesSociaisInput.Usuario,
+                UsuarioId = usuario.Id
+            };
+            await _usuarioRepository.AtualizarRedesSociais(redeSocial);
+        }
         public async Task CadastrarArtista(CadastrarArtistaInput cadastrarArtistaInput)
         {
             var usuario = await _usuarioRepository.ObterUsuarioPorId(cadastrarArtistaInput.UsuarioId);
             var artista = new Artista
             {
                 UsuarioId = usuario.Id,
+                CargoArtista = cadastrarArtistaInput.CargoArtista,
+                PrazoMedioEntrega = cadastrarArtistaInput.PrazoMedioEntrega
             };
+
             await _usuarioRepository.CadastrarArtista(artista, usuario.Id);
         }
 
-        public async Task<Artista> ObterPerfilArtista(ValidarUsuarioGoogleInput obterArtistaInput)
+        public async Task<ObterPerfilArtistaOutput> ObterPerfilArtista(ValidarUsuarioGoogleInput obterArtistaInput)
         {
             var userGoogle = await _authService.ValidarTokenGoogle(obterArtistaInput.TokenGoogle);
             var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
@@ -216,7 +296,7 @@ namespace SMT.Back.Comissoes.Services
             {
                 foreach (var item in artista.PortfolioItens)
                 {
-                    for(int j = 0; j < item.Imagens.Count; j++)
+                    for (int j = 0; j < item.Imagens.Count; j++)
                     {
                         var imagem = item.Imagens.ElementAt(j);
                         var signedUrl = _bucketService.GetPresignedUrl(imagem.UrlArquivo, TimeSpan.FromHours(6));
@@ -236,7 +316,20 @@ namespace SMT.Back.Comissoes.Services
                     );
                 }
             }
-            return artista;
+            var obterPerfilArtistaOutput = new ObterPerfilArtistaOutput
+            {
+                Id = artista.Id,
+                UsuarioId = artista.UsuarioId,
+                Estilo = artista.Estilo,
+                CargoArtista = artista.CargoArtista.obterDescricaoEnum() ?? string.Empty,
+                PrazoMedioEntrega = artista.PrazoMedioEntrega?.obterDescricaoEnum(),
+                PortfolioItens = artista.PortfolioItens,
+                Avaliacao = artista.Avaliacao,
+                AtivoParaServicos = artista.AtivoParaServicos,
+                Servicos = artista.Servicos
+            };
+
+            return obterPerfilArtistaOutput;
         }
         public async Task CadastrarPortfolioAsync(CadastrarPortfolioInput cadastrarPortfolioInput)
         {
@@ -292,19 +385,7 @@ namespace SMT.Back.Comissoes.Services
 
             await _usuarioRepository.CadastrarPortfolioArtista(artista.Id, portfolioItem);
         }
-        public async Task AtualizarRedesSociais(AtualizarRedesSociaisInput atualizarRedesSociaisInput)
-        {
-            var userGoogle = await _authService.ValidarTokenGoogle(atualizarRedesSociaisInput.TokenGoogle);
-            var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
 
-            var redeSocial = new RedeSocial
-            {
-                Titulo = atualizarRedesSociaisInput.RedeSocial,
-                Url = atualizarRedesSociaisInput.Usuario,
-                UsuarioId = usuario.Id
-            };
-            await _usuarioRepository.AtualizarRedesSociais(redeSocial);
-        }
         //public async Task CriarServico(criarservico)
         //{
 

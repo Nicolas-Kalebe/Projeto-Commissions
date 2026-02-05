@@ -13,5 +13,6 @@ namespace SMT.Back.Comissoes.DTO.Input.UsuarioController
         public DateOnly DataNascimento { get; set; } // Data de nascimento do usuário
         [Required]
         public string TokenGoogle { get; set; } = string.Empty; // Token Google do usuário
-    }
+        public PronomeEnum? Pronome { get; set; }
+        }
 }

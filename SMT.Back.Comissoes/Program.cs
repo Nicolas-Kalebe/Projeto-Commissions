@@ -1,11 +1,12 @@
-using Microsoft.EntityFrameworkCore;
-using SMT.Back.Comissoes.Data;
-using Serilog;
-using SMT.Back.Comissoes.Services.Interfaces;
-using SMT.Back.Comissoes.Services;
-using SMT.Back.Comissoes.Repositories.Interfaces;
-using SMT.Back.Comissoes.Repositories;
 using Amazon.S3;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
+using SMT.Back.Comissoes.Data;
+using SMT.Back.Comissoes.Repositories;
+using SMT.Back.Comissoes.Repositories.Interfaces;
+using SMT.Back.Comissoes.Services;
+using SMT.Back.Comissoes.Services.Interfaces;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +16,9 @@ Log.Logger = new LoggerConfiguration()
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+        .AddJsonOptions(o =>
+        o.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull); ;
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
@@ -25,7 +28,6 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
-
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IInteracaoRepository, InteracaoRepository>();

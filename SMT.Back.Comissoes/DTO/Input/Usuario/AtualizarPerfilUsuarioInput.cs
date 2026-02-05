@@ -1,14 +1,15 @@
-﻿namespace SMT.Back.Comissoes.DTO.Input.Usuario
+﻿using SMT.Back.Comissoes.Models.Enum;
+using System.ComponentModel.DataAnnotations;
+
+namespace SMT.Back.Comissoes.DTO.Input.Usuario
 {
     public class AtualizarPerfilUsuarioInput
+    
     {
+        [Required]
         public string TokenGoogle { get; set; }
         public string? NomePerfil { get; set; }
-        //public string? Pronomes { get; set; }
-        //public string? Cargo { get; set; }
         public string? Bio { get; set; }
-        public string? EstiloDescricao { get; set; }
-        //public string? PrazoMedioEntrega { get; set; }
-        //public List<string>? TagsEstilo { get; set; }
+        public PronomeEnum? Pronome { get; set; }
     }
 }

@@ -76,13 +76,13 @@ namespace SMT.Back.Comissoes.Controllers
         [HttpPatch]
         public async Task<IActionResult> AtualizarPerfilUsuario([FromBody] AtualizarPerfilUsuarioInput atualizarPerfilUsuarioInput)
         {
-            await _usuarioService.AtualizarPerfilUsuario(atualizarPerfilUsuarioInput);
+            var usuario = await _usuarioService.AtualizarPerfilUsuario(atualizarPerfilUsuarioInput);
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
             {
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
                 StatusHttp = (int)HttpStatusCode.OK,
                 Mensagem = "Dados do usuário atualizados com sucesso.",
-                Resultado = "Sucesso ao atualizar dados do usuário."
+                Resultado = usuario
             });
         }
         [HttpPatch]
@@ -94,8 +94,7 @@ namespace SMT.Back.Comissoes.Controllers
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
                 StatusHttp = (int)HttpStatusCode.OK,
                 Mensagem = "Foto de usuário atualizada com sucesso.",
-                Resultado = $"Sucesso ao atualizar foto de usuário, segue imagem: {fotoUsuario}"
-
+                Resultado = fotoUsuario
             });
         }
         [HttpPatch]
