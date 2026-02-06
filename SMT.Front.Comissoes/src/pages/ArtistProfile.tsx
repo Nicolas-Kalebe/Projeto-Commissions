@@ -29,7 +29,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { arts, priceSheets, users } from "@/data"
 import { PriceSheetRow } from "@/components/profile/PriceSheetRow"
 import {
   type CarouselApi,
@@ -521,7 +520,6 @@ function PortfolioPreviewCard({ post, onOpen }: PortfolioPreviewCardProps) {
 interface ArtistProfileProps {
   onRequestCommission: (price: number) => void
   currentUser?: User
-  isMockUser?: boolean
   onCurrentUserUpdate?: (partial: Partial<User>) => void
 }
 
@@ -590,7 +588,6 @@ function OwnerPriceSheetRow({ sheet, images }: OwnerPriceSheetRowProps) {
 export function ArtistProfile({
   onRequestCommission,
   currentUser,
-  isMockUser = false,
   onCurrentUserUpdate,
 }: ArtistProfileProps) {
   const [postDialogOpen, setPostDialogOpen] = useState(false)
@@ -645,11 +642,17 @@ export function ArtistProfile({
   const { toast } = useToast()
   const portfolioHashtagsLimit = 10
   const portfolioHashtagLengthLimit = 15
-  const fallbackArtist = users.find((user) => user.id === "art-1")
-  const artist = !isMockUser && currentUser ? currentUser : fallbackArtist
-  const isOwnerProfile = Boolean(!isMockUser && currentUser?.id && artist?.id && currentUser.id === artist.id)
-  const isRealUser = Boolean(!isMockUser && currentUser)
-  const canEditProfile = isOwnerProfile || isMockUser || isRealUser
+  const fallbackArtist: User = {
+    id: currentUser?.id ?? "",
+    nome: currentUser?.nome ?? "",
+    role: currentUser?.role ?? "cliente",
+    avatarUrl: currentUser?.avatarUrl ?? "",
+    bio: currentUser?.bio ?? "",
+    seguidores: currentUser?.seguidores ?? 0,
+  }
+  const artist = currentUser ?? fallbackArtist
+  const isOwnerProfile = Boolean(currentUser?.id && artist?.id && currentUser.id === artist.id)
+  const canEditProfile = Boolean(currentUser?.id)
 
   const applyUserFromTokenResponse = (resultado: Record<string, unknown>) => {
     const usuarioId = readField<number>(resultado, "id", "Id")
@@ -803,183 +806,35 @@ export function ArtistProfile({
     }
   }, [currentUser?.id])
 
-  const gallery = isMockUser
-    ? arts.filter((art) => art.artistId === "art-1")
-    : []
-
-  const extendedGallery = [
-    ...gallery,
-    ...gallery.map((art, index) => ({
-      ...art,
-      id: `${art.id}-extra-a-${index}`,
-      titulo: `${art.titulo} (Estudo)`,
-    })),
-    ...gallery.map((art, index) => ({
-      ...art,
-      id: `${art.id}-extra-b-${index}`,
-      titulo: `${art.titulo} (Variacao)`,
-    })),
-  ]
-  const portfolioPosts = extendedGallery.reduce<PortfolioPost[]>((acc, _, index) => {
-    const chunkSize = 3
-    if (index % chunkSize !== 0) {
-      return acc
-    }
-    const chunk = extendedGallery.slice(index, index + chunkSize)
-    const images = chunk.map((item) => item.imageUrl).filter(Boolean)
-    if (images.length === 0) {
-      return acc
-    }
-    const tags = Array.from(
-      new Set(chunk.flatMap((item) => item.tags ?? []))
-    ).slice(0, 6)
-    const titulo = chunk[0]?.titulo ?? "Novo post"
-    const descricao = `Serie com ${images.length} variacoes explorando ${tags
-      .slice(0, 3)
-      .join(" ")}.`
-    const popularidade = chunk.reduce((sum, item) => sum + item.preco, 0)
-    const likes = Math.max(12, Math.round(popularidade * 3))
-    const saves = Math.max(4, Math.round(popularidade * 1.2))
-    acc.push({
-      id: `post-${index}`,
-      titulo,
-      descricao,
-      tags,
-      images,
-      popularidade,
-      likes,
-      saves,
-      createdAt: new Date().toISOString(),
-      commissionLink: index % 3 === 0 ? "/comissoes" : undefined,
-    })
-    return acc
-  }, [])
-  const testSingleImagePost: PortfolioPost = {
-    id: "post-test-single",
-    titulo: "Anime Draw",
-    descricao:
-      "Ilustracao com foco em expressao, cores suaves e atmosfera delicada.",
-    tags: ["#Anime", "#Ilustracao", "#Personagem"],
-    images: ["/mock_arts/mock_3.jpg"],
-    popularidade: 999,
-    likes: 4280,
-    saves: 860,
-    createdAt: new Date().toISOString(),
-    commissionLink: "/comissoes",
-  }
-  const testPortfolioPosts: PortfolioPost[] = [
-    {
-      id: "post-test-3-4",
-      titulo: "Character Sketch",
-      descricao:
-        "Estudo rapido de personagem com linha limpa e foco em silhueta.",
-      tags: ["#Sketch", "#Personagem", "#Lineart"],
-      images: ["/mock_arts/mock_3.jpg", "/mock_arts/mock_3.jpg"],
-      popularidade: 780,
-      likes: 1670,
-      saves: 310,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "post-test-4-3",
-      titulo: "Cenario Ilustrado",
-      descricao:
-        "Cenario com elementos em camadas e detalhes sutis no fundo.",
-      tags: ["#Cenario", "#Background", "#Ilustracao"],
-      images: ["/mock_arts/mock_3.jpg"],
-      popularidade: 720,
-      likes: 1420,
-      saves: 280,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "post-test-16-9",
-      titulo: "Paisagem Concept",
-      descricao:
-        "Paisagem com luz natural e clima de aventura.",
-      tags: ["#Paisagem", "#Concept", "#Fantasy"],
-      images: ["/mock_arts/mock_2.jpg", "/mock_arts/mock_1.jpg"],
-      popularidade: 690,
-      likes: 1310,
-      saves: 250,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "post-test-21-9",
-      titulo: "Horizonte Fantasy",
-      descricao:
-        "Cena ampla com atmosfera leve e contraste suave.",
-      tags: ["#Fantasy", "#Atmosfera", "#Arte"],
-      images: ["/mock_arts/mock_3.jpg"],
-      popularidade: 640,
-      likes: 1180,
-      saves: 220,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "post-test-wallhaven",
-      titulo: "Noite Urbana",
-      descricao:
-        "Ilustracao noturna com luzes marcantes e clima urbano.",
-      tags: ["#Noite", "#Urbano", "#Luzes"],
-      images: ["/mock_arts/mock_3.jpg"],
-      popularidade: 820,
-      likes: 1900,
-      saves: 360,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "post-test-watercolor",
-      titulo: "Aquarela Naturaleza",
-      descricao:
-        "Pintura delicada com cores suaves e sensacao de calma.",
-      tags: ["#Aquarela", "#Natureza", "#Pintura"],
-      images: ["/mock_arts/mock_1.jpg", "/mock_arts/mock_3.jpg"],
-      popularidade: 860,
-      likes: 2100,
-      saves: 420,
-      createdAt: new Date().toISOString(),
-    },
-  ]
   const isProfileLoading =
-    !isMockUser &&
-    (!backendProfile || (!backendProfile.usuarioNomePerfil && !backendProfile.usuarioNome))
-  const ratingValue = isMockUser
-    ? 4.8
-    : typeof backendProfile?.avaliacao === "number"
+    !backendProfile || (!backendProfile.usuarioNomePerfil && !backendProfile.usuarioNome)
+  const ratingValue =
+    typeof backendProfile?.avaliacao === "number"
       ? backendProfile.avaliacao
       : 0
   if (!artist) {
     return null
   }
 
-  const baseProfileBio = isMockUser
-    ? artist.bio
-    : backendProfile?.usuarioBio?.trim()
-      ? backendProfile.usuarioBio
-      : artist.bio?.trim()
-        ? artist.bio
-        : "Bio ainda n?o informada."
-  const baseStyleDescription = isMockUser
-    ? "Tra?o leve com foco em express?es, paleta suave e detalhes delicados para personagens e cenas."
-    : backendProfile?.estilo?.trim()
-      ? backendProfile.estilo
-      : "Estilo ainda n?o informado."
-  const baseStyleTags = isProfileLoading
-    ? []
-    : isMockUser
-      ? ["Lineart suave", "Cores pasteis", "Chibi"]
-      : (backendProfile?.tagsArtista ?? [])
+  const baseProfileBio = backendProfile?.usuarioBio?.trim()
+    ? backendProfile.usuarioBio
+    : artist.bio?.trim()
+      ? artist.bio
+      : "Bio ainda n?o informada."
+  const baseStyleDescription = backendProfile?.estilo?.trim()
+    ? backendProfile.estilo
+    : "Estilo ainda n?o informado."
+  const baseStyleTags = backendProfile?.tagsArtista ?? []
   const baseCoverImageUrl =
-    !isMockUser && typeof backendProfile?.usuarioFotoCapa === "string" && backendProfile.usuarioFotoCapa.trim()
+    typeof backendProfile?.usuarioFotoCapa === "string" && backendProfile.usuarioFotoCapa.trim()
       ? backendProfile.usuarioFotoCapa
-      : !isMockUser && typeof backendProfile?.portifolioUrl === "string" && backendProfile.portifolioUrl.trim()
+      : typeof backendProfile?.portifolioUrl === "string" && backendProfile.portifolioUrl.trim()
         ? backendProfile.portifolioUrl
-        : "/mock_arts/mock_2.jpg"
+        : ""
   const baseDisplayName =
-    !isMockUser && typeof backendProfile?.usuarioNomePerfil === "string" && backendProfile.usuarioNomePerfil.trim()
+    typeof backendProfile?.usuarioNomePerfil === "string" && backendProfile.usuarioNomePerfil.trim()
       ? backendProfile.usuarioNomePerfil
-      : !isMockUser && typeof backendProfile?.usuarioNome === "string" && backendProfile.usuarioNome.trim()
+      : typeof backendProfile?.usuarioNome === "string" && backendProfile.usuarioNome.trim()
         ? backendProfile.usuarioNome
         : artist.nome
 
@@ -1030,15 +885,12 @@ export function ArtistProfile({
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_|_$/g, "")}`
-  const followersValue = isMockUser
-    ? artist.seguidores
-    : typeof backendProfile?.usuarioSeguidores === "number"
+  const followersValue =
+    typeof backendProfile?.usuarioSeguidores === "number"
       ? backendProfile.usuarioSeguidores
       : undefined
 
-  const availableSocialLinks = isMockUser
-    ? resolvedSocialLinks
-    : backendProfile?.socialLinks ?? {}
+  const availableSocialLinks = backendProfile?.socialLinks ?? {}
 
   const socialLinks: Array<{
     key: SocialLinkKey
@@ -1092,7 +944,7 @@ export function ArtistProfile({
   useEffect(() => {
     if (!isEditProfileOpen) return
     const initialDraft: ProfileDraft = {
-      displayName: !isMockUser && backendProfile?.usuarioNomePerfil
+      displayName: backendProfile?.usuarioNomePerfil
         ? backendProfile.usuarioNomePerfil
         : artist.nome,
       bio: backendProfile?.usuarioBio ?? "",
@@ -1140,7 +992,6 @@ export function ArtistProfile({
   }, [isAddPortfolioOpen])
 
   useEffect(() => {
-    if (isMockUser) return
     if (!backendProfile?.portfolioItens || backendProfile.portfolioItens.length === 0) return
     const initialLikes: Record<string, boolean> = {}
     const initialSaves: Record<string, boolean> = {}
@@ -1159,7 +1010,7 @@ export function ArtistProfile({
     if (Object.keys(initialSaves).length > 0) {
       setSavedPosts((prev) => ({ ...prev, ...initialSaves }))
     }
-  }, [backendProfile?.portfolioItens, isMockUser])
+  }, [backendProfile?.portfolioItens])
   useEffect(() => {
     const next = portfolioImages.map((file) => ({
       file,
@@ -1285,10 +1136,10 @@ export function ArtistProfile({
     const hasArtistaFieldsToSync = Boolean(
       styleDescriptionChanged || roleChanged || deliveryChanged || tagsChanged
     )
-    const shouldSyncProfileData = !isMockUser && (hasUsuarioFieldsToSync || hasArtistaFieldsToSync || socialEntries.length > 0)
+    const shouldSyncProfileData = hasUsuarioFieldsToSync || hasArtistaFieldsToSync || socialEntries.length > 0
 
     let tokenGoogle = ""
-    if (!isMockUser && (shouldSyncProfileData || Boolean(draftCoverFile))) {
+    if (shouldSyncProfileData || Boolean(draftCoverFile)) {
       tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
       if (!tokenGoogle) {
         toast({
@@ -1369,7 +1220,7 @@ export function ArtistProfile({
     }
 
     let updatedCoverUrl = nextOverrides.coverUrl
-    if (draftCoverFile && !isMockUser) {
+    if (draftCoverFile) {
       setIsUploadingCover(true)
       try {
         const formData = new FormData()
@@ -1486,7 +1337,6 @@ export function ArtistProfile({
 
   const activePriceSheets: ServiceSheet[] = [
     ...addedServices,
-    ...(isMockUser ? priceSheets : []),
   ]
   const portfolioServiceOptions = activePriceSheets.map((sheet, index) => ({
     id: sheet.id,
@@ -1497,9 +1347,7 @@ export function ArtistProfile({
       currency: "BRL",
     }),
   }))
-  const visiblePosts = isMockUser
-    ? [testSingleImagePost, ...testPortfolioPosts, ...portfolioPosts]
-    : backendPosts
+  const visiblePosts = backendPosts
   const sortedPosts = [...visiblePosts].sort((a, b) => {
     if (portfolioSort === "populares") {
       return b.popularidade - a.popularidade
@@ -1559,31 +1407,13 @@ export function ArtistProfile({
     if (sheet.imageUrl) {
       return [sheet.imageUrl]
     }
-    if (sheet.id === "ps-1") {
-      return [
-        "/mock_arts/mock_2.jpg",
-        "/mock_arts/mock_3.jpg",
-        "/mock_arts/mock_3.jpg",
-        "/mock_arts/mock_3.jpg",
-        "/mock_arts/mock_3.jpg",
-      ]
-    }
-    if (sheet.id === "ps-single-vertical") {
-      return ["/mock_arts/mock_3.jpg"]
-    }
-    const startIndex = gallery.length > 0 ? (index * 3) % gallery.length : 0
-    const images = gallery
-      .slice(startIndex, startIndex + 3)
-      .map((art) => art.imageUrl)
-      .filter(Boolean)
-
-    return images
+    return []
   })
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     event.target.value = ""
-    if (!file || isMockUser) return
+    if (!file) return
 
     const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
     if (!tokenGoogle) {
@@ -1823,7 +1653,6 @@ export function ArtistProfile({
   }
 
   const handlePortfolioSubmit = async () => {
-    if (isMockUser) return
     if (
       !portfolioTitle.trim() ||
       portfolioImages.length === 0 ||
@@ -2030,7 +1859,7 @@ export function ArtistProfile({
     }
   }
 
-  const showLoadingOverlay = !isMockUser && isProfileLoading
+  const showLoadingOverlay = isProfileLoading
 
   return (
     <section className="relative min-h-[calc(100svh-4rem)] w-full px-6 py-6">
@@ -2245,7 +2074,7 @@ export function ArtistProfile({
                   />
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
-                {!isMockUser && (
+                {canEditProfile && (
                   <>
                     <input
                       id="profile-photo-input"
