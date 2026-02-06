@@ -2420,11 +2420,11 @@ export function ArtistProfile({
       </Dialog>
 
       <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
-        <DialogContent className="w-[96vw] max-w-4xl overflow-hidden border border-white/10 bg-neutral-950 p-0 text-white">
+        <DialogContent className="w-[96vw] max-w-4xl overflow-hidden border border-border bg-background p-0 text-foreground shadow-xl">
           <div className="flex h-[86vh] flex-col">
-            <DialogHeader className="border-b border-white/10 px-6 py-4">
-              <DialogTitle className="text-white">Editar perfil</DialogTitle>
-              <DialogDescription className="text-white/60">
+            <DialogHeader className="border-b border-border px-6 py-4">
+              <DialogTitle>Editar perfil</DialogTitle>
+              <DialogDescription>
                 Atualize os dados visiveis do seu perfil.
               </DialogDescription>
             </DialogHeader>
@@ -2433,7 +2433,7 @@ export function ArtistProfile({
               {profileDraft ? (
                 <div className="space-y-8">
                   <section className="space-y-4">
-                    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-muted/40">
                       <div className="relative aspect-[16/7] w-full">
                         {profileDraft.coverUrl ? (
                           <img
@@ -2442,7 +2442,7 @@ export function ArtistProfile({
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center text-sm text-white/50">
+                          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
                             Sem capa
                           </div>
                         )}
@@ -2451,7 +2451,7 @@ export function ArtistProfile({
                           <Button
                             type="button"
                             variant="secondary"
-                            className="gap-2 bg-white/10 text-white hover:bg-white/20"
+                            className="gap-2"
                             onClick={() =>
                               document.getElementById("draft-cover-input")?.click()
                             }
@@ -2470,7 +2470,7 @@ export function ArtistProfile({
                       </div>
                       <div className="absolute bottom-6 right-6 z-20">
                         <div className="relative">
-                          <Avatar className="h-40 w-40 border-4 border-neutral-950">
+                          <Avatar className="h-40 w-40 border-4 border-background">
                             <AvatarImage
                               src={profileDraft.avatarUrl}
                               alt={profileDraft.displayName}
@@ -2481,7 +2481,7 @@ export function ArtistProfile({
                             type="button"
                             size="icon-sm"
                             variant="secondary"
-                            className="absolute -right-2 -bottom-2 h-8 w-8 rounded-full bg-white/10 text-white hover:bg-white/20"
+                            className="absolute -right-2 -bottom-2 h-8 w-8 rounded-full"
                             onClick={() =>
                               document.getElementById("draft-avatar-input")?.click()
                             }
@@ -2500,18 +2500,18 @@ export function ArtistProfile({
                     </div>
                     <div className="grid gap-4 pt-10 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label className="text-white/70">
+                        <Label className="text-muted-foreground">
                           Capa do perfil
                         </Label>
-                        <p className="text-xs text-white/50">
+                        <p className="text-xs text-muted-foreground">
                           Use o botao \"Editar capa\" para trocar a imagem.
                         </p>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-white/70">
+                        <Label className="text-muted-foreground">
                           Foto de perfil
                         </Label>
-                        <p className="text-xs text-white/50">
+                        <p className="text-xs text-muted-foreground">
                           Use o botao sobre o avatar para trocar a imagem.
                         </p>
                       </div>
@@ -2519,12 +2519,12 @@ export function ArtistProfile({
                   </section>
 
                   <section className="space-y-4">
-                    <div className="text-sm font-semibold uppercase text-white/60">
+                    <div className="text-sm font-semibold uppercase text-muted-foreground">
                       Identidade
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="profile-display-name" className="text-white/70">
+                        <Label htmlFor="profile-display-name" className="text-muted-foreground">
                           Nome de exibicao
                         </Label>
                         <Input
@@ -2533,12 +2533,12 @@ export function ArtistProfile({
                           onChange={(event) =>
                             updateDraft({ displayName: event.target.value })
                           }
-                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          className="bg-background/60"
                           placeholder="Ex: Camila Araujo"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="profile-pronouns" className="text-white/70">
+                        <Label htmlFor="profile-pronouns" className="text-muted-foreground">
                           Pronomes
                         </Label>
                         <Select
@@ -2547,7 +2547,7 @@ export function ArtistProfile({
                         >
                           <SelectTrigger
                             id="profile-pronouns"
-                            className="border-white/10 bg-white/5 text-white"
+                            className="bg-background/60"
                           >
                             <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
@@ -2560,7 +2560,7 @@ export function ArtistProfile({
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="profile-role" className="text-white/70">
+                        <Label htmlFor="profile-role" className="text-muted-foreground">
                           Cargo
                         </Label>
                         <Select
@@ -2569,7 +2569,7 @@ export function ArtistProfile({
                         >
                           <SelectTrigger
                             id="profile-role"
-                            className="border-white/10 bg-white/5 text-white"
+                            className="bg-background/60"
                           >
                             <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
@@ -2584,7 +2584,7 @@ export function ArtistProfile({
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="profile-delivery" className="text-white/70">
+                        <Label htmlFor="profile-delivery" className="text-muted-foreground">
                           Prazo medio de entrega
                         </Label>
                         <Select
@@ -2593,7 +2593,7 @@ export function ArtistProfile({
                         >
                           <SelectTrigger
                             id="profile-delivery"
-                            className="border-white/10 bg-white/5 text-white"
+                            className="bg-background/60"
                           >
                             <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
@@ -2611,11 +2611,11 @@ export function ArtistProfile({
                   <Separator />
 
                   <section className="space-y-4">
-                    <div className="text-sm font-semibold uppercase text-white/60">
+                    <div className="text-sm font-semibold uppercase text-muted-foreground">
                       Bio e estilo
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="profile-bio" className="text-white/70">
+                      <Label htmlFor="profile-bio" className="text-muted-foreground">
                         Bio
                       </Label>
                       <Textarea
@@ -2623,12 +2623,12 @@ export function ArtistProfile({
                         value={profileDraft.bio}
                         onChange={(event) => updateDraft({ bio: event.target.value })}
                         rows={4}
-                        className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                        className="bg-background/60"
                         placeholder="Conte um pouco sobre voce e o seu trabalho."
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="profile-style" className="text-white/70">
+                      <Label htmlFor="profile-style" className="text-muted-foreground">
                         Sobre o estilo
                       </Label>
                       <Textarea
@@ -2638,13 +2638,13 @@ export function ArtistProfile({
                           updateDraft({ styleDescription: event.target.value })
                         }
                         rows={4}
-                        className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                        className="bg-background/60"
                         placeholder="Descreva sua abordagem, tecnicas e referencias."
                       />
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="profile-style-tags" className="text-white/70">
+                        <Label htmlFor="profile-style-tags" className="text-muted-foreground">
                           Tags de estilo
                         </Label>
                         <Input
@@ -2653,7 +2653,7 @@ export function ArtistProfile({
                           onChange={(event) =>
                             updateDraft({ styleTags: event.target.value })
                           }
-                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          className="bg-background/60"
                           placeholder="Ex: Lineart, Cores pasteis, Chibi"
                         />
                       </div>
@@ -2663,12 +2663,12 @@ export function ArtistProfile({
                   <Separator />
 
                   <section className="space-y-4">
-                    <div className="text-sm font-semibold uppercase text-white/60">
+                    <div className="text-sm font-semibold uppercase text-muted-foreground">
                       Redes sociais
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="profile-twitter" className="text-white/70">
+                        <Label htmlFor="profile-twitter" className="text-muted-foreground">
                           Twitter/X
                         </Label>
                         <Input
@@ -2677,12 +2677,12 @@ export function ArtistProfile({
                           onChange={(event) =>
                             updateDraftSocial("twitter", normalizeSocialHandle(event.target.value))
                           }
-                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          className="bg-background/60"
                           placeholder="seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="profile-instagram" className="text-white/70">
+                        <Label htmlFor="profile-instagram" className="text-muted-foreground">
                           Instagram
                         </Label>
                         <Input
@@ -2691,12 +2691,12 @@ export function ArtistProfile({
                           onChange={(event) =>
                             updateDraftSocial("instagram", normalizeSocialHandle(event.target.value))
                           }
-                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          className="bg-background/60"
                           placeholder="seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="profile-tiktok" className="text-white/70">
+                        <Label htmlFor="profile-tiktok" className="text-muted-foreground">
                           TikTok
                         </Label>
                         <Input
@@ -2705,12 +2705,12 @@ export function ArtistProfile({
                           onChange={(event) =>
                             updateDraftSocial("tiktok", normalizeSocialHandle(event.target.value))
                           }
-                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          className="bg-background/60"
                           placeholder="seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="profile-youtube" className="text-white/70">
+                        <Label htmlFor="profile-youtube" className="text-muted-foreground">
                           YouTube
                         </Label>
                         <Input
@@ -2719,12 +2719,12 @@ export function ArtistProfile({
                           onChange={(event) =>
                             updateDraftSocial("youtube", normalizeSocialHandle(event.target.value))
                           }
-                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          className="bg-background/60"
                           placeholder="seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="profile-twitch" className="text-white/70">
+                        <Label htmlFor="profile-twitch" className="text-muted-foreground">
                           Twitch
                         </Label>
                         <Input
@@ -2733,12 +2733,12 @@ export function ArtistProfile({
                           onChange={(event) =>
                             updateDraftSocial("twitch", normalizeSocialHandle(event.target.value))
                           }
-                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          className="bg-background/60"
                           placeholder="seuusuario"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="profile-artstation" className="text-white/70">
+                        <Label htmlFor="profile-artstation" className="text-muted-foreground">
                           ArtStation
                         </Label>
                         <Input
@@ -2747,7 +2747,7 @@ export function ArtistProfile({
                           onChange={(event) =>
                             updateDraftSocial("artstation", normalizeSocialHandle(event.target.value))
                           }
-                          className="border-white/10 bg-white/5 text-white placeholder:text-white/40"
+                          className="bg-background/60"
                           placeholder="seuusuario"
                         />
                       </div>
@@ -2757,14 +2757,13 @@ export function ArtistProfile({
               ) : null}
             </div>
 
-            <DialogFooter className="border-t border-white/10 px-6 py-4">
+            <DialogFooter className="border-t border-border px-6 py-4">
               <TooltipProvider delayDuration={100}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className={`ml-auto inline-flex ${!profileHasChanges ? "cursor-pointer" : ""}`}>
                       <Button
-                        className={`bg-white text-black hover:bg-white/90 ${!profileHasChanges ? "opacity-60" : ""
-                          }`}
+                        className={`${!profileHasChanges ? "opacity-60" : ""}`}
                         onClick={handleProfileSave}
                         disabled={isUploadingCover || isSavingProfile || !profileHasChanges}
                       >
