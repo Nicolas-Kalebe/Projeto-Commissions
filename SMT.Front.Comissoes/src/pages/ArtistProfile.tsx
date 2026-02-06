@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-
 import {
   Dialog,
   DialogContent,
@@ -23,27 +21,14 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { PriceSheetRow } from "@/components/profile/PriceSheetRow"
-import {
-  type CarouselApi,
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel"
-import {
-  CarouselDots,
-  CarouselOverlayNext,
-  CarouselOverlayPrevious,
-} from "@/components/ui/carousel-overlay"
-import { useCarouselDots } from "@/hooks/use-carousel-dots"
 import { OverlayPill } from "@/components/ui/overlay"
-import type { PriceSheet, User } from "@/types"
+import { EditProfileDialog } from "@/components/profile/EditProfileDialog"
+import { ServicesSection } from "@/components/profile/ServicesSection"
+import { PortfolioSection } from "@/components/profile/PortfolioSection"
+import { ArtistInfoPanel } from "@/components/profile/ArtistInfoPanel"
+import type { ServiceSheet } from "@/components/profile/OwnerPriceSheetRow"
+import type { User } from "@/types"
+import type { PortfolioPost, ProfileDraft, SocialLinkKey } from "@/types/profile"
 import { API_ROUTES } from "@/constants/apiRoutes"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -51,28 +36,10 @@ import {
   Heart,
   Instagram,
   Link,
-  MessageCircle,
-  Pencil,
-  Star,
   Twitch,
   Twitter,
-  UserPlus,
   Youtube,
 } from "lucide-react"
-
-type PortfolioPost = {
-  id: string
-  titulo: string
-  descricao: string
-  tags: string[]
-  images: string[]
-  popularidade: number
-  likes: number
-  saves: number
-  createdAt?: string
-  backendId?: number
-  commissionLink?: string
-}
 
 type BackendArtistProfile = {
   usuarioId?: number
@@ -120,14 +87,6 @@ type BackendPortfolioItemImagem = {
   principal?: boolean
 }
 
-type SocialLinkKey =
-  | "twitter"
-  | "instagram"
-  | "tiktok"
-  | "youtube"
-  | "twitch"
-  | "artstation"
-
 type ProfileOverrides = {
   displayName?: string
   bio?: string
@@ -139,19 +98,6 @@ type ProfileOverrides = {
   styleDescription?: string
   styleTags?: string[]
   socialLinks?: Partial<Record<SocialLinkKey, string>>
-}
-
-type ProfileDraft = {
-  displayName: string
-  bio: string
-  avatarUrl: string
-  coverUrl: string
-  pronounsBadge: string
-  roleBadge: string
-  deliveryBadge: string
-  styleDescription: string
-  styleTags: string
-  socialLinks: Record<SocialLinkKey, string>
 }
 
 const userFetchGuard = { token: "", ts: 0 }
@@ -419,105 +365,10 @@ const parsePortfolioItems = (value: unknown): BackendPortfolioItem[] => {
   })
 }
 
-type PortfolioPreviewCardProps = {
-  post: PortfolioPost
-  onOpen: () => void
-}
-
-function PortfolioPreviewCard({ post, onOpen }: PortfolioPreviewCardProps) {
-  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null)
-  const hasMultipleImages = post.images.length > 1
-  const { index: carouselIndex, snaps: carouselSnaps } = useCarouselDots(
-    carouselApi,
-    hasMultipleImages
-  )
-
-  return (
-    <button
-      type="button"
-      className="relative h-full w-full cursor-pointer overflow-hidden rounded-xl border bg-card"
-      onClick={onOpen}
-    >
-      <div className="aspect-[4/3] w-full overflow-hidden">
-        <div className="relative h-full w-full">
-          {hasMultipleImages ? (
-            <Carousel
-              opts={{ loop: true }}
-              setApi={setCarouselApi}
-              className="h-full w-full overflow-hidden"
-            >
-              <CarouselContent viewportClassName="h-full" className="h-full !-ml-0">
-                {post.images.map((image, index) => (
-                  <CarouselItem key={`${post.id}-${index}`} className="h-full !pl-0">
-                    <img
-                      src={image}
-                      alt={`${post.titulo} ${index + 1}`}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselOverlayPrevious
-                className="left-2 top-1/2 -translate-y-1/2 h-8 w-8"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  carouselApi?.scrollPrev()
-                }}
-                onPointerDown={(event) => event.stopPropagation()}
-                aria-label="Imagem anterior"
-              />
-              <CarouselOverlayNext
-                className="right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  carouselApi?.scrollNext()
-                }}
-                onPointerDown={(event) => event.stopPropagation()}
-                aria-label="Proxima imagem"
-              />
-              <CarouselDots
-                snaps={carouselSnaps}
-                activeIndex={carouselIndex}
-                onSelect={(index) => carouselApi?.scrollTo(index)}
-              />
-            </Carousel>
-          ) : (
-            <img
-              src={post.images[0]}
-              alt={post.titulo}
-              className="h-full w-full object-cover"
-              loading="lazy"
-            />
-          )}
-          <OverlayPill className="pointer-events-none absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold opacity-0 transition-opacity group-hover:opacity-100">
-            {post.titulo}
-          </OverlayPill>
-        </div>
-      </div>
-    </button>
-  )
-}
-
 interface ArtistProfileProps {
   onRequestCommission: (price: number) => void
   currentUser?: User
   onCurrentUserUpdate?: (partial: Partial<User>) => void
-}
-
-type OwnerPriceSheetRowProps = {
-  sheet: {
-    id: string
-    titulo: string
-    preco: number
-    descricao: string
-    imageUrl?: string
-  }
-  images: string[]
-}
-
-type ServiceSheet = PriceSheet & {
-  images?: string[]
 }
 
 type OverlayIconButtonProps = {
@@ -536,53 +387,6 @@ function OverlayIconButton({ onClick, ariaLabel, children }: OverlayIconButtonPr
     >
       {children}
     </button>
-  )
-}
-
-function OwnerPriceSheetRow({ sheet, images }: OwnerPriceSheetRowProps) {
-  const image = images[0] ?? sheet.imageUrl
-  return (
-    <Card className="border-border/60 bg-card/95 shadow-sm">
-      <CardContent className="flex flex-col gap-6 p-5 xl:flex-row xl:items-stretch">
-        <div className="flex flex-1 flex-col gap-4">
-          <div className="space-y-2">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              Comissao
-            </p>
-            <div className="flex flex-wrap items-baseline gap-3">
-              <h3 className="text-2xl font-semibold">{sheet.titulo}</h3>
-              <span className="text-lg font-semibold text-muted-foreground">
-                {sheet.preco.toLocaleString("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                })}
-              </span>
-            </div>
-          </div>
-
-          <p className="text-sm text-muted-foreground">{sheet.descricao}</p>
-
-          <div className="mt-auto">
-            <Button variant="secondary">Editar comissao</Button>
-          </div>
-        </div>
-
-        <div className="space-y-3 xl:w-[520px] xl:shrink-0">
-          <div className="overflow-hidden rounded-xl">
-            <div className="aspect-[16/9] h-[220px] w-full">
-              {image ? (
-                <img
-                  src={image}
-                  alt={sheet.titulo}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              ) : null}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   )
 }
 
@@ -889,32 +693,32 @@ export function ArtistProfile({
   const followersValue =
     typeof backendProfile?.usuarioSeguidores === "number"
       ? backendProfile.usuarioSeguidores
-      : undefined
+      : null
 
   const availableSocialLinks = backendProfile?.socialLinks ?? {}
 
   const socialLinks: Array<{
     key: SocialLinkKey
     name: string
-    handle?: string
+    handle: string
     icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
   }> = [
     {
       key: "twitter" as SocialLinkKey,
       name: "Twitter",
-      handle: availableSocialLinks.twitter,
+      handle: availableSocialLinks.twitter ?? "",
       icon: Twitter,
     },
     {
       key: "instagram" as SocialLinkKey,
       name: "Instagram",
-      handle: availableSocialLinks.instagram,
+      handle: availableSocialLinks.instagram ?? "",
       icon: Instagram,
     },
     {
       key: "tiktok" as SocialLinkKey,
       name: "TikTok",
-      handle: availableSocialLinks.tiktok,
+      handle: availableSocialLinks.tiktok ?? "",
       icon: (props: React.SVGProps<SVGSVGElement>) => (
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
           <path d="M15.5 3.5c.6 1.6 1.9 2.8 3.5 3.2v3.1c-1.5 0-2.9-.5-4-1.3v5.2a4.9 4.9 0 1 1-4.9-4.9c.4 0 .8 0 1.2.1v3.2a1.8 1.8 0 1 0 1.5 1.8V3.5h2.7z" />
@@ -924,19 +728,19 @@ export function ArtistProfile({
     {
       key: "youtube" as SocialLinkKey,
       name: "YouTube",
-      handle: availableSocialLinks.youtube,
+      handle: availableSocialLinks.youtube ?? "",
       icon: Youtube,
     },
     {
       key: "twitch" as SocialLinkKey,
       name: "Twitch",
-      handle: availableSocialLinks.twitch,
+      handle: availableSocialLinks.twitch ?? "",
       icon: Twitch,
     },
     {
       key: "artstation" as SocialLinkKey,
       name: "ArtStation",
-      handle: availableSocialLinks.artstation,
+      handle: availableSocialLinks.artstation ?? "",
       icon: Link,
     },
   ]
@@ -1045,8 +849,11 @@ export function ArtistProfile({
   }
 
   const updateDraftSocial = (key: SocialLinkKey, value: string) => {
+    const trimmed = normalizeSocialHandle(value)
     setProfileDraft((prev) =>
-      prev ? { ...prev, socialLinks: { ...prev.socialLinks, [key]: value } } : prev
+      prev
+        ? { ...prev, socialLinks: { ...prev.socialLinks, [key]: trimmed } }
+        : prev
     )
   }
 
@@ -1929,296 +1736,53 @@ export function ArtistProfile({
             )}
           </div>
           {showServices ? (
-            activePriceSheets.length > 0 ? (
-              <div className="space-y-4">
-                {canEditProfile ? (
-                  <button
-                    type="button"
-                    className="group flex min-h-[220px] w-full cursor-pointer items-center justify-center rounded-xl border border-dashed border-zinc-500/60 bg-card/40 text-muted-foreground transition hover:border-zinc-700/70 hover:text-foreground dark:border-border/60 dark:hover:border-foreground/40"
-                    onClick={() => setIsAddServiceOpen(true)}
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-zinc-500/60 text-3xl font-semibold dark:border-border/60">
-                        +
-                      </div>
-                      <span className="text-sm font-semibold">
-                        Adicionar servi?o
-                      </span>
-                    </div>
-                  </button>
-                ) : null}
-                {activePriceSheets.map((sheet, index) =>
-                  isOwnerProfile ? (
-                    <OwnerPriceSheetRow
-                      key={sheet.id}
-                      sheet={sheet}
-                      images={serviceGalleries[index] ?? []}
-                    />
-                  ) : (
-                    <PriceSheetRow
-                      key={sheet.id}
-                      sheet={sheet}
-                      images={serviceGalleries[index] ?? []}
-                      artist={artist}
-                      onRequest={onRequestCommission}
-                    />
-                  )
-                )}
-              </div>
-            ) : canEditProfile ? (
-              <div className="space-y-4">
-                <button
-                  type="button"
-                  className="group flex min-h-[220px] w-full cursor-pointer items-center justify-center rounded-xl border border-dashed border-zinc-500/60 bg-card/40 text-muted-foreground transition hover:border-zinc-700/70 hover:text-foreground dark:border-border/60 dark:hover:border-foreground/40"
-                  onClick={() => setIsAddServiceOpen(true)}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-zinc-500/60 text-3xl font-semibold dark:border-border/60">
-                      +
-                    </div>
-                    <span className="text-sm font-semibold">
-                      Adicionar servi?o
-                    </span>
-                  </div>
-                </button>
-                <div className="rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center text-sm text-muted-foreground">
-                  Nenhum servi?o cadastrado ainda.
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center text-sm text-muted-foreground">
-                Nenhum servi?o cadastrado ainda.
-              </div>
-            )
+            <ServicesSection
+              activePriceSheets={activePriceSheets}
+              canEditProfile={canEditProfile}
+              isOwnerProfile={isOwnerProfile}
+              serviceGalleries={serviceGalleries}
+              artist={artist}
+              onAddService={() => setIsAddServiceOpen(true)}
+              onRequestCommission={onRequestCommission}
+            />
           ) : (
-            sortedPosts.length > 0 || canEditProfile ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {canEditProfile && (
-                  <button
-                    type="button"
-                    className="group flex aspect-[4/3] cursor-pointer items-center justify-center rounded-xl border border-dashed border-zinc-500/60 bg-card/40 text-muted-foreground transition hover:border-zinc-700/70 hover:text-foreground dark:border-border/60 dark:hover:border-foreground/40"
-                    onClick={() => setIsAddPortfolioOpen(true)}
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-zinc-500/60 text-3xl font-semibold dark:border-border/60">
-                        +
-                      </div>
-                      <span className="text-sm font-semibold">
-                        Adicionar imagem
-                      </span>
-                    </div>
-                  </button>
-                )}
-                {sortedPosts.map((post, index) => {
-                  const metrics = resolveMetrics(post)
-                  return (
-                  <div key={post.id} className="group relative">
-                    <PortfolioPreviewCard
-                      post={post}
-                      onOpen={() => {
-                        setActivePostIndex(index)
-                        setActiveImageIndex(0)
-                        setPostDialogOpen(true)
-                      }}
-                    />
-                    <OverlayPill className="pointer-events-none absolute bottom-3 left-3 z-10 flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold">
-                      <Heart
-                        className={`h-3 w-3 ${likedPosts[post.id] ? "fill-red-500 text-red-500" : "text-[color:var(--overlay-text-muted)]"}`}
-                      />
-                      <span>{metrics.likes.toLocaleString("pt-BR")}</span>
-                    </OverlayPill>
-                    <div className="absolute bottom-3 right-3 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                      {isOwnerProfile ? null : (
-                        <>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="icon-sm"
-                            aria-label="Curtir"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <Heart className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="icon-sm"
-                            aria-label="Salvar"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <Bookmark className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )})}
-              </div>
-            ) : (
-              <div className="rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center text-sm text-muted-foreground">
-                Nenhum post no portf?lio ainda.
-              </div>
-            )
+            <PortfolioSection
+              sortedPosts={sortedPosts}
+              canEditProfile={canEditProfile}
+              isOwnerProfile={isOwnerProfile}
+              likedPosts={likedPosts}
+              onAddPortfolio={() => setIsAddPortfolioOpen(true)}
+              onOpenPost={(index) => {
+                setActivePostIndex(index)
+                setActiveImageIndex(0)
+                setPostDialogOpen(true)
+              }}
+              resolveMetrics={resolveMetrics}
+            />
           )}
         </section>
-        <aside className="self-start lg:sticky lg:top-8">
-          <section
-            className="space-y-6 p-3 lg:-mt-3 lg:min-h-[calc(100svh-14em)]"
-          >
-
-            <div className="flex flex-col items-center gap-3 text-center">
-              <div className="relative">
-                <Avatar className="relative z-10 h-32 w-32">
-                  <AvatarImage
-                    src={resolvedAvatarUrl}
-                    alt={resolvedDisplayName}
-                  />
-                  <AvatarFallback>{initials}</AvatarFallback>
-                </Avatar>
-                {canEditProfile && (
-                  <>
-                    <input
-                      id="profile-photo-input"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarChange}
-                    />
-                    <label
-                      htmlFor="profile-photo-input"
-                      className="group absolute inset-0 z-20 flex cursor-pointer items-center justify-center rounded-full bg-[color:var(--overlay-soft)] text-[color:var(--overlay-text)] opacity-0 transition-opacity hover:opacity-100"
-                      aria-label="Editar foto de perfil"
-                    >
-                      <span className="flex items-center gap-2 text-sm font-semibold">
-                        <Pencil className="h-4 w-4" />
-                        Editar
-                      </span>
-                    </label>
-                  </>
-                )}
-                {isUploadingAvatar && (
-                  <div className="absolute inset-0 z-30 flex items-center justify-center rounded-full bg-[color:var(--overlay)] text-xs font-semibold text-[color:var(--overlay-text)]">
-                    Enviando...
-                  </div>
-                )}
-              </div>
-              <div className="space-y-1">
-                <h2 className="text-2xl font-semibold">{resolvedDisplayName}</h2>
-                <p className="text-sm text-muted-foreground">{handle}</p>
-              </div>
-              <p className="text-sm text-muted-foreground">{resolvedBio}</p>
-            </div>
-            <div className="flex w-full flex-wrap justify-center gap-2">
-              {badgeList.length > 0 ? (
-                badgeList.map((badge) => (
-                  <Badge key={badge} variant="secondary">
-                    {badge}
-                  </Badge>
-                ))
-              ) : (
-                <Badge variant="secondary">Sem badges</Badge>
-              )}
-            </div>
-            <div className="flex">
-              {canEditProfile ? (
-                <Button
-                  className="w-full gap-2 px-4 py-6 text-base"
-                  onClick={() => setIsEditProfileOpen(true)}
-                >
-                  <Pencil className="h-5 w-5" />
-                  Editar perfil
-                </Button>
-              ) : (
-                <>
-                  <Button className="flex-1 gap-2 px-4">
-                    <UserPlus className="h-4 w-4" />
-                    Seguir
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    className="flex-1 gap-2"
-                    aria-label="Enviar DM"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Mensagem
-                  </Button>
-                </>
-              )}
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-baseline gap-2">
-                <span className="text-base font-semibold">
-                  {typeof followersValue === "number"
-                    ? followersValue.toLocaleString("pt-BR")
-                    : "--"}
-                </span>
-                <span className="text-muted-foreground">Seguidores</span>
-              </div>
-              {!canEditProfile && (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-base font-semibold">312</span>
-                  <span className="text-muted-foreground">Seguindo</span>
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <span className="text-base font-semibold">
-                  {ratingValue.toFixed(1)}
-                </span>
-                <div className="flex items-center gap-0.5">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Star
-                      key={index}
-                      className={`h-3.5 w-2.5 ${index < Math.round(ratingValue)
-                        ? "fill-foreground text-foreground"
-                        : "text-muted-foreground"
-                        }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-muted-foreground">Avaliação</span>
-              </div>
-            </div>
-            <div className="text-center text-xs font-semibold uppercase text-muted-foreground">
-              Redes sociais
-            </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {socialLinks.map((link) => (
-                <Button
-                  key={link.name}
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={link.name}
-                  onClick={() => {
-                    const href = link.handle ? buildSocialHref(link.key, link.handle) : ""
-                    if (!href) return
-                    window.open(href, "_blank", "noreferrer")
-                  }}
-                >
-                  <link.icon className="h-4 w-4" />
-                </Button>
-              ))}
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="text-xs font-semibold uppercase text-muted-foreground">
-                Sobre o estilo
-              </div>
-              <p className="text-muted-foreground">
-                {resolvedStyleDescription}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {resolvedStyleTags.length > 0 ? (
-                  resolvedStyleTags.map((tag) => (
-                    <Badge key={tag} variant="secondary">
-                      {tag}
-                    </Badge>
-                  ))
-                ) : (
-                  <Badge variant="secondary">Sem tags</Badge>
-                )}
-              </div>
-            </div>
-          </section>
-        </aside>
+        <ArtistInfoPanel
+          resolvedAvatarUrl={resolvedAvatarUrl}
+          resolvedDisplayName={resolvedDisplayName}
+          initials={initials}
+          handle={handle}
+          resolvedBio={resolvedBio}
+          badgeList={badgeList}
+          canEditProfile={canEditProfile}
+          isUploadingAvatar={isUploadingAvatar}
+          onAvatarChange={handleAvatarChange}
+          onEditProfile={() => setIsEditProfileOpen(true)}
+          followersValue={followersValue}
+          ratingValue={ratingValue}
+          socialLinks={socialLinks}
+          resolvedStyleDescription={resolvedStyleDescription}
+          resolvedStyleTags={resolvedStyleTags}
+          onOpenSocial={(key, handleValue) => {
+            const href = handleValue ? buildSocialHref(key, handleValue) : ""
+            if (!href) return
+            window.open(href, "_blank", "noreferrer")
+          }}
+        />
       </div>
 
       <Dialog open={postDialogOpen} onOpenChange={setPostDialogOpen}>
@@ -2420,367 +1984,20 @@ export function ArtistProfile({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
-        <DialogContent className="w-[96vw] max-w-4xl overflow-hidden border border-border bg-background p-0 text-foreground shadow-xl">
-          <div className="flex h-[86vh] flex-col">
-            <DialogHeader className="border-b border-border px-6 py-4">
-              <DialogTitle>Editar perfil</DialogTitle>
-              <DialogDescription>
-                Atualize os dados visiveis do seu perfil.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="flex-1 overflow-y-auto px-6 py-6">
-              {profileDraft ? (
-                <div className="space-y-8">
-                  <section className="space-y-4">
-                    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-muted/40">
-                      <div className="relative aspect-[16/7] w-full">
-                        {profileDraft.coverUrl ? (
-                          <img
-                            src={profileDraft.coverUrl}
-                            alt="Preview da capa"
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
-                            Sem capa
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--overlay-strong)] via-[color:var(--overlay-faint)] to-transparent" />
-                        <div className="absolute right-4 top-4 flex gap-2">
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            className="gap-2"
-                            onClick={() =>
-                              document.getElementById("draft-cover-input")?.click()
-                            }
-                          >
-                            <Pencil className="h-4 w-4" />
-                            Editar capa
-                          </Button>
-                          <Input
-                            id="draft-cover-input"
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleDraftCoverChange}
-                          />
-                        </div>
-                      </div>
-                      <div className="absolute bottom-6 right-6 z-20">
-                        <div className="relative">
-                          <Avatar className="h-40 w-40 border-4 border-background">
-                            <AvatarImage
-                              src={profileDraft.avatarUrl}
-                              alt={profileDraft.displayName}
-                            />
-                            <AvatarFallback>{initials}</AvatarFallback>
-                          </Avatar>
-                          <Button
-                            type="button"
-                            size="icon-sm"
-                            variant="secondary"
-                            className="absolute -right-2 -bottom-2 h-8 w-8 rounded-full"
-                            onClick={() =>
-                              document.getElementById("draft-avatar-input")?.click()
-                            }
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Input
-                            id="draft-avatar-input"
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleDraftAvatarChange}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid gap-4 pt-10 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label className="text-muted-foreground">
-                          Capa do perfil
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          Use o botao \"Editar capa\" para trocar a imagem.
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-muted-foreground">
-                          Foto de perfil
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          Use o botao sobre o avatar para trocar a imagem.
-                        </p>
-                      </div>
-                    </div>
-                  </section>
-
-                  <section className="space-y-4">
-                    <div className="text-sm font-semibold uppercase text-muted-foreground">
-                      Identidade
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="profile-display-name" className="text-muted-foreground">
-                          Nome de exibicao
-                        </Label>
-                        <Input
-                          id="profile-display-name"
-                          value={profileDraft.displayName}
-                          onChange={(event) =>
-                            updateDraft({ displayName: event.target.value })
-                          }
-                          className="bg-background/60"
-                          placeholder="Ex: Camila Araujo"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="profile-pronouns" className="text-muted-foreground">
-                          Pronomes
-                        </Label>
-                        <Select
-                          value={profileDraft.pronounsBadge}
-                          onValueChange={(value) => updateDraft({ pronounsBadge: value })}
-                        >
-                          <SelectTrigger
-                            id="profile-pronouns"
-                            className="bg-background/60"
-                          >
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Ele/dele">Ele/dele</SelectItem>
-                            <SelectItem value="Ela/dela">Ela/dela</SelectItem>
-                            <SelectItem value="Elu/Delu">Elu/Delu</SelectItem>
-                            <SelectItem value="Prefiro não informar">Prefiro não informar</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="profile-role" className="text-muted-foreground">
-                          Cargo
-                        </Label>
-                        <Select
-                          value={profileDraft.roleBadge}
-                          onValueChange={(value) => updateDraft({ roleBadge: value })}
-                        >
-                          <SelectTrigger
-                            id="profile-role"
-                            className="bg-background/60"
-                          >
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Ilustradora">Ilustradora</SelectItem>
-                            <SelectItem value="Ilustrador">Ilustrador</SelectItem>
-                            <SelectItem value="Designer">Designer</SelectItem>
-                            <SelectItem value="Concept artist">Concept artist</SelectItem>
-                            <SelectItem value="Animadora">Animadora</SelectItem>
-                            <SelectItem value="Modeladora 3D">Modeladora 3D</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="profile-delivery" className="text-muted-foreground">
-                          Prazo medio de entrega
-                        </Label>
-                        <Select
-                          value={profileDraft.deliveryBadge}
-                          onValueChange={(value) => updateDraft({ deliveryBadge: value })}
-                        >
-                          <SelectTrigger
-                            id="profile-delivery"
-                            className="bg-background/60"
-                          >
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1-3 dias">1-3 dias</SelectItem>
-                            <SelectItem value="1 semana">1 semana</SelectItem>
-                            <SelectItem value="2-3 semanas">2-3 semanas</SelectItem>
-                            <SelectItem value="1 mes">1 mes</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </section>
-
-                  <Separator />
-
-                  <section className="space-y-4">
-                    <div className="text-sm font-semibold uppercase text-muted-foreground">
-                      Bio e estilo
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="profile-bio" className="text-muted-foreground">
-                        Bio
-                      </Label>
-                      <Textarea
-                        id="profile-bio"
-                        value={profileDraft.bio}
-                        onChange={(event) => updateDraft({ bio: event.target.value })}
-                        rows={4}
-                        className="bg-background/60"
-                        placeholder="Conte um pouco sobre voce e o seu trabalho."
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="profile-style" className="text-muted-foreground">
-                        Sobre o estilo
-                      </Label>
-                      <Textarea
-                        id="profile-style"
-                        value={profileDraft.styleDescription}
-                        onChange={(event) =>
-                          updateDraft({ styleDescription: event.target.value })
-                        }
-                        rows={4}
-                        className="bg-background/60"
-                        placeholder="Descreva sua abordagem, tecnicas e referencias."
-                      />
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="profile-style-tags" className="text-muted-foreground">
-                          Tags de estilo
-                        </Label>
-                        <Input
-                          id="profile-style-tags"
-                          value={profileDraft.styleTags}
-                          onChange={(event) =>
-                            updateDraft({ styleTags: event.target.value })
-                          }
-                          className="bg-background/60"
-                          placeholder="Ex: Lineart, Cores pasteis, Chibi"
-                        />
-                      </div>
-                    </div>
-                  </section>
-
-                  <Separator />
-
-                  <section className="space-y-4">
-                    <div className="text-sm font-semibold uppercase text-muted-foreground">
-                      Redes sociais
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="profile-twitter" className="text-muted-foreground">
-                          Twitter/X
-                        </Label>
-                        <Input
-                          id="profile-twitter"
-                          value={profileDraft.socialLinks.twitter}
-                          onChange={(event) =>
-                            updateDraftSocial("twitter", normalizeSocialHandle(event.target.value))
-                          }
-                          className="bg-background/60"
-                          placeholder="seuusuario"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="profile-instagram" className="text-muted-foreground">
-                          Instagram
-                        </Label>
-                        <Input
-                          id="profile-instagram"
-                          value={profileDraft.socialLinks.instagram}
-                          onChange={(event) =>
-                            updateDraftSocial("instagram", normalizeSocialHandle(event.target.value))
-                          }
-                          className="bg-background/60"
-                          placeholder="seuusuario"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="profile-tiktok" className="text-muted-foreground">
-                          TikTok
-                        </Label>
-                        <Input
-                          id="profile-tiktok"
-                          value={profileDraft.socialLinks.tiktok}
-                          onChange={(event) =>
-                            updateDraftSocial("tiktok", normalizeSocialHandle(event.target.value))
-                          }
-                          className="bg-background/60"
-                          placeholder="seuusuario"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="profile-youtube" className="text-muted-foreground">
-                          YouTube
-                        </Label>
-                        <Input
-                          id="profile-youtube"
-                          value={profileDraft.socialLinks.youtube}
-                          onChange={(event) =>
-                            updateDraftSocial("youtube", normalizeSocialHandle(event.target.value))
-                          }
-                          className="bg-background/60"
-                          placeholder="seuusuario"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="profile-twitch" className="text-muted-foreground">
-                          Twitch
-                        </Label>
-                        <Input
-                          id="profile-twitch"
-                          value={profileDraft.socialLinks.twitch}
-                          onChange={(event) =>
-                            updateDraftSocial("twitch", normalizeSocialHandle(event.target.value))
-                          }
-                          className="bg-background/60"
-                          placeholder="seuusuario"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="profile-artstation" className="text-muted-foreground">
-                          ArtStation
-                        </Label>
-                        <Input
-                          id="profile-artstation"
-                          value={profileDraft.socialLinks.artstation}
-                          onChange={(event) =>
-                            updateDraftSocial("artstation", normalizeSocialHandle(event.target.value))
-                          }
-                          className="bg-background/60"
-                          placeholder="seuusuario"
-                        />
-                      </div>
-                    </div>
-                  </section>
-                </div>
-              ) : null}
-            </div>
-
-            <DialogFooter className="border-t border-border px-6 py-4">
-              <TooltipProvider delayDuration={100}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className={`ml-auto inline-flex ${!profileHasChanges ? "cursor-pointer" : ""}`}>
-                      <Button
-                        className={`${!profileHasChanges ? "opacity-60" : ""}`}
-                        onClick={handleProfileSave}
-                        disabled={isUploadingCover || isSavingProfile || !profileHasChanges}
-                      >
-                        {isUploadingCover || isSavingProfile ? "Salvando..." : "Salvar"}
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  {!profileHasChanges ? (
-                    <TooltipContent>Sem alteracoes para salvar.</TooltipContent>
-                  ) : null}
-                </Tooltip>
-              </TooltipProvider>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EditProfileDialog
+        open={isEditProfileOpen}
+        onOpenChange={setIsEditProfileOpen}
+        profileDraft={profileDraft}
+        initials={initials}
+        profileHasChanges={profileHasChanges}
+        isUploadingCover={isUploadingCover}
+        isSavingProfile={isSavingProfile}
+        onSave={handleProfileSave}
+        onDraftCoverChange={handleDraftCoverChange}
+        onDraftAvatarChange={handleDraftAvatarChange}
+        onUpdateDraft={updateDraft}
+        onUpdateDraftSocial={updateDraftSocial}
+      />
 
       <Dialog open={isAddServiceOpen} onOpenChange={setIsAddServiceOpen}>
         <DialogContent className="w-[94vw] max-w-2xl">
