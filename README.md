@@ -8,9 +8,8 @@ Desenvolver uma plataforma digital que permita a artistas divulgar, publicar e c
 
 | | |
 |---|---|
-| ![1](https://github.com/user-attachments/assets/0285a007-44d7-4413-967b-c4472146d85e) | ![2](https://github.com/user-attachments/assets/b6e97274-3bac-46ac-a5b2-e5f23c1c36cc) |
+| ![1](https://github.com/user-attachments/assets/05795be3-caab-4af4-8780-4a6c63e4ede5) | ![2](https://github.com/user-attachments/assets/b6e97274-3bac-46ac-a5b2-e5f23c1c36cc) |
 | ![3](https://github.com/user-attachments/assets/f8d74d6b-e888-47d2-9cc3-38cb2826ba6c) | ![4](https://github.com/user-attachments/assets/2ec066eb-dfae-42e1-bf0d-a317b59960a2) |
-
 
 
 
