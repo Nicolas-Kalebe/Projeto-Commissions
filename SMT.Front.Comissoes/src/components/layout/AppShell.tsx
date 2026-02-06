@@ -59,10 +59,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
     bio: "",
     seguidores: 0,
   }
-  const [currentUser, setCurrentUser] = useState<User>(() => (
-    isAuthenticated ? emptyUser : users[2]
-  ))
-  const isMockUser = !isAuthenticated
+  const [currentUser, setCurrentUser] = useState<User>(emptyUser)
   const location = useLocation()
   const viewportRef = useRef<HTMLDivElement>(null)
 
@@ -72,7 +69,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setCurrentUser(users[2])
+      setCurrentUser(emptyUser)
       return
     }
     const googleName = localStorage.getItem("google_name")?.trim() ?? ""
@@ -228,7 +225,6 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
                   <ArtistProfile
                     onRequestCommission={handleRequestCommission}
                     currentUser={currentUser}
-                    isMockUser={isMockUser}
                     onCurrentUserUpdate={(partial) =>
                       setCurrentUser((prev) => ({ ...prev, ...partial }))
                     }
