@@ -91,12 +91,6 @@ const walletTransactions = [
   { descricao: "Pagamento #2033", tipo: "Entrada", data: "08/05", valor: "R$ 520,00" },
 ]
 
-const analyticsSummary = [
-  { label: "Conversao", value: "12,8%" },
-  { label: "Visitas", value: "18.240" },
-  { label: "Tempo medio", value: "2m 14s" },
-]
-
 const analyticsHighlights = {
   views: {
     label: "Mais visualizada",

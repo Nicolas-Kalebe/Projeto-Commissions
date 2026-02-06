@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -35,9 +35,14 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel"
+import {
+  CarouselDots,
+  CarouselOverlayNext,
+  CarouselOverlayPrevious,
+} from "@/components/ui/carousel-overlay"
+import { useCarouselDots } from "@/hooks/use-carousel-dots"
+import { OverlayPill } from "@/components/ui/overlay"
 import type { PriceSheet, User } from "@/types"
 import { API_ROUTES } from "@/constants/apiRoutes"
 import { useToast } from "@/hooks/use-toast"
@@ -421,21 +426,11 @@ type PortfolioPreviewCardProps = {
 
 function PortfolioPreviewCard({ post, onOpen }: PortfolioPreviewCardProps) {
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null)
-  const [carouselIndex, setCarouselIndex] = useState(0)
-  const [carouselSnaps, setCarouselSnaps] = useState<number[]>([])
   const hasMultipleImages = post.images.length > 1
-
-  useEffect(() => {
-    if (!carouselApi || !hasMultipleImages) return
-    setCarouselSnaps(carouselApi.scrollSnapList())
-    setCarouselIndex(carouselApi.selectedScrollSnap())
-    const onSelect = () => setCarouselIndex(carouselApi.selectedScrollSnap())
-    carouselApi.on("select", onSelect)
-    carouselApi.on("reInit", onSelect)
-    return () => {
-      carouselApi.off("select", onSelect)
-    }
-  }, [carouselApi, hasMultipleImages])
+  const { index: carouselIndex, snaps: carouselSnaps } = useCarouselDots(
+    carouselApi,
+    hasMultipleImages
+  )
 
   return (
     <button
@@ -463,8 +458,8 @@ function PortfolioPreviewCard({ post, onOpen }: PortfolioPreviewCardProps) {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious
-                className="left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 text-white hover:bg-black/70 border-transparent opacity-0 transition-opacity group-hover:opacity-100 dark:bg-black/60 dark:text-white dark:hover:bg-black/70"
+              <CarouselOverlayPrevious
+                className="left-2 top-1/2 -translate-y-1/2 h-8 w-8"
                 onClick={(event) => {
                   event.stopPropagation()
                   carouselApi?.scrollPrev()
@@ -472,8 +467,8 @@ function PortfolioPreviewCard({ post, onOpen }: PortfolioPreviewCardProps) {
                 onPointerDown={(event) => event.stopPropagation()}
                 aria-label="Imagem anterior"
               />
-              <CarouselNext
-                className="right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 text-white hover:bg-black/70 border-transparent opacity-0 transition-opacity group-hover:opacity-100 dark:bg-black/60 dark:text-white dark:hover:bg-black/70"
+              <CarouselOverlayNext
+                className="right-2 top-1/2 -translate-y-1/2 h-8 w-8"
                 onClick={(event) => {
                   event.stopPropagation()
                   carouselApi?.scrollNext()
@@ -481,24 +476,11 @@ function PortfolioPreviewCard({ post, onOpen }: PortfolioPreviewCardProps) {
                 onPointerDown={(event) => event.stopPropagation()}
                 aria-label="Proxima imagem"
               />
-              <div className="pointer-events-auto absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5">
-                {carouselSnaps.map((_, index) => (
-                  <button
-                    key={`${post.id}-dot-${index}`}
-                    type="button"
-                    className={`h-1.5 w-1.5 rounded-full transition ${index === carouselIndex
-                      ? "bg-white"
-                      : "bg-white/50 hover:bg-white/80"
-                      }`}
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      carouselApi?.scrollTo(index)
-                    }}
-                    onPointerDown={(event) => event.stopPropagation()}
-                    aria-label={`Ir para imagem ${index + 1}`}
-                  />
-                ))}
-              </div>
+              <CarouselDots
+                snaps={carouselSnaps}
+                activeIndex={carouselIndex}
+                onSelect={(index) => carouselApi?.scrollTo(index)}
+              />
             </Carousel>
           ) : (
             <img
@@ -508,9 +490,9 @@ function PortfolioPreviewCard({ post, onOpen }: PortfolioPreviewCardProps) {
               loading="lazy"
             />
           )}
-          <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
+          <OverlayPill className="pointer-events-none absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold opacity-0 transition-opacity group-hover:opacity-100">
             {post.titulo}
-          </div>
+          </OverlayPill>
         </div>
       </div>
     </button>
@@ -536,6 +518,25 @@ type OwnerPriceSheetRowProps = {
 
 type ServiceSheet = PriceSheet & {
   images?: string[]
+}
+
+type OverlayIconButtonProps = {
+  onClick: () => void
+  ariaLabel: string
+  children: ReactNode
+}
+
+function OverlayIconButton({ onClick, ariaLabel, children }: OverlayIconButtonProps) {
+  return (
+    <button
+      type="button"
+      className="absolute right-1 top-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-[color:var(--overlay-strong)] text-xs font-semibold text-[color:var(--overlay-text)] hover:bg-[color:var(--overlay-stronger)]"
+      onClick={onClick}
+      aria-label={ariaLabel}
+    >
+      {children}
+    </button>
+  )
 }
 
 function OwnerPriceSheetRow({ sheet, images }: OwnerPriceSheetRowProps) {
@@ -1400,7 +1401,7 @@ export function ArtistProfile({
       setActiveImageIndex(0)
     }
   }, [activePostIndex, sortedPosts.length])
-  const serviceGalleries = activePriceSheets.map((sheet, index) => {
+  const serviceGalleries = activePriceSheets.map((sheet) => {
     if (sheet.images && sheet.images.length > 0) {
       return sheet.images
     }
@@ -1865,9 +1866,9 @@ export function ArtistProfile({
     <section className="relative min-h-[calc(100svh-4rem)] w-full px-6 py-6">
       {showLoadingOverlay ? (
         <div className="absolute inset-0 z-20 flex items-center justify-center">
-          <div className="rounded-xl bg-black/70 px-6 py-4 text-sm font-semibold text-white shadow-lg">
+          <OverlayPill className="rounded-xl px-6 py-4 text-sm font-semibold shadow-lg">
             Carregando...
-          </div>
+          </OverlayPill>
         </div>
       ) : null}
       <div className={`space-y-6 ${showLoadingOverlay ? "pointer-events-none blur-sm" : ""}`}>
@@ -1880,7 +1881,7 @@ export function ArtistProfile({
         />
       </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
-        <section className="space-y-4 bg-card/80 p-4 md:p-5 dark:bg-[oklch(0.12_0_0)]">
+        <section className="space-y-4 bg-card/80 p-4 md:p-5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-1 rounded-full border bg-background/80 p-1 text-lg font-bold">
               <Button
@@ -2020,12 +2021,12 @@ export function ArtistProfile({
                         setPostDialogOpen(true)
                       }}
                     />
-                    <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-xs font-semibold text-white">
+                    <OverlayPill className="pointer-events-none absolute bottom-3 left-3 z-10 flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold">
                       <Heart
-                        className={`h-3 w-3 ${likedPosts[post.id] ? "fill-red-500 text-red-500" : "text-white/80"}`}
+                        className={`h-3 w-3 ${likedPosts[post.id] ? "fill-red-500 text-red-500" : "text-[color:var(--overlay-text-muted)]"}`}
                       />
                       <span>{metrics.likes.toLocaleString("pt-BR")}</span>
-                    </div>
+                    </OverlayPill>
                     <div className="absolute bottom-3 right-3 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
                       {isOwnerProfile ? null : (
                         <>
@@ -2085,7 +2086,7 @@ export function ArtistProfile({
                     />
                     <label
                       htmlFor="profile-photo-input"
-                      className="group absolute inset-0 z-20 flex cursor-pointer items-center justify-center rounded-full bg-black/45 text-white opacity-0 transition-opacity hover:opacity-100"
+                      className="group absolute inset-0 z-20 flex cursor-pointer items-center justify-center rounded-full bg-[color:var(--overlay-soft)] text-[color:var(--overlay-text)] opacity-0 transition-opacity hover:opacity-100"
                       aria-label="Editar foto de perfil"
                     >
                       <span className="flex items-center gap-2 text-sm font-semibold">
@@ -2096,7 +2097,7 @@ export function ArtistProfile({
                   </>
                 )}
                 {isUploadingAvatar && (
-                  <div className="absolute inset-0 z-30 flex items-center justify-center rounded-full bg-black/60 text-xs font-semibold text-white">
+                  <div className="absolute inset-0 z-30 flex items-center justify-center rounded-full bg-[color:var(--overlay)] text-xs font-semibold text-[color:var(--overlay-text)]">
                     Enviando...
                   </div>
                 )}
@@ -2381,10 +2382,10 @@ export function ArtistProfile({
                           <path d="M9 18l6-6-6-6" />
                         </svg>
                       </Button>
-                      <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-black/60 px-2 py-1 text-xs text-white">
+                      <OverlayPill tone="base" className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full px-2 py-1 text-xs">
                         {activeImageIndex + 1} /{" "}
                         {activePost?.images?.length ?? 0}
-                      </div>
+                      </OverlayPill>
                     </>
                   )}
                 </div>
@@ -2446,7 +2447,7 @@ export function ArtistProfile({
                             Sem capa
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--overlay-strong)] via-[color:var(--overlay-faint)] to-transparent" />
                         <div className="absolute right-4 top-4 flex gap-2">
                           <Button
                             type="button"
@@ -2927,14 +2928,12 @@ export function ArtistProfile({
                           alt={item.file.name}
                           className="h-full w-full object-cover"
                         />
-                        <button
-                          type="button"
-                          className="absolute right-1 top-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-black/70 text-xs font-semibold text-white hover:bg-black/80"
+                        <OverlayIconButton
                           onClick={() => handleRemoveServiceImage(index)}
-                          aria-label="Remover imagem"
+                          ariaLabel="Remover imagem"
                         >
                           x
-                        </button>
+                        </OverlayIconButton>
                       </div>
                     ))}
                   </div>
@@ -3150,14 +3149,12 @@ export function ArtistProfile({
                           alt={item.file.name}
                           className="h-full w-full object-cover"
                         />
-                        <button
-                          type="button"
-                          className="absolute right-1 top-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-black/70 text-xs font-semibold text-white hover:bg-black/80"
+                        <OverlayIconButton
                           onClick={() => handleRemovePortfolioImage(index)}
-                          aria-label="Remover imagem"
+                          ariaLabel="Remover imagem"
                         >
                           x
-                        </button>
+                        </OverlayIconButton>
                       </div>
                     ))}
                   </div>

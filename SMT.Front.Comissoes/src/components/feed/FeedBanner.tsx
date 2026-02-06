@@ -6,9 +6,11 @@ import {
     Carousel,
     CarouselContent,
     CarouselItem,
-    CarouselNext,
-    CarouselPrevious,
 } from "@/components/ui/carousel"
+import {
+    CarouselOverlayNext,
+    CarouselOverlayPrevious,
+} from "@/components/ui/carousel-overlay"
 
 export function FeedBanner() {
     const [bannerApi, setBannerApi] = useState<CarouselApi | null>(null)
@@ -74,16 +76,16 @@ export function FeedBanner() {
                                     className="absolute inset-0 h-full w-full scale-110 object-cover"
                                     loading="lazy"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-[color:var(--overlay-strong)] via-[color:var(--overlay-soft)] to-transparent" />
                                 <CardContent className="relative flex h-full flex-col justify-center gap-4 p-6 md:p-10">
                                     <div>
-                                        <p className="text-xs uppercase tracking-wide text-white/70">
+                                        <p className="text-xs uppercase tracking-wide text-[color:var(--overlay-text-muted)]">
                                             Destaque
                                         </p>
-                                        <h2 className="text-2xl font-semibold text-white">
+                                        <h2 className="text-2xl font-semibold text-[color:var(--overlay-text)]">
                                             {banner.title}
                                         </h2>
-                                        <p className="text-sm text-white/80">
+                                        <p className="text-sm text-[color:var(--overlay-text-muted)]">
                                             {banner.description}
                                         </p>
                                     </div>
@@ -96,16 +98,16 @@ export function FeedBanner() {
                     </CarouselItem>
                 ))}
             </CarouselContent>
-            <CarouselPrevious
-                variant="secondary"
+            <CarouselOverlayPrevious
+                variant="ghost"
                 size="icon"
-                className="left-4 top-1/2 -translate-y-1/2 rounded-full opacity-0 transition group-hover:opacity-100 dark:bg-[oklch(0.97_0_0)] dark:text-[oklch(0.205_0_0)] dark:hover:bg-[oklch(0.93_0_0)]"
+                className="left-4 top-1/2 -translate-y-1/2 opacity-0 transition group-hover:opacity-100 h-9 w-9"
                 onClick={handleBannerPrev}
             />
-            <CarouselNext
-                variant="secondary"
+            <CarouselOverlayNext
+                variant="ghost"
                 size="icon"
-                className="right-4 top-1/2 -translate-y-1/2 rounded-full opacity-0 transition group-hover:opacity-100 dark:bg-[oklch(0.97_0_0)] dark:text-[oklch(0.205_0_0)] dark:hover:bg-[oklch(0.93_0_0)]"
+                className="right-4 top-1/2 -translate-y-1/2 opacity-0 transition group-hover:opacity-100 h-9 w-9"
                 onClick={handleBannerNext}
             />
         </Carousel>

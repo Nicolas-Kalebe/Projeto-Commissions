@@ -153,7 +153,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
   }, [isAuthenticated])
 
   // Determine if we should show the radial background
-  const showBackground = !["/perfil", "/login", "/cadastro"].includes(location.pathname)
+  const showBackground = !["/login", "/cadastro"].includes(location.pathname)
 
   const artistMap = useMemo(
     () => new Map(users.map((user) => [user.id, user])),
@@ -221,7 +221,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
 
             <Route path="/perfil" element={
               <ProtectedRoute>
-                <main className="w-full px-0 py-0">
+                <main className="w-full px-0 py-0 bg-background">
                   <ArtistProfile
                     onRequestCommission={handleRequestCommission}
                     currentUser={currentUser}

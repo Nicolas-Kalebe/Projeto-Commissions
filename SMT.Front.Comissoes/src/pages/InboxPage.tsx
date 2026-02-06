@@ -147,7 +147,7 @@ export function InboxPage() {
                         </p>
                         <p
                           className={`text-xs ${conversation.unread > 0
-                            ? "font-semibold text-black dark:text-white"
+                            ? "font-semibold text-foreground"
                             : "text-muted-foreground"
                             }`}
                         >

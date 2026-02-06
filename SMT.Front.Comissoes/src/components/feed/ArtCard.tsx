@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Art, User } from "@/types"
@@ -9,9 +9,14 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel"
+import {
+  CarouselDots,
+  CarouselOverlayNext,
+  CarouselOverlayPrevious,
+} from "@/components/ui/carousel-overlay"
+import { useCarouselDots } from "@/hooks/use-carousel-dots"
+import { OverlayPill } from "@/components/ui/overlay"
 
 interface ArtCardProps {
   art: Art
@@ -28,8 +33,6 @@ export function ArtCard({
 }: ArtCardProps) {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null)
-  const [carouselIndex, setCarouselIndex] = useState(0)
-  const [carouselSnaps, setCarouselSnaps] = useState<number[]>([])
   const images = art.images?.length ? art.images : [art.imageUrl]
   const hasMultipleImages = images.length > 1
   const terms = useMemo(
@@ -72,17 +75,10 @@ export function ArtCard({
   const isBlurred = art.nsfw && !showNsfw
   const isSponsored = art.patrocinado
 
-  useEffect(() => {
-    if (!carouselApi || !hasMultipleImages) return
-    setCarouselSnaps(carouselApi.scrollSnapList())
-    setCarouselIndex(carouselApi.selectedScrollSnap())
-    const onSelect = () => setCarouselIndex(carouselApi.selectedScrollSnap())
-    carouselApi.on("select", onSelect)
-    carouselApi.on("reInit", onSelect)
-    return () => {
-      carouselApi.off("select", onSelect)
-    }
-  }, [carouselApi, hasMultipleImages])
+  const { index: carouselIndex, snaps: carouselSnaps } = useCarouselDots(
+    carouselApi,
+    hasMultipleImages
+  )
 
   return (
     <>
@@ -117,8 +113,8 @@ export function ArtCard({
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious
-                className="left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 text-white hover:bg-black/70 border-transparent opacity-0 transition-opacity group-hover:opacity-100 dark:bg-black/60 dark:text-white dark:hover:bg-black/70"
+              <CarouselOverlayPrevious
+                className="left-2 top-1/2 -translate-y-1/2 h-8 w-8"
                 onClick={(event) => {
                   event.stopPropagation()
                   carouselApi?.scrollPrev()
@@ -126,8 +122,8 @@ export function ArtCard({
                 onPointerDown={(event) => event.stopPropagation()}
                 aria-label="Imagem anterior"
               />
-              <CarouselNext
-                className="right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 text-white hover:bg-black/70 border-transparent opacity-0 transition-opacity group-hover:opacity-100 dark:bg-black/60 dark:text-white dark:hover:bg-black/70"
+              <CarouselOverlayNext
+                className="right-2 top-1/2 -translate-y-1/2 h-8 w-8"
                 onClick={(event) => {
                   event.stopPropagation()
                   carouselApi?.scrollNext()
@@ -135,25 +131,11 @@ export function ArtCard({
                 onPointerDown={(event) => event.stopPropagation()}
                 aria-label="Próxima imagem"
               />
-              <div className="pointer-events-auto absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5">
-                {carouselSnaps.map((_, index) => (
-                  <button
-                    key={`${art.id}-dot-${index}`}
-                    type="button"
-                    className={`h-1.5 w-1.5 rounded-full transition ${
-                      index === carouselIndex
-                        ? "bg-white"
-                        : "bg-white/50 hover:bg-white/80"
-                    }`}
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      carouselApi?.scrollTo(index)
-                    }}
-                    onPointerDown={(event) => event.stopPropagation()}
-                    aria-label={`Ir para imagem ${index + 1}`}
-                  />
-                ))}
-              </div>
+              <CarouselDots
+                snaps={carouselSnaps}
+                activeIndex={carouselIndex}
+                onSelect={(index) => carouselApi?.scrollTo(index)}
+              />
             </Carousel>
           ) : (
             <div className="block h-full w-full">
@@ -168,16 +150,16 @@ export function ArtCard({
 
           <div className="absolute right-2 top-2 flex flex-col gap-1 z-10">
             {isSponsored && (
-              <div className="rounded bg-black px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm shadow-sm flex items-center gap-1">
+              <OverlayPill className="rounded px-1.5 py-0.5 text-[10px] font-bold backdrop-blur-sm shadow-sm flex items-center gap-1">
                 <Megaphone className="h-3 w-3" />
                 Impulsionado
-              </div>
+              </OverlayPill>
             )}
 
             {art.nsfw && (
-              <div className="self-end rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+              <OverlayPill className="self-end rounded px-1.5 py-0.5 text-[10px] font-bold backdrop-blur-sm">
                 NSFW
-              </div>
+              </OverlayPill>
             )}
           </div>
         </div>
