@@ -9,6 +9,7 @@ import { NotificationsPage } from "@/pages/NotificationsPage"
 import { LoginPage } from "@/pages/LoginPage"
 import { CompleteSignupPage } from "@/pages/CompleteSignupPage"
 import { MyPurchasesPage } from "@/pages/MyPurchasesPage"
+import { AboutPage } from "@/pages/AboutPage"
 import { arts, notifications, users } from "@/data"
 import { AppHeader } from "@/components/layout/AppHeader"
 import { AppFooter } from "@/components/layout/AppFooter"
@@ -207,6 +208,13 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
                     onRequestCommission={handleRequestCommission}
                   />
                 </main>
+                <AppFooter />
+              </>
+            } />
+
+            <Route path="/sobre" element={
+              <>
+                <AboutPage />
                 <AppFooter />
               </>
             } />
