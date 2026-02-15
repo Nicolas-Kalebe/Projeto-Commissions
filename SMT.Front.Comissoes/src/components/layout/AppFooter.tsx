@@ -67,7 +67,7 @@ export function AppFooter() {
                     <div className="flex flex-col gap-3">
                         <h3 className="text-sm font-semibold">Empresa</h3>
                         <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
-                            <Link to="#" className="hover:text-foreground">Sobre nós</Link>
+                            <Link to="/sobre" className="hover:text-foreground">Sobre nos</Link>
                             <Link to="#" className="hover:text-foreground">Carreiras</Link>
                             <Link to="#" className="hover:text-foreground">Blog</Link>
                             <Link to="#" className="hover:text-foreground">Contato</Link>

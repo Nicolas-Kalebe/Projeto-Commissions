@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/carousel-overlay"
 import { useCarouselDots } from "@/hooks/use-carousel-dots"
 import { OverlayPill } from "@/components/ui/overlay"
+import { PausableImage } from "@/components/media/PausableImage"
 
 interface ArtCardProps {
   art: Art
@@ -104,11 +105,12 @@ export function ArtCard({
               <CarouselContent viewportClassName="h-full" className="h-full -ml-0">
                 {images.map((image, index) => (
                   <CarouselItem key={`${art.id}-${index}`} className="h-full pl-0">
-                    <img
+                    <PausableImage
                       src={image}
                       alt={`${art.titulo} ${index + 1}`}
                       className={`h-full w-full object-cover ${isBlurred ? "blur-xl scale-110" : ""}`}
                       loading="lazy"
+                      blurred={isBlurred}
                     />
                   </CarouselItem>
                 ))}
@@ -139,11 +141,12 @@ export function ArtCard({
             </Carousel>
           ) : (
             <div className="block h-full w-full">
-              <img
+              <PausableImage
                 src={art.imageUrl}
                 alt={art.titulo}
                 className={`h-full w-full object-cover transition-all duration-500 group-hover:scale-105 ${isBlurred ? "blur-xl scale-110" : ""}`}
                 loading="lazy"
+                blurred={isBlurred}
               />
             </div>
           )}
