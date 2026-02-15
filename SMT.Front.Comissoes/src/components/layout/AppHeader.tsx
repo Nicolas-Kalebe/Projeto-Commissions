@@ -186,8 +186,12 @@ const handleLogout = () => {
             className="mr-2 hidden cursor-pointer items-center gap-2 rounded-lg px-2 py-1 transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:flex"
             aria-label="Voltar ao inicio"
           >
-            <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <ShieldCheck className="size-5" />
+            <div className="flex size-10 items-center justify-center rounded-lg bg-muted/60">
+              <img
+                src="/logo-korart.svg"
+                alt="Korart"
+                className="h-8 w-8 object-contain"
+              />
             </div>
             <div className="text-left">
               <p className="text-sm font-semibold">Projeto Comissões</p>

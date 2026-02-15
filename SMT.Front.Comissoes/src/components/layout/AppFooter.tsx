@@ -17,10 +17,14 @@ export function AppFooter() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-5">
                     <div className="col-span-1 md:col-span-2 lg:col-span-2">
                         <div className="mb-2 flex items-center gap-2">
-                            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                                <span className="font-bold text-xs">PC</span>
+                            <div className="flex size-9 items-center justify-center rounded-lg bg-muted/60">
+                                <img
+                                    src="/logo-korart.svg"
+                                    alt="Korart"
+                                    className="h-7 w-7 object-contain"
+                                />
                             </div>
-                            <span className="font-semibold">Projeto Comissões</span>
+                            <span className="font-semibold">Projeto Comiss?es</span>
                         </div>
                         <p className="max-w-xs text-xs text-muted-foreground">
                             A plataforma definitiva para artistas e criadores gerenciarem suas comissões com segurança e estilo.

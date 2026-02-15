@@ -168,8 +168,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 <div className="flex flex-col gap-6">
                     <Card className="border-border/50 shadow-xl dark:bg-zinc-900/50 dark:backdrop-blur-xl">
                         <CardHeader className="text-center pt-10">
-                            <div className="mx-auto mb-4 flex h-[150px] w-[150px] items-center justify-center rounded-xl bg-muted/50 border-2 border-dashed border-muted-foreground/20">
-                                <span className="text-sm text-muted-foreground font-semibold">LOGO 150x150</span>
+                            <div className="mx-auto mb-4 flex h-[150px] w-[150px] items-center justify-center rounded-xl bg-muted/50 border border-muted-foreground/10 p-4">
+                                <img
+                                    src="/logo-korart.svg"
+                                    alt="Logo Korart"
+                                    className="h-full w-full object-contain"
+                                />
                             </div>
                             <CardTitle className="text-2xl font-bold tracking-tight">Bem-vindo de volta</CardTitle>
                             <CardDescription>
