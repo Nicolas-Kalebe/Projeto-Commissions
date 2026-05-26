@@ -1,0 +1,44 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main, development]
+    paths:
+      - "SMT.Back.Comissoes/**"
+      - ".github/workflows/deploy-back.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-back-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore SMT.Back.Comissoes/SMT.Back.Comissoes.csproj
+
+      - name: Build (Release)
+        run: dotnet build SMT.Back.Comissoes/SMT.Back.Comissoes.csproj --configuration Release --no-restore
+
+      # Trigger Render deploy hook (different hook per branch).
+      - name: Trigger Render Deploy — PROD
+        if: github.ref == 'refs/heads/main'
+        run: |
+          curl -fsSL -X POST "${{ secrets.RENDER_HOOK_BACK_PROD }}"
+
+      - name: Trigger Render Deploy — DEV
+        if: github.ref == 'refs/heads/development'
+        run: |
+          curl -fsSL -X POST "${{ secrets.RENDER_HOOK_BACK_DEV }}"

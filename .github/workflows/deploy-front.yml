@@ -1,0 +1,49 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main, development]
+    paths:
+      - "SMT.Front.Comissoes/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/deploy-front.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-front-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint frontend
+        run: npm run lint --workspace SMT.Front.Comissoes
+
+      - name: Build frontend
+        run: npm run build --workspace SMT.Front.Comissoes
+
+      - name: Trigger Render Deploy — PROD
+        if: github.ref == 'refs/heads/main'
+        run: |
+          curl -fsSL -X POST "${{ secrets.RENDER_HOOK_FRONT_PROD }}"
+
+      - name: Trigger Render Deploy — DEV
+        if: github.ref == 'refs/heads/development'
+        run: |
+          curl -fsSL -X POST "${{ secrets.RENDER_HOOK_FRONT_DEV }}"
