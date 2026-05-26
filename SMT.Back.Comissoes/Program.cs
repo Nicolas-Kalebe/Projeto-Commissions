@@ -121,17 +121,21 @@ builder.Services.AddScoped<IInteracaoService, InteracaoService>();
 builder.Services.AddScoped<IBucketService, BucketService>();
 builder.Services.AddSingleton<IAmazonS3>(sp =>
 {
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var serviceUrl = configuration["S3:ServiceUrl"]
+        ?? throw new InvalidOperationException("S3:ServiceUrl não configurado.");
+    var accessKey = configuration["S3:AccessKey"]
+        ?? throw new InvalidOperationException("S3:AccessKey não configurado.");
+    var secretKey = configuration["S3:SecretKey"]
+        ?? throw new InvalidOperationException("S3:SecretKey não configurado.");
+
     var config = new AmazonS3Config
     {
-        ServiceURL = "https://s3.us-east-005.backblazeb2.com",
+        ServiceURL = serviceUrl,
         ForcePathStyle = true
     };
 
-    return new AmazonS3Client(
-        "005e91036491bcb0000000003",
-        "K005QplQTwc/fpq5AE+iArEPEUE4vVo",
-        config
-    );
+    return new AmazonS3Client(accessKey, secretKey, config);
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
