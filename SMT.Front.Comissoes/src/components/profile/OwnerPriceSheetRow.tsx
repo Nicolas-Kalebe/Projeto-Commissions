@@ -41,7 +41,7 @@ export function OwnerPriceSheetRow({ sheet, images }: OwnerPriceSheetRowProps) {
           <p className="text-sm text-muted-foreground">{sheet.descricao}</p>
 
           <div className="mt-auto">
-            <Button variant="secondary">Editar comissao</Button>
+            <Button variant="secondary">Editar comissão</Button>
           </div>
         </div>
 

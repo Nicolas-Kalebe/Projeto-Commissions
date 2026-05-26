@@ -1,8 +1,7 @@
-﻿namespace SMT.Back.Comissoes.DTO.Input.UsuarioController
+namespace SMT.Back.Comissoes.DTO.Input.UsuarioController
 {
     public class CadastrarPortfolioInput
     {
-        public ValidarUsuarioGoogleInput TokenGoogle { get; set; } 
         public List<IFormFile>? Imagens { get; set; }
         public string? Titulo { get; set; }
         public string? Descricao { get; set; }

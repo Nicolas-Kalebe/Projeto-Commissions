@@ -24,7 +24,7 @@ export function AppFooter() {
                                     className="h-7 w-7 object-contain"
                                 />
                             </div>
-                            <span className="font-semibold">Projeto Comiss?es</span>
+                            <span className="font-semibold">Projeto Comissões</span>
                         </div>
                         <p className="max-w-xs text-xs text-muted-foreground">
                             A plataforma definitiva para artistas e criadores gerenciarem suas comissões com segurança e estilo.

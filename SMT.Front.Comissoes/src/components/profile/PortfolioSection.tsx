@@ -89,7 +89,7 @@ export function PortfolioSection({
 
   return (
     <div className="rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center text-sm text-muted-foreground">
-      Nenhum post no portf?lio ainda.
+      Nenhum post no portfólio ainda.
     </div>
   )
 }

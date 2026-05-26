@@ -1,4 +1,4 @@
-﻿using SMT.Back.Comissoes.Models.Enum;
+using SMT.Back.Comissoes.Models.Enum;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -11,6 +11,7 @@ namespace SMT.Back.Comissoes.Models.Entity
         [Required]
         public int UsuarioId { get; set; }
         [ForeignKey(nameof(UsuarioId))]
+        public Usuario? Usuario { get; set; }
         public string? Estilo { get; set; }
         [Required]
         public CargoArtistaEnum CargoArtista { get; set; }

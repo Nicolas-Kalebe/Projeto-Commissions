@@ -62,7 +62,6 @@ export function AppHeader({
   const location = useLocation()
   const navigate = useNavigate()
   const chatRef = useRef<HTMLDivElement>(null)
-  const googlePhoto = localStorage.getItem("google_photo")
 
   const groupedNotifications = useMemo(() => {
     // Sort by date first
@@ -157,24 +156,10 @@ export function AppHeader({
   }
 
 const handleLogout = () => {
-  // 1. Acessa o objeto global do Google carregado pelo script no index.html
-  const google = (window as any).google;
-
-  // 2. Desativa o login automático 
-  // Isso garante que o usuário não entre em um loop de login infinito 
-  // ao ser redirecionado para a página de login.
-  google?.accounts?.id?.disableAutoSelect();
-
-  // 3. Limpa os dados do seu banco de dados local (navegador)
-  localStorage.removeItem("google_email");
-  localStorage.removeItem("google_photo");
-  localStorage.removeItem("google_name");
-  localStorage.removeItem("google_token");
-
-  // 4. Notifica o seu sistema que o usuário deslogou
-  // Geralmente isso limpa o estado (User Context) e redireciona para o login
-  onLogout();
-};
+  const google = (window as unknown as { google?: { accounts?: { id?: { disableAutoSelect?: () => void } } } }).google
+  google?.accounts?.id?.disableAutoSelect?.()
+  onLogout()
+}
   return (
     <header className="sticky top-0 z-20 h-14 border-b bg-background/80 px-6 py-2 backdrop-blur">
       <div className="flex w-full items-center justify-between gap-3">
@@ -347,7 +332,7 @@ const handleLogout = () => {
                   aria-label="Perfil"
                 >
                   <Avatar className="size-9">
-                    <AvatarImage src={currentUser.avatarUrl || googlePhoto || ""} alt={currentUser.nome} />
+                    <AvatarImage src={currentUser.avatarUrl || ""} alt={currentUser.nome} />
                     <AvatarFallback>MS</AvatarFallback>
                   </Avatar>
                 </button>

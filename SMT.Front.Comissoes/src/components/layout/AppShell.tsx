@@ -8,6 +8,7 @@ import { NewArtPage } from "@/pages/NewArtPage"
 import { NotificationsPage } from "@/pages/NotificationsPage"
 import { LoginPage } from "@/pages/LoginPage"
 import { CompleteSignupPage } from "@/pages/CompleteSignupPage"
+import { ConfirmEmailPage } from "@/pages/ConfirmEmailPage"
 import { MyPurchasesPage } from "@/pages/MyPurchasesPage"
 import { AboutPage } from "@/pages/AboutPage"
 import { arts, notifications, users } from "@/data"
@@ -16,7 +17,7 @@ import { AppFooter } from "@/components/layout/AppFooter"
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { useState, type PropsWithChildren } from "react"
 import type { User } from "@/types"
-import { API_ROUTES } from "@/constants/apiRoutes"
+import { getAuth, subscribeAuth, type AuthUser } from "@/lib/authStorage"
 
 interface AppShellProps {
   isAuthenticated: boolean
@@ -24,43 +25,31 @@ interface AppShellProps {
   onLogout: () => void
 }
 
-const normalizeHttpUrl = (value: unknown) => {
-  if (typeof value !== "string") return ""
-  const trimmed = value.trim()
-  if (!trimmed) return ""
-  try {
-    const url = new URL(trimmed)
-    if (url.protocol !== "http:" && url.protocol !== "https:") return ""
-    return url.toString()
-  } catch {
-    return ""
-  }
+const resolveUserFromAuth = (user: AuthUser): User => ({
+  id: String(user.id),
+  nome: user.nomePerfil || user.nome || "Usuario",
+  role: user.jaAnunciou ? "artista" : "cliente",
+  avatarUrl: user.fotoPerfil ?? "",
+  bio: "",
+  seguidores: 0,
+})
+
+const emptyUser: User = {
+  id: "",
+  nome: "",
+  role: "cliente",
+  avatarUrl: "",
+  bio: "",
+  seguidores: 0,
 }
-
-const resolveDisplayName = (nomePerfil: unknown, nome: unknown, googleName: string) => {
-  if (typeof nomePerfil === "string" && nomePerfil.trim()) return nomePerfil.trim()
-  if (typeof nome === "string" && nome.trim()) return nome.trim()
-  if (googleName) return googleName
-  return "Usuario"
-}
-
-const resolveUserRole = (jaAnunciou: unknown) =>
-  jaAnunciou === true ? "artista" : "cliente"
-
-const isLikelyJwt = (value: string) => value.split(".").length === 3
 
 export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) {
   const [commissionOpen, setCommissionOpen] = useState(false)
   const [selectedPrice, setSelectedPrice] = useState(100)
-  const emptyUser: User = {
-    id: "",
-    nome: "",
-    role: "cliente",
-    avatarUrl: "",
-    bio: "",
-    seguidores: 0,
-  }
-  const [currentUser, setCurrentUser] = useState<User>(emptyUser)
+  const [currentUser, setCurrentUser] = useState<User>(() => {
+    const auth = getAuth()
+    return auth ? resolveUserFromAuth(auth.user) : emptyUser
+  })
   const location = useLocation()
   const viewportRef = useRef<HTMLDivElement>(null)
 
@@ -73,88 +62,18 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
       setCurrentUser(emptyUser)
       return
     }
-    const googleName = localStorage.getItem("google_name")?.trim() ?? ""
-    const googlePhoto = localStorage.getItem("google_photo")?.trim() ?? ""
-    setCurrentUser({
-      id: "",
-      nome: resolveDisplayName("", "", googleName),
-      role: "cliente",
-      avatarUrl: normalizeHttpUrl(googlePhoto),
-      bio: "",
-      seguidores: 0,
-    })
+    const auth = getAuth()
+    if (auth) setCurrentUser(resolveUserFromAuth(auth.user))
   }, [isAuthenticated])
 
   useEffect(() => {
-    if (!isAuthenticated) return
-    let isActive = true
-    const tokenGoogleRaw = localStorage.getItem("google_token")
-    const tokenGoogle = tokenGoogleRaw?.trim() ?? ""
-    if (!tokenGoogle || !isLikelyJwt(tokenGoogle)) return
+    return subscribeAuth((next) => {
+      setCurrentUser(next ? resolveUserFromAuth(next.user) : emptyUser)
+    })
+  }, [])
 
-    const loadUser = async () => {
-      try {
-        const googleName = localStorage.getItem("google_name")?.trim() ?? ""
-        const googlePhoto = localStorage.getItem("google_photo")?.trim() ?? ""
-        const fallbackUser: User = {
-          id: "",
-          nome: resolveDisplayName("", "", googleName),
-          role: "cliente",
-          avatarUrl: normalizeHttpUrl(googlePhoto),
-          bio: "",
-          seguidores: 0,
-        }
-        const response = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tokenGoogle }),
-        })
-        if (!response.ok) return
-        const body = await response.json().catch(() => null)
-        const resultado = body?.resultado ?? body?.Resultado
-        if (!resultado || typeof resultado !== "object") return
-
-        const fotoPerfil = (resultado as { fotoPerfil?: unknown; FotoPerfil?: unknown }).fotoPerfil
-          ?? (resultado as { FotoPerfil?: unknown }).FotoPerfil
-        const nomePerfil = (resultado as { nomePerfil?: unknown; NomePerfil?: unknown }).nomePerfil
-          ?? (resultado as { NomePerfil?: unknown }).NomePerfil
-        const nome = (resultado as { nome?: unknown; Nome?: unknown }).nome
-          ?? (resultado as { Nome?: unknown }).Nome
-        const id = (resultado as { id?: unknown; Id?: unknown }).id
-          ?? (resultado as { Id?: unknown }).Id
-        const jaAnunciou = (resultado as { jaAnunciou?: unknown; JaAnunciou?: unknown }).jaAnunciou
-          ?? (resultado as { JaAnunciou?: unknown }).JaAnunciou
-        const bio = (resultado as { bio?: unknown; Bio?: unknown }).bio
-          ?? (resultado as { Bio?: unknown }).Bio
-        const seguidores = (resultado as { seguidores?: unknown; Seguidores?: unknown }).seguidores
-          ?? (resultado as { Seguidores?: unknown }).Seguidores
-
-        if (!isActive) return
-        const displayName = resolveDisplayName(nomePerfil, nome, googleName)
-        const avatarUrl = normalizeHttpUrl(fotoPerfil) || normalizeHttpUrl(googlePhoto)
-        setCurrentUser({
-          id: id ? String(id) : fallbackUser.id,
-          nome: displayName || fallbackUser.nome,
-          role: typeof jaAnunciou === "boolean"
-            ? resolveUserRole(jaAnunciou)
-            : fallbackUser.role,
-          avatarUrl: avatarUrl || fallbackUser.avatarUrl,
-          bio: typeof bio === "string" ? bio : fallbackUser.bio,
-          seguidores: typeof seguidores === "number" ? seguidores : fallbackUser.seguidores,
-        })
-      } catch {
-        // Silent fallback to existing user data
-      }
-    }
-
-    loadUser()
-    return () => {
-      isActive = false
-    }
-  }, [isAuthenticated])
-
-  // Determine if we should show the radial background
-  const showBackground = !["/login", "/cadastro"].includes(location.pathname)
+  const showBackground = !["/login", "/cadastro", "/cadastro/confirmar"].includes(location.pathname)
+  const hideHeader = ["/login", "/cadastro", "/cadastro/confirmar"].includes(location.pathname)
 
   const artistMap = useMemo(
     () => new Map(users.map((user) => [user.id, user])),
@@ -162,10 +81,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
   )
 
   const handleRequestCommission = (price: number) => {
-    // This logic might need adjustment depending on how we handle redirects
-    // ideally navigate('/login') if not authenticated
     if (!isAuthenticated) {
-      // Ideally we would redirect here, but for now we might rely on the protected route logic or parent
       return <Navigate to="/login" />
     }
     setSelectedPrice(price)
@@ -185,7 +101,7 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.98_0.02_90),transparent)] dark:bg-[radial-gradient(1200px_600px_at_30%_-20%,oklch(0.18_0_0),transparent)]" />
       )}
       <div className="flex min-h-svh flex-1 flex-col">
-        {location.pathname !== '/login' && location.pathname !== '/cadastro' && (
+        {!hideHeader && (
           <AppHeader
             notifications={notifications}
             currentUser={currentUser}
@@ -225,6 +141,10 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
 
             <Route path="/cadastro" element={
               isAuthenticated ? <Navigate to="/inicio" replace /> : <CompleteSignupPage onLogin={onLogin} />
+            } />
+
+            <Route path="/cadastro/confirmar" element={
+              isAuthenticated ? <Navigate to="/inicio" replace /> : <ConfirmEmailPage onLogin={onLogin} />
             } />
 
             <Route path="/perfil" element={
@@ -306,6 +226,3 @@ export function AppShell({ isAuthenticated, onLogin, onLogout }: AppShellProps) 
     </div>
   )
 }
-
-
-

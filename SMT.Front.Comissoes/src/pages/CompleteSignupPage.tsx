@@ -1,71 +1,76 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react"
-import { useNavigate } from "react-router-dom"
-import { API_ROUTES } from "@/constants/apiRoutes"
+import { useMemo, useState, type FormEvent } from "react"
+import { useNavigate, Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { authService } from "@/services/authService"
+import { ApiError } from "@/lib/apiClient"
 
 interface CompleteSignupPageProps {
   onLogin: () => void
 }
 
-export function CompleteSignupPage({ onLogin }: CompleteSignupPageProps) {
+const validarSenha = (senha: string): string | null => {
+  if (senha.length < 8 || senha.length > 20) return "Senha deve ter entre 8 e 20 caracteres."
+  if (!/[A-Z]/.test(senha)) return "Senha deve ter pelo menos uma letra maiúscula."
+  if (!/[^A-Za-z0-9]/.test(senha)) return "Senha deve ter pelo menos um símbolo."
+  return null
+}
+
+export function CompleteSignupPage({ onLogin: _onLogin }: CompleteSignupPageProps) {
+  void _onLogin
   const navigate = useNavigate()
+  const [email, setEmail] = useState("")
+  const [senha, setSenha] = useState("")
+  const [confirmarSenha, setConfirmarSenha] = useState("")
   const [nomePerfil, setNomePerfil] = useState("")
   const [dataNascimento, setDataNascimento] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const tokenGoogle = localStorage.getItem("google_token") ?? ""
-  const googleName = localStorage.getItem("google_name") ?? ""
-  const googleEmail = localStorage.getItem("google_email") ?? ""
-  const googlePhoto = localStorage.getItem("google_photo") ?? ""
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], [])
 
-  useEffect(() => {
-    if (!tokenGoogle) {
-      navigate("/login", { replace: true })
-    }
-  }, [navigate, tokenGoogle])
+  const senhaErro = senha ? validarSenha(senha) : null
+  const senhaCheck = {
+    tamanho: senha.length >= 8 && senha.length <= 20,
+    maiuscula: /[A-Z]/.test(senha),
+    simbolo: /[^A-Za-z0-9]/.test(senha),
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
 
-    if (!nomePerfil.trim() || !dataNascimento || !tokenGoogle) {
-      setError("Preencha todos os campos obrigatórios antes de continuar.")
+    if (!email || !senha || !nomePerfil || !dataNascimento) {
+      setError("Preencha todos os campos obrigatórios.")
+      return
+    }
+    const senhaInvalida = validarSenha(senha)
+    if (senhaInvalida) {
+      setError(senhaInvalida)
+      return
+    }
+    if (senha !== confirmarSenha) {
+      setError("As senhas não coincidem.")
       return
     }
 
-    setIsSubmitting(true)
+    setSubmitting(true)
     try {
-      const response = await fetch(API_ROUTES.Usuario.cadastrarUsuario, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nomePerfil: nomePerfil.trim(),
-          dataNascimento,
-          tokenGoogle,
-        }),
+      await authService.cadastrar({
+        email: email.trim(),
+        senha,
+        nomePerfil: nomePerfil.trim(),
+        dataNascimento,
       })
-
-      if (!response.ok) {
-        const body = await response.json().catch(() => null)
-        const mensagem = body?.mensagem ?? "Nao foi possivel completar o cadastro."
-        setError(mensagem)
-        return
-      }
-
-      localStorage.removeItem("google_token")
-      onLogin()
-      navigate("/inicio", { replace: true })
-    } catch {
-      setError("Nao foi possivel conectar ao servidor.")
+      navigate(`/cadastro/confirmar?email=${encodeURIComponent(email.trim())}`)
+    } catch (e) {
+      const err = e as ApiError
+      setError(err.message || "Não foi possível completar o cadastro.")
     } finally {
-      setIsSubmitting(false)
+      setSubmitting(false)
     }
   }
 
@@ -74,26 +79,12 @@ export function CompleteSignupPage({ onLogin }: CompleteSignupPageProps) {
       <div className="w-full max-w-lg">
         <Card className="border-border/50 shadow-xl dark:bg-zinc-900/50 dark:backdrop-blur-xl">
           <CardHeader className="text-center pt-10">
-            <div className="mx-auto mb-4 flex h-[96px] w-[96px] items-center justify-center overflow-hidden rounded-2xl border border-border/60 bg-muted/40">
-              {googlePhoto ? (
-                <img src={googlePhoto} alt={googleName || "Usuario"} className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-sm text-muted-foreground font-semibold">Perfil</span>
-              )}
-            </div>
-            <CardTitle className="text-2xl font-bold tracking-tight">Finalize seu cadastro</CardTitle>
+            <CardTitle className="text-2xl font-bold tracking-tight">Criar conta</CardTitle>
             <CardDescription>
-              Informe seu nome de perfil e data de nascimento para continuar.
+              Crie sua conta com e-mail e senha. Você receberá um código de 6 dígitos para confirmar.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6">
-            {(googleName || googleEmail) && (
-              <div className="rounded-lg border border-border/50 bg-muted/30 px-4 py-3 text-sm">
-                {googleName && <p className="font-semibold text-foreground">{googleName}</p>}
-                {googleEmail && <p className="text-muted-foreground">{googleEmail}</p>}
-              </div>
-            )}
-
             {error && (
               <Alert variant="destructive">
                 <AlertTitle>Erro no cadastro</AlertTitle>
@@ -103,40 +94,83 @@ export function CompleteSignupPage({ onLogin }: CompleteSignupPageProps) {
 
             <form className="grid gap-4" onSubmit={handleSubmit}>
               <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="nomePerfil">Nome de perfil</Label>
                 <Input
                   id="nomePerfil"
-                  name="nomePerfil"
                   placeholder="seu_username"
                   value={nomePerfil}
-                  onChange={(event) => setNomePerfil(event.target.value)}
+                  onChange={(e) => setNomePerfil(e.target.value)}
                   required
                 />
-                <p className="text-xs text-muted-foreground">
-                  Este sera seu @ no sistema. Use algo simples e unico.
-                </p>
+                <p className="text-xs text-muted-foreground">Este será seu @ no sistema.</p>
               </div>
-
               <div className="grid gap-2">
                 <Label htmlFor="dataNascimento">Data de nascimento</Label>
                 <Input
                   id="dataNascimento"
-                  name="dataNascimento"
                   type="date"
                   max={today}
                   value={dataNascimento}
-                  onChange={(event) => setDataNascimento(event.target.value)}
+                  onChange={(e) => setDataNascimento(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="senha">Senha</Label>
+                <Input
+                  id="senha"
+                  type="password"
+                  autoComplete="new-password"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  required
+                />
+                <ul className="text-xs space-y-1 mt-1">
+                  <li className={senhaCheck.tamanho ? "text-green-600" : "text-muted-foreground"}>
+                    {senhaCheck.tamanho ? "OK" : "-"} 8 a 20 caracteres
+                  </li>
+                  <li className={senhaCheck.maiuscula ? "text-green-600" : "text-muted-foreground"}>
+                    {senhaCheck.maiuscula ? "OK" : "-"} pelo menos 1 letra maiúscula
+                  </li>
+                  <li className={senhaCheck.simbolo ? "text-green-600" : "text-muted-foreground"}>
+                    {senhaCheck.simbolo ? "OK" : "-"} pelo menos 1 símbolo
+                  </li>
+                </ul>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="confirmarSenha">Confirmar senha</Label>
+                <Input
+                  id="confirmarSenha"
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmarSenha}
+                  onChange={(e) => setConfirmarSenha(e.target.value)}
                   required
                 />
               </div>
 
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Salvando..." : "Concluir cadastro"}
+              <Button type="submit" disabled={submitting || !!senhaErro}>
+                {submitting ? "Enviando..." : "Criar conta"}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center text-center text-xs text-muted-foreground pb-6">
-            Ao continuar, voce confirma que os dados acima estao corretos.
+          <CardFooter className="flex justify-center text-center text-sm text-muted-foreground pb-6">
+            Já tem conta?&nbsp;
+            <Link to="/login" className="underline hover:text-primary">
+              Entrar
+            </Link>
           </CardFooter>
         </Card>
       </div>

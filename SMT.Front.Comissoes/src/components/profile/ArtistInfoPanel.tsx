@@ -160,7 +160,7 @@ export function ArtistInfoPanel({
                 />
               ))}
             </div>
-            <span className="text-muted-foreground">AvaliaÃ§Ã£o</span>
+            <span className="text-muted-foreground">Avaliação</span>
           </div>
         </div>
         <div className="text-center text-xs font-semibold uppercase text-muted-foreground">

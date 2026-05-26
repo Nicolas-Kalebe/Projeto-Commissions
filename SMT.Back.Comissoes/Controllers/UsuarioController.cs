@@ -1,130 +1,106 @@
-﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
 using SMT.Back.Comissoes.DTO.Input.Usuario;
 using SMT.Back.Comissoes.DTO.Input.UsuarioController;
 using SMT.Back.Comissoes.Models;
-using SMT.Back.Comissoes.Models.Entity;
-using SMT.Back.Comissoes.Models.Enum;
 using SMT.Back.Comissoes.Services.Interfaces;
 using SMT.Back.Comissoes.Utils;
 using System.Net;
 
 namespace SMT.Back.Comissoes.Controllers
 {
-    //[Authorize]
     [ApiController]
     [Route("api/[controller]/[action]")]
     public class UsuarioController : ControllerBase
     {
-        public readonly IUsuarioService _usuarioService;
+        private readonly IUsuarioService _usuarioService;
+
         public UsuarioController(IUsuarioService usuarioService)
         {
             _usuarioService = usuarioService;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Cadastrar([FromBody] CadastrarUsuarioInput usuarioInput)
+        [HttpGet]
+        public async Task<IActionResult> ObterStatusUsuario()
         {
-            await _usuarioService.CadastrarUsuario(usuarioInput);
-            Log.Information($"Usuário cadastrado com sucesso: Nome de Perfil: {usuarioInput.NomePerfil}");
+            var statusUsuario = await _usuarioService.ObterStatusUsuario();
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
             {
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
                 StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Usuário cadastrado com sucesso.",
-                Resultado = "Cadastro de usuário realizado com sucesso."
-            });
-        }
-        //[HttpPost]
-        //public async Task<IActionResult> Autenticar([FromBody] AutenticarUsuarioInput autenticarUsuarioInput)
-        //{
-        //    var usuarioAutenticado = await _usuarioService.AutenticarUsuario(autenticarUsuarioInput);
-        //    return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
-        //    {
-        //        Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
-        //        StatusHttp = (int)HttpStatusCode.OK,
-        //        Mensagem = "Usuário autenticado com sucesso.",
-        //        Resultado = usuarioAutenticado
-        //    });
-        //}
-
-        [HttpPost]
-        public async Task<IActionResult> ObterStatusUsuario([FromBody] ValidarUsuarioGoogleInput obterStatusInput)
-        {
-            var statusUsuario = await _usuarioService.ObterStatusUsuario(obterStatusInput);
-            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
-            {
-                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
-                StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Status do usuário obtido com sucesso.",
+                Mensagem = "Status do usuario obtido com sucesso.",
                 Resultado = statusUsuario
             });
         }
-        [HttpPost]
-        public async Task<IActionResult> ObterUsuarioPorToken([FromBody] ValidarUsuarioGoogleInput obterTokenGoogleInput)
+
+        [HttpGet]
+        public async Task<IActionResult> ObterMeuUsuario()
         {
-            var usuario = await _usuarioService.ObterUsuarioPorToken(obterTokenGoogleInput);
+            var usuario = await _usuarioService.ObterMeuUsuario();
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
             {
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
                 StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Usuário obtido com sucesso pelo token Google.",
+                Mensagem = "Usuario autenticado obtido com sucesso.",
                 Resultado = usuario
             });
         }
+
         [HttpPatch]
-        public async Task<IActionResult> AtualizarPerfilUsuario([FromBody] AtualizarPerfilUsuarioInput atualizarPerfilUsuarioInput)
+        public async Task<IActionResult> AtualizarPerfilUsuario([FromBody] AtualizarPerfilUsuarioInput input)
         {
-            var usuario = await _usuarioService.AtualizarPerfilUsuario(atualizarPerfilUsuarioInput);
+            var usuario = await _usuarioService.AtualizarPerfilUsuario(input);
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
             {
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
                 StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Dados do usuário atualizados com sucesso.",
+                Mensagem = "Dados do usuario atualizados com sucesso.",
                 Resultado = usuario
             });
         }
+
         [HttpPatch]
-        public async Task<IActionResult> AtualizarFotoUsuario([FromForm] AtualizarFotoUsuarioInput atualizarFotoUsuarioInput)
+        public async Task<IActionResult> AtualizarFotoUsuario([FromForm] AtualizarFotoUsuarioInput input)
         {
-            var fotoUsuario = await _usuarioService.AtualizarFotoUsuario(atualizarFotoUsuarioInput);
+            var fotoUsuario = await _usuarioService.AtualizarFotoUsuario(input);
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
             {
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
                 StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Foto de usuário atualizada com sucesso.",
+                Mensagem = "Foto de usuario atualizada com sucesso.",
                 Resultado = fotoUsuario
             });
         }
+
         [HttpPatch]
-        public async Task<IActionResult> AtualizarRedesSociais([FromBody] AtualizarRedesSociaisInput atualizarDadosUsuarioInput)
+        public async Task<IActionResult> AtualizarRedesSociais([FromBody] AtualizarRedesSociaisInput input)
         {
-            await _usuarioService.AtualizarRedesSociais(atualizarDadosUsuarioInput);
+            await _usuarioService.AtualizarRedesSociais(input);
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
             {
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
                 StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Dados do usuário atualizados com sucesso.",
-                Resultado = "Sucesso ao atualizar dados do usuário."
+                Mensagem = "Redes sociais atualizadas com sucesso.",
+                Resultado = "Sucesso ao atualizar redes sociais."
             });
         }
+
         [HttpPost]
-        public async Task<IActionResult> CadastrarArtista([FromBody] CadastrarArtistaInput cadastrarArtistaInput)
+        public async Task<IActionResult> CadastrarArtista([FromBody] CadastrarArtistaInput input)
         {
-            await _usuarioService.CadastrarArtista(cadastrarArtistaInput);
+            await _usuarioService.CadastrarArtista(input);
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
             {
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
                 StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Usuário cadastrado como artista com sucesso",
-                Resultado = "Sucesso ao cadastrar usuário como artista no sistema."
+                Mensagem = "Usuario cadastrado como artista com sucesso.",
+                Resultado = "Sucesso ao cadastrar usuario como artista."
             });
         }
-        [HttpPost]
-        public async Task<IActionResult> ObterPerfilArtista([FromBody] ValidarUsuarioGoogleInput obterArtistaInput)
+
+        [HttpGet]
+        public async Task<IActionResult> ObterPerfilArtista()
         {
-            var artista = await _usuarioService.ObterPerfilArtista(obterArtistaInput);
+            var artista = await _usuarioService.ObterPerfilArtista();
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
             {
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
@@ -133,10 +109,11 @@ namespace SMT.Back.Comissoes.Controllers
                 Resultado = artista
             });
         }
+
         [HttpPatch]
-        public async Task<IActionResult> AtualizarPerfilArtista([FromBody] AtualizarPerfilArtistaInput atualizarPerfilArtistaInput)
+        public async Task<IActionResult> AtualizarPerfilArtista([FromBody] AtualizarPerfilArtistaInput input)
         {
-            var artista = await _usuarioService.AtualizarPerfilArtista(atualizarPerfilArtistaInput);
+            var artista = await _usuarioService.AtualizarPerfilArtista(input);
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
             {
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
@@ -145,30 +122,18 @@ namespace SMT.Back.Comissoes.Controllers
                 Resultado = artista
             });
         }
+
         [HttpPost]
-        public async Task<IActionResult> CadastrarPortfolio([FromForm] CadastrarPortfolioInput cadastrarPortfolioInput)
+        public async Task<IActionResult> CadastrarPortfolio([FromForm] CadastrarPortfolioInput input)
         {
-            await _usuarioService.CadastrarPortfolioAsync(cadastrarPortfolioInput);
+            await _usuarioService.CadastrarPortfolioAsync(input);
             return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
             {
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
                 StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Portfólio atualizado com sucesso.",
-                Resultado = "Sucesso ao atualizar portfólio do artista."
+                Mensagem = "Portfolio atualizado com sucesso.",
+                Resultado = "Sucesso ao atualizar portfolio do artista."
             });
         }
-
-        //[HttpPost]
-        //public async Task<IActionResult> CriarServico([FromBody ] CadastrarServicoInput criarServicoInput)
-        //{
-        //    await _usuarioService.CriarServico(criarServicoInput);
-        //    return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
-        //    {
-        //        Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
-        //        StatusHttp = (int)HttpStatusCode.OK,
-        //        Mensagem = "Serviço criado com sucesso.",
-        //        Resultado = "Sucesso ao criar serviço para o artista."
-        //    });
-        //}
     }
 }

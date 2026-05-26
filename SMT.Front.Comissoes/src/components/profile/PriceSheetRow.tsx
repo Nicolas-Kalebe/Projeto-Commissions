@@ -27,21 +27,21 @@ export function PriceSheetRow({
   const defaultTerms = useMemo(
     () =>
       [
-        "### Revisoes",
-        "- Ate **2 revisoes** inclusas na etapa de rascunho.",
-        "- Ajustes pequenos de pose, expressao e paleta.",
+        "### Revisões",
+        "- Até **2 revisões** inclusas na etapa de rascunho.",
+        "- Ajustes pequenos de pose, expressão e paleta.",
         "",
-        "### Comunicacao",
+        "### Comunicação",
         "- Atendimento via chat da plataforma.",
-        "- Prazo de resposta de ate *48h uteis*.",
+        "- Prazo de resposta de até *48h úteis*.",
         "",
         "### Uso e entrega",
         "- Uso pessoal liberado.",
-        "- Uso comercial exige **licenca adicional**.",
-        "- Entrega em **PNG** e **JPG** (alta resolucao).",
+        "- Uso comercial exige **licença adicional**.",
+        "- Entrega em **PNG** e **JPG** (alta resolução).",
         "",
-        "### Observacoes",
-        "- Mudancas grandes apos pintura final podem gerar taxa.",
+        "### Observações",
+        "- Mudanças grandes após pintura final podem gerar taxa.",
       ].join("\n"),
     []
   )

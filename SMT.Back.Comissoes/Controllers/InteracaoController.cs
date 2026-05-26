@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using SMT.Back.Comissoes.DTO.Input;
 using SMT.Back.Comissoes.DTO.Input.Interacao;
 using SMT.Back.Comissoes.Models;
 using SMT.Back.Comissoes.Models.Enum;
-using SMT.Back.Comissoes.Services;
 using SMT.Back.Comissoes.Services.Interfaces;
 using SMT.Back.Comissoes.Utils;
 using System.Net;
@@ -15,166 +13,86 @@ namespace SMT.Back.Comissoes.Controllers
     public class InteracaoController : ControllerBase
     {
         private readonly IInteracaoService _interacaoService;
-        private readonly IUsuarioService _usuarioService;
-        private readonly IAuthService _authService;
+        private readonly ICurrentUser _currentUser;
 
-        public InteracaoController(IInteracaoService interacaoService, IUsuarioService usuarioService, IAuthService authService)
+        public InteracaoController(IInteracaoService interacaoService, ICurrentUser currentUser)
         {
             _interacaoService = interacaoService;
-            _usuarioService = usuarioService;
-            _authService = authService;
+            _currentUser = currentUser;
         }
 
         [HttpPost]
-        public async Task<IActionResult> Curtir([FromBody] InteracaoCurtidaInput interacaoCurtidaInput)
+        public async Task<IActionResult> Curtir([FromBody] InteracaoCurtidaInput input)
         {
-            if (interacaoCurtidaInput.TipoAlvoInteracao != TipoAlvoInteracaoEnum.PortfolioItem &&
-                interacaoCurtidaInput.TipoAlvoInteracao != TipoAlvoInteracaoEnum.Post)
-            {
-                throw new ExcecaoPersonalizada(
-                    ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
-                    "Descurtir só pode ser aplicado em portfolio ou post.",
-                    () => { },
-                    (int)HttpStatusCode.BadRequest);
-            }
-            var usuarioId = await ObterUsuarioId(interacaoCurtidaInput.GoogleToken);
-            await _interacaoService.CurtirAsync(usuarioId, interacaoCurtidaInput.AlvoId, interacaoCurtidaInput.TipoAlvoInteracao);
-
-            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
-            {
-                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
-                StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Like registrado com sucesso.",
-                Resultado = "Like registrado com sucesso."
-            });
+            ValidarAlvoPortfolioOuPost(input.TipoAlvoInteracao, "Curtir");
+            await _interacaoService.CurtirAsync(_currentUser.UsuarioId, input.AlvoId, input.TipoAlvoInteracao);
+            return Ok(MontarRetorno("Like registrado com sucesso."));
         }
 
         [HttpDelete]
-        public async Task<IActionResult> Descurtir([FromBody] InteracaoCurtidaInput interacaoCurtidaInput)
+        public async Task<IActionResult> Descurtir([FromBody] InteracaoCurtidaInput input)
         {
-            if (interacaoCurtidaInput.TipoAlvoInteracao != TipoAlvoInteracaoEnum.PortfolioItem &&
-                interacaoCurtidaInput.TipoAlvoInteracao != TipoAlvoInteracaoEnum.Post)
-            {
-                throw new ExcecaoPersonalizada(
-                    ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
-                    "Descurtir só pode ser aplicado em portfolio ou post.",
-                    () => { },
-                    (int)HttpStatusCode.BadRequest);
-            }
-            var usuarioId = await ObterUsuarioId(interacaoCurtidaInput.GoogleToken);
-
-            await _interacaoService.DescurtirAsync(usuarioId, interacaoCurtidaInput.AlvoId, interacaoCurtidaInput.TipoAlvoInteracao);
-            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
-            {
-                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
-                StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Like removido com sucesso.",
-                Resultado = "Like removido com sucesso."
-            });
+            ValidarAlvoPortfolioOuPost(input.TipoAlvoInteracao, "Descurtir");
+            await _interacaoService.DescurtirAsync(_currentUser.UsuarioId, input.AlvoId, input.TipoAlvoInteracao);
+            return Ok(MontarRetorno("Like removido com sucesso."));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Salvar([FromBody] InteracaoSalvamentoInput interacaoFavoritoInput)
+        public async Task<IActionResult> Salvar([FromBody] InteracaoSalvamentoInput input)
         {
-            if (interacaoFavoritoInput.TipoAlvoInteracao != TipoAlvoInteracaoEnum.PortfolioItem &&
-                interacaoFavoritoInput.TipoAlvoInteracao != TipoAlvoInteracaoEnum.Post)
-            {
-                throw new ExcecaoPersonalizada(
-                    ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
-                    "Favorito so pode ser aplicado em portfolio ou post.",
-                    () => { },
-                    (int)HttpStatusCode.BadRequest);
-            }
-
-            var usuarioId = await ObterUsuarioId(interacaoFavoritoInput.GoogleToken);
-            await _interacaoService.SalvarAsync(usuarioId, interacaoFavoritoInput.AlvoId, interacaoFavoritoInput.TipoAlvoInteracao);
-
-            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
-            {
-                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
-                StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Favorito registrado com sucesso.",
-                Resultado = "Favorito registrado com sucesso."
-            });
+            ValidarAlvoPortfolioOuPost(input.TipoAlvoInteracao, "Salvar");
+            await _interacaoService.SalvarAsync(_currentUser.UsuarioId, input.AlvoId, input.TipoAlvoInteracao);
+            return Ok(MontarRetorno("Favorito registrado com sucesso."));
         }
 
         [HttpDelete]
-        public async Task<IActionResult> RemoverSalvamento([FromBody] InteracaoSalvamentoInput interacaoSalvamentoInput)
+        public async Task<IActionResult> RemoverSalvamento([FromBody] InteracaoSalvamentoInput input)
         {
-            if (interacaoSalvamentoInput.TipoAlvoInteracao != TipoAlvoInteracaoEnum.PortfolioItem &&
-                interacaoSalvamentoInput.TipoAlvoInteracao != TipoAlvoInteracaoEnum.Post)
-            {
-                throw new ExcecaoPersonalizada(
-                    ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
-                    "Remover salvamento só pode ser aplicado em portfolio ou post.",
-                    () => { },
-                    (int)HttpStatusCode.BadRequest);
-            }
-
-            var usuarioId = await ObterUsuarioId(interacaoSalvamentoInput.GoogleToken);
-            await _interacaoService.RemoverSalvarAsync(usuarioId, interacaoSalvamentoInput.AlvoId, interacaoSalvamentoInput.TipoAlvoInteracao);
-
-            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
-            {
-                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
-                StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Salvamento removido com sucesso.",
-                Resultado = "Salvamento removido com sucesso."
-            });
+            ValidarAlvoPortfolioOuPost(input.TipoAlvoInteracao, "Remover salvamento");
+            await _interacaoService.RemoverSalvarAsync(_currentUser.UsuarioId, input.AlvoId, input.TipoAlvoInteracao);
+            return Ok(MontarRetorno("Salvamento removido com sucesso."));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Seguir([FromBody] InteracaoSeguimentoInput interacaoSeguimentoInput)
+        public async Task<IActionResult> Seguir([FromBody] InteracaoSeguimentoInput input)
         {
-            var usuarioId = await ObterUsuarioId(interacaoSeguimentoInput.GoogleToken);
-            await _interacaoService.SeguirAsync(usuarioId, interacaoSeguimentoInput.AlvoUsuarioId);
-
-            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
-            {
-                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
-                StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Seguimento registrado com sucesso.",
-                Resultado = "Seguimento registrado com sucesso."
-            });
+            await _interacaoService.SeguirAsync(_currentUser.UsuarioId, input.AlvoUsuarioId);
+            return Ok(MontarRetorno("Seguimento registrado com sucesso."));
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeixarDeSeguir([FromBody] InteracaoSeguimentoInput interacaoSeguimentoInput)
+        public async Task<IActionResult> DeixarDeSeguir([FromBody] InteracaoSeguimentoInput input)
         {
-            var usuarioId = await ObterUsuarioId(interacaoSeguimentoInput.GoogleToken);
-            await _interacaoService.DeixarDeSeguirAsync(usuarioId, interacaoSeguimentoInput.AlvoUsuarioId);
-
-            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
-            {
-                Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
-                StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Seguimento removido com sucesso.",
-                Resultado = "Seguimento removido com sucesso."
-            });
+            await _interacaoService.DeixarDeSeguirAsync(_currentUser.UsuarioId, input.AlvoUsuarioId);
+            return Ok(MontarRetorno("Seguimento removido com sucesso."));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Avaliar([FromBody] InteracaoAvaliacaoInput interacaoAvaliacaoInput)
+        public async Task<IActionResult> Avaliar([FromBody] InteracaoAvaliacaoInput input)
         {
-            var usuarioId = await ObterUsuarioId(interacaoAvaliacaoInput.GoogleToken);
-            await _interacaoService.AvaliarAsync(usuarioId, interacaoAvaliacaoInput.PerfilId, interacaoAvaliacaoInput.Valor);
+            await _interacaoService.AvaliarAsync(_currentUser.UsuarioId, input.PerfilId, input.Valor);
+            return Ok(MontarRetorno("Avaliacao registrada com sucesso."));
+        }
 
-            return StatusCode((int)HttpStatusCode.OK, new RetornoPadrao<object>
+        private static void ValidarAlvoPortfolioOuPost(TipoAlvoInteracaoEnum tipo, string acao)
+        {
+            if (tipo != TipoAlvoInteracaoEnum.PortfolioItem && tipo != TipoAlvoInteracaoEnum.Post)
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
+                    $"{acao} so pode ser aplicado em portfolio ou post.",
+                    () => { },
+                    (int)HttpStatusCode.BadRequest);
+        }
+
+        private static RetornoPadrao<object> MontarRetorno(string mensagem)
+        {
+            return new RetornoPadrao<object>
             {
                 Codigo = ConstantesCodigoRetornoPadrao.SucessoPadrao,
                 StatusHttp = (int)HttpStatusCode.OK,
-                Mensagem = "Avaliacao registrada com sucesso.",
-                Resultado = "Avaliacao registrada com sucesso."
-            });
-        }
-
-        private async Task<int> ObterUsuarioId(string tokenGoogle)
-        {
-            var usuario = await _usuarioService.ObterUsuarioPorToken(new DTO.Input.UsuarioController.ValidarUsuarioGoogleInput
-            {
-                TokenGoogle = tokenGoogle
-            });
-            return usuario.Id;
+                Mensagem = mensagem,
+                Resultado = mensagem
+            };
         }
     }
 }

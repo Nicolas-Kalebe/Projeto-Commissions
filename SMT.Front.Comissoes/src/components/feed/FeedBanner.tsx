@@ -26,14 +26,14 @@ export function FeedBanner() {
         },
         {
             title: "Artistas mais requisitados",
-            description: "Descubra quem lidera os pedidos de comissoes esta semana.",
+            description: "Descubra quem lidera os pedidos de comissões esta semana.",
             action: "Explorar lista",
             imageUrl:
                 "/mock_arts/mock_1.jpg",
         },
         {
             title: "Ranking de artistas",
-            description: "Acompanhe o top 10 com mais seguidores e avaliacoes.",
+            description: "Acompanhe o top 10 com mais seguidores e avaliações.",
             action: "Ver ranking",
             imageUrl:
                 "/mock_arts/mock_2.jpg",

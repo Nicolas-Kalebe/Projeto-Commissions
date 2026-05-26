@@ -120,7 +120,7 @@ export function CommissionDetailsDialog({
 
                 <div className="rounded-xl border border-border/60 bg-card/70 px-4 py-3">
                   <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    Termos de servico
+                    Termos de serviço
                   </p>
                   <div className="mt-2 space-y-2 text-sm text-muted-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mt-1 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-2">
                     <ReactMarkdown>{termsMarkdown}</ReactMarkdown>

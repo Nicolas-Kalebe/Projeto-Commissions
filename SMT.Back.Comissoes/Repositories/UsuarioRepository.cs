@@ -76,6 +76,12 @@ namespace SMT.Back.Comissoes.Repositories
             }
             return usuario;
         }
+
+        public async Task<Usuario?> BuscarUsuarioPorEmail(string email)
+        {
+            return await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Email == email);
+        }
         public async Task AtualizarPerfilUsuario(Usuario usuarioAtualizado)
         {
             _context.Usuarios.Update(usuarioAtualizado);

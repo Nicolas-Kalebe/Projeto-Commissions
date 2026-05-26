@@ -54,7 +54,45 @@ namespace SMT.Back.Comissoes.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UsuarioId")
+                        .IsUnique();
+
                     b.ToTable("Artistas");
+                });
+
+            modelBuilder.Entity("SMT.Back.Comissoes.Models.Entity.CodigoVerificacaoEmail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodigoHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Consumido")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("DataCriacao")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ExpiraEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Tentativas")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email");
+
+                    b.ToTable("CodigosVerificacaoEmail");
                 });
 
             modelBuilder.Entity("SMT.Back.Comissoes.Models.Entity.Interacao", b =>
@@ -186,6 +224,46 @@ namespace SMT.Back.Comissoes.Migrations
                     b.ToTable("RedeSocial");
                 });
 
+            modelBuilder.Entity("SMT.Back.Comissoes.Models.Entity.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DataCriacao")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiraEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IpCriacao")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Revogado")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("SubstituidoPor")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("SMT.Back.Comissoes.Models.Entity.Servicos", b =>
                 {
                     b.Property<int>("Id")
@@ -305,6 +383,9 @@ namespace SMT.Back.Comissoes.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("EmailConfirmado")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("FotoCapa")
                         .HasColumnType("text");
 
@@ -325,12 +406,31 @@ namespace SMT.Back.Comissoes.Migrations
                     b.Property<int?>("Pronome")
                         .HasColumnType("integer");
 
+                    b.Property<int>("ProvedorAutenticacao")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SenhaHash")
+                        .HasColumnType("text");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email");
+
                     b.ToTable("Usuarios");
+                });
+
+            modelBuilder.Entity("SMT.Back.Comissoes.Models.Entity.Artista", b =>
+                {
+                    b.HasOne("SMT.Back.Comissoes.Models.Entity.Usuario", "Usuario")
+                        .WithOne()
+                        .HasForeignKey("SMT.Back.Comissoes.Models.Entity.Artista", "UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("SMT.Back.Comissoes.Models.Entity.PortfolioItem", b =>
@@ -358,6 +458,17 @@ namespace SMT.Back.Comissoes.Migrations
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("SMT.Back.Comissoes.Models.Entity.RefreshToken", b =>
+                {
+                    b.HasOne("SMT.Back.Comissoes.Models.Entity.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("SMT.Back.Comissoes.Models.Entity.Servicos", b =>

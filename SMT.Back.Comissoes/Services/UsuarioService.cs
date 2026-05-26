@@ -1,4 +1,4 @@
-﻿using Serilog;
+using Serilog;
 using SMT.Back.Comissoes.DTO.Input.Usuario;
 using SMT.Back.Comissoes.DTO.Input.UsuarioController;
 using SMT.Back.Comissoes.DTO.Output.Usuario;
@@ -8,106 +8,37 @@ using SMT.Back.Comissoes.Repositories.Interfaces;
 using SMT.Back.Comissoes.Services.Interfaces;
 using SMT.Back.Comissoes.Utils;
 using System.Net;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace SMT.Back.Comissoes.Services
 {
     public class UsuarioService : IUsuarioService
     {
         private readonly IUsuarioRepository _usuarioRepository;
-        private readonly IAuthService _authService;
         private readonly IBucketService _bucketService;
         private readonly IInteracaoRepository _interacaoRepository;
-        public UsuarioService(IUsuarioRepository usuarioRepository, IAuthService authService, IBucketService bucketService, IInteracaoRepository interacaoRepository)
+        private readonly ICurrentUser _currentUser;
+
+        public UsuarioService(
+            IUsuarioRepository usuarioRepository,
+            IBucketService bucketService,
+            IInteracaoRepository interacaoRepository,
+            ICurrentUser currentUser)
         {
             _usuarioRepository = usuarioRepository;
-            _authService = authService;
             _bucketService = bucketService;
             _interacaoRepository = interacaoRepository;
+            _currentUser = currentUser;
         }
 
-        public async Task CadastrarUsuario(CadastrarUsuarioInput usuarioInput)
+        public async Task<StatusEnum> ObterStatusUsuario()
         {
-            if (usuarioInput == null)
-                throw new ExcecaoPersonalizada(
-                    ConstantesCodigoRetornoPadrao.DadoNulo,
-                    "Dados do usuário não podem ser nulos.",
-                    () => Log.Error("Tentativa de cadastro com dados de usuário nulos"),
-                    (int)System.Net.HttpStatusCode.BadRequest
-                );
-
-            var userGoogle = await _authService.ValidarTokenGoogle(usuarioInput.TokenGoogle);
-
-            var usuarioExistente = await _usuarioRepository.VerificaUsuarioExistePorEmail(userGoogle.Email);
-
-            if (usuarioExistente)
-                throw new ExcecaoPersonalizada(
-                    ConstantesCodigoRetornoPadrao.DuplicidadeEncontrada,
-                    "Já existe um usuário cadastrado com este email.",
-                    () => Log.Error("Tentativa de cadastro com email já existente: {Email}", userGoogle.Email),
-                    (int)System.Net.HttpStatusCode.Conflict
-                );
-
-            var nomePerfilExistente = await _usuarioRepository.VerificaUsuarioExistePorNomePerfil(usuarioInput.NomePerfil);
-
-            if (nomePerfilExistente)
-                throw new ExcecaoPersonalizada(
-                    ConstantesCodigoRetornoPadrao.DuplicidadeEncontrada,
-                    "Já existe um usuário cadastrado com este nome de perfil.",
-                    () => Log.Error($"Tentativa de cadastro com nome de perfil já existente: {usuarioInput.NomePerfil}"),
-                    (int)System.Net.HttpStatusCode.Conflict
-                );
-
-            var usuario = new Usuario
-            {
-                Nome = userGoogle.Name, // vem do google
-                NomePerfil = usuarioInput.NomePerfil, // payload front
-                DataNascimento = usuarioInput.DataNascimento, // payload front
-                Email = userGoogle.Email, // vem do google
-                FotoPerfil = userGoogle.Picture, // vem do google
-                DataCriacao = DateTime.UtcNow, 
-                Status = StatusEnum.Ativo,
-                JaAnunciou = false,
-            };
-            if (usuarioInput.Pronome.HasValue)
-            {
-                usuario.Pronome = usuarioInput.Pronome;
-            }
-
-            await _usuarioRepository.CadastrarUsuario(usuario);
-
-            return;
+            var usuario = await _usuarioRepository.ObterUsuarioPorId(_currentUser.UsuarioId);
+            return usuario.Status;
         }
-        public async Task AutenticarUsuario(AutenticarUsuarioInput autenticarUsuarioInput)
+
+        public async Task<ObterUsuarioOutput> ObterMeuUsuario()
         {
-            try
-            {
-                var usuario = await _authService.ValidarTokenGoogle(autenticarUsuarioInput.TokenGoogle);
-                var usuarioCadastrado = await _usuarioRepository.ObterUsuarioPorEmail(usuario.Email);
-                if (usuarioCadastrado == null) {
-                    throw new ExcecaoPersonalizada(
-                        ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
-                        "Usuário não encontrado.",
-                        () => Log.Error($"Usuário não encontrado para o email: {usuario.Email}"),
-                        (int)System.Net.HttpStatusCode.NotFound
-                    );
-                }
-            } catch (Exception ex) {
-                Log.Error($"Erro ao autenticar usuário: {ex.Message}");
-                throw;
-            }
-        }
-        public async Task<ObterUsuarioOutput> ObterUsuarioPorToken(ValidarUsuarioGoogleInput obterTokenGoogleInput)
-        {
-            var userGoogle = await _authService.ValidarTokenGoogle(obterTokenGoogleInput.TokenGoogle);
-            var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
-            if (usuario == null)
-                throw new ExcecaoPersonalizada(
-                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
-                    "Usuário não encontrado.",
-                    () => Log.Error($"Usuário não encontrado para o email: {userGoogle.Email}"),
-                    (int)System.Net.HttpStatusCode.NotFound
-                );
+            var usuario = await _usuarioRepository.ObterUsuarioPorEmail(_currentUser.Email);
 
             if (!string.IsNullOrWhiteSpace(usuario.FotoPerfil))
             {
@@ -147,40 +78,27 @@ namespace SMT.Back.Comissoes.Services
                 RedesSociais = usuario.RedesSociais
             };
         }
-        public async Task<StatusEnum> ObterStatusUsuario(ValidarUsuarioGoogleInput obterStatusInput)
-        {
-            var userGoogle = await _authService.ValidarTokenGoogle(obterStatusInput.TokenGoogle);
-            var usuarioStatus = await _usuarioRepository.ObterStatusUsuario(userGoogle.Email);
-            return usuarioStatus;
-        }
-        public async Task<AtualizarPerfilUsuarioOutput> AtualizarPerfilUsuario(AtualizarPerfilUsuarioInput atualizarPerfilUsuarioInput)
-        {
-            var userGoogle = await _authService.ValidarTokenGoogle(atualizarPerfilUsuarioInput.TokenGoogle);
-            var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
 
-            Log.Information("AtualizarPerfilUsuario input: NomePerfil='{NomePerfil}', Bio='{Bio}', Pronome='{Pronome}'",
-                atualizarPerfilUsuarioInput.NomePerfil,
-                atualizarPerfilUsuarioInput.Bio,
-                atualizarPerfilUsuarioInput.Pronome);
+        public async Task<AtualizarPerfilUsuarioOutput> AtualizarPerfilUsuario(AtualizarPerfilUsuarioInput input)
+        {
+            var usuario = await _usuarioRepository.ObterUsuarioPorId(_currentUser.UsuarioId);
 
-            if (atualizarPerfilUsuarioInput.NomePerfil is not null && string.IsNullOrWhiteSpace(atualizarPerfilUsuarioInput.NomePerfil))
+            if (input.NomePerfil is not null && string.IsNullOrWhiteSpace(input.NomePerfil))
                 throw new ExcecaoPersonalizada(
                     ConstantesCodigoRetornoPadrao.DadoNulo,
-                    "Username não pode ser vazio.",
-                    () => Log.Error($"Nome de perfil vazio para o usuário de email: {userGoogle.Email}."),
-                    (int)HttpStatusCode.BadRequest
-                );
+                    "Nome de perfil não pode ser vazio.",
+                    () => Log.Error($"Nome de perfil vazio para userId {usuario.Id}."),
+                    (int)HttpStatusCode.BadRequest);
 
-            if (atualizarPerfilUsuarioInput.Bio is not null && string.IsNullOrWhiteSpace(atualizarPerfilUsuarioInput.Bio))
+            if (input.Bio is not null && string.IsNullOrWhiteSpace(input.Bio))
                 throw new ExcecaoPersonalizada(
                     ConstantesCodigoRetornoPadrao.DadoNulo,
-                    "Biografia não pode ser vazia",
-                    () => Log.Error($"Biografia vazia para o usuário de email: {userGoogle.Email}."),
-                    (int)HttpStatusCode.BadRequest
-                );
+                    "Biografia não pode ser vazia.",
+                    () => Log.Error($"Bio vazia para userId {usuario.Id}."),
+                    (int)HttpStatusCode.BadRequest);
 
-            var novoNomePerfil = atualizarPerfilUsuarioInput.NomePerfil?.Trim();
-            var novaBio = atualizarPerfilUsuarioInput.Bio?.Trim();
+            var novoNomePerfil = input.NomePerfil?.Trim();
+            var novaBio = input.Bio?.Trim();
 
             if (!string.IsNullOrWhiteSpace(novoNomePerfil) &&
                 !novoNomePerfil.Equals(usuario.NomePerfil, StringComparison.OrdinalIgnoreCase))
@@ -190,142 +108,136 @@ namespace SMT.Back.Comissoes.Services
                     throw new ExcecaoPersonalizada(
                         ConstantesCodigoRetornoPadrao.DuplicidadeEncontrada,
                         "Já existe um usuário com este nome de perfil.",
-                        () => Log.Error($"Nome de perfil já em uso: {novoNomePerfil}"),
-                        (int)HttpStatusCode.Conflict
-                    );
+                        () => Log.Warning($"NomePerfil duplicado: {novoNomePerfil}."),
+                        (int)HttpStatusCode.Conflict);
             }
 
-            var atualizarPerfilUsuariooutput = new AtualizarPerfilUsuarioOutput();
+            var output = new AtualizarPerfilUsuarioOutput();
 
             if (novoNomePerfil != null && !novoNomePerfil.Equals(usuario.NomePerfil, StringComparison.OrdinalIgnoreCase))
             {
                 usuario.NomePerfil = novoNomePerfil;
-                atualizarPerfilUsuariooutput.NomePerfil = usuario.NomePerfil;
+                output.NomePerfil = usuario.NomePerfil;
             }
 
             if (novaBio != null && novaBio != usuario.Bio)
             {
                 usuario.Bio = novaBio;
-                atualizarPerfilUsuariooutput.Bio = usuario.Bio;
+                output.Bio = usuario.Bio;
             }
 
-            if (atualizarPerfilUsuarioInput.Pronome.HasValue &&
-                atualizarPerfilUsuarioInput.Pronome.Value != usuario.Pronome)
+            if (input.Pronome.HasValue && input.Pronome.Value != usuario.Pronome)
             {
-                usuario.Pronome = atualizarPerfilUsuarioInput.Pronome.Value;
-                atualizarPerfilUsuariooutput.Pronome = usuario.Pronome?.obterDescricaoEnum();
+                usuario.Pronome = input.Pronome.Value;
+                output.Pronome = usuario.Pronome?.obterDescricaoEnum();
             }
 
             usuario.DataAtualizacao = DateTime.UtcNow;
-
             await _usuarioRepository.AtualizarPerfilUsuario(usuario);
-
-            return atualizarPerfilUsuariooutput;
+            return output;
         }
 
-        public async Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput atualizarFotoUsuarioInput)
+        public async Task<string> AtualizarFotoUsuario(AtualizarFotoUsuarioInput input)
         {
-            var userGoogle = await _authService.ValidarTokenGoogle(atualizarFotoUsuarioInput.TokenGoogle);
-            var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
-            if (usuario == null)
+            var usuario = await _usuarioRepository.ObterUsuarioPorId(_currentUser.UsuarioId);
+
+            if (input.FotoPerfil == null || input.FotoPerfil.Length == 0)
                 throw new ExcecaoPersonalizada(
-                    ConstantesCodigoRetornoPadrao.RecursoNaoEncontrado,
-                    "Usuário não encontrado.",
-                    () => Log.Error($"Usuário não encontrado para o email: {userGoogle.Email}"),
-                    (int)System.Net.HttpStatusCode.NotFound
-                );
-            if (atualizarFotoUsuarioInput.FotoPerfil == null || atualizarFotoUsuarioInput.FotoPerfil.Length == 0)
-                throw new ArgumentException("Nenhuma imagem enviada.");
-            // Validação de tipo
-            if (!atualizarFotoUsuarioInput.FotoPerfil.ContentType.StartsWith("image/"))
+                    ConstantesCodigoRetornoPadrao.DadoNulo,
+                    "Nenhuma imagem enviada.",
+                    () => Log.Warning($"AtualizarFotoUsuario sem arquivo para userId {usuario.Id}."),
+                    (int)HttpStatusCode.BadRequest);
+
+            if (!input.FotoPerfil.ContentType.StartsWith("image/"))
                 throw new ExcecaoPersonalizada(
                     ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
-                    "Tipo de dado inválido, insira uma imagem/gif",
-                    () => Log.Error($"Tipo de dado inválido para foto de perfil do usuário Email: {usuario.NomePerfil}"),
-                    (int)System.Net.HttpStatusCode.BadRequest);
+                    "Tipo de dado inválido, insira uma imagem/gif.",
+                    () => Log.Warning($"AtualizarFotoUsuario tipo inválido para userId {usuario.Id} contentType {input.FotoPerfil.ContentType}."),
+                    (int)HttpStatusCode.BadRequest);
 
-            if (atualizarFotoUsuarioInput.fotoPerfilEnum == TipoFotoPerfilEnum.FotoPerfil)
-            {
-                var pathBucket = $"usuarios/{usuario.NomePerfil}/foto_perfil.webp";
-                var pathCompleto = await _bucketService.UploadAsync(atualizarFotoUsuarioInput.FotoPerfil, pathBucket);
-
-                await _usuarioRepository.AtualizarFotoPerfil(usuario.Id, pathCompleto, atualizarFotoUsuarioInput.fotoPerfilEnum);
-                return pathCompleto;
-            }
-            else
-            {
-                var pathBucket = $"usuarios/{usuario.NomePerfil}/foto_capa.webp";
-                var pathCompleto = await _bucketService.UploadAsync(atualizarFotoUsuarioInput.FotoPerfil, pathBucket);
-                await _usuarioRepository.AtualizarFotoPerfil(usuario.Id, pathCompleto, atualizarFotoUsuarioInput.fotoPerfilEnum);
-                return pathCompleto;
-            }
+            var nomeArquivo = input.fotoPerfilEnum == TipoFotoPerfilEnum.FotoPerfil ? "foto_perfil.webp" : "foto_capa.webp";
+            var pathBucket = $"usuarios/{usuario.NomePerfil}/{nomeArquivo}";
+            var pathCompleto = await _bucketService.UploadAsync(input.FotoPerfil, pathBucket);
+            await _usuarioRepository.AtualizarFotoPerfil(usuario.Id, pathCompleto, input.fotoPerfilEnum);
+            return pathCompleto;
         }
-        public async Task AtualizarRedesSociais(AtualizarRedesSociaisInput atualizarRedesSociaisInput)
-        {
-            var userGoogle = await _authService.ValidarTokenGoogle(atualizarRedesSociaisInput.TokenGoogle);
-            var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
 
+        public async Task AtualizarRedesSociais(AtualizarRedesSociaisInput input)
+        {
             var redeSocial = new RedeSocial
             {
-                Titulo = atualizarRedesSociaisInput.RedeSocial,
-                Url = atualizarRedesSociaisInput.Usuario,
-                UsuarioId = usuario.Id
+                Titulo = input.RedeSocial,
+                Url = input.Usuario,
+                UsuarioId = _currentUser.UsuarioId
             };
             await _usuarioRepository.AtualizarRedesSociais(redeSocial);
         }
-        public async Task CadastrarArtista(CadastrarArtistaInput cadastrarArtistaInput)
+
+        public async Task CadastrarArtista(CadastrarArtistaInput input)
         {
-            var usuario = await _usuarioRepository.ObterUsuarioPorId(cadastrarArtistaInput.UsuarioId);
+            var usuario = await _usuarioRepository.ObterUsuarioPorId(_currentUser.UsuarioId);
+
+            if (usuario.JaAnunciou)
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.UsuarioJaEhArtista,
+                    "Usuário já está cadastrado como artista.",
+                    () => Log.Warning($"CadastrarArtista bloqueado: usuario {usuario.Id} ja e artista."),
+                    (int)HttpStatusCode.Conflict);
+
+            if (!System.Enum.IsDefined(typeof(CargoArtistaEnum), input.CargoArtista))
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
+                    "Cargo de artista inválido.",
+                    () => Log.Warning($"CadastrarArtista cargo invalido {input.CargoArtista} userId {usuario.Id}."),
+                    (int)HttpStatusCode.BadRequest);
+
             var artista = new Artista
             {
                 UsuarioId = usuario.Id,
-                CargoArtista = cadastrarArtistaInput.CargoArtista,
-                PrazoMedioEntrega = cadastrarArtistaInput.PrazoMedioEntrega,
-                TagsArtista = cadastrarArtistaInput.TagsArtista
+                CargoArtista = input.CargoArtista,
+                PrazoMedioEntrega = input.PrazoMedioEntrega,
+                TagsArtista = input.TagsArtista
             };
-
             await _usuarioRepository.CadastrarArtista(artista, usuario.Id);
         }
 
-        public async Task<ObterPerfilArtistaOutput> ObterPerfilArtista(ValidarUsuarioGoogleInput obterArtistaInput)
+        public async Task<ObterPerfilArtistaOutput> ObterPerfilArtista()
         {
-            var userGoogle = await _authService.ValidarTokenGoogle(obterArtistaInput.TokenGoogle);
-            var usuario = await _usuarioRepository.ObterUsuarioPorEmail(userGoogle.Email);
+            var usuario = await _usuarioRepository.ObterUsuarioPorId(_currentUser.UsuarioId);
+
+            if (!usuario.JaAnunciou)
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.UsuarioNaoEhArtista,
+                    "Usuário ainda não está cadastrado como artista.",
+                    () => Log.Warning($"ObterPerfilArtista bloqueado: usuario {usuario.Id} nao e artista."),
+                    (int)HttpStatusCode.Forbidden);
 
             var artista = await _usuarioRepository.ObterArtistaPorUsuarioId(usuario.Id);
+
             var portfolioItensOutput = new List<PortfolioItemOutput>();
             if (artista.PortfolioItens != null)
             {
                 foreach (var item in artista.PortfolioItens)
                 {
-                    for (int j = 0; j < item.Imagens.Count; j++)
+                    foreach (var imagem in item.Imagens)
                     {
-                        var imagem = item.Imagens.ElementAt(j);
                         var signedUrl = _bucketService.GetPresignedUrl(imagem.UrlArquivo, TimeSpan.FromHours(6));
                         if (!string.IsNullOrWhiteSpace(signedUrl))
                             imagem.UrlArquivo = signedUrl;
                     }
 
                     item.QuantidadeCurtidas = await _interacaoRepository.CountAsync(
-                        TipoInteracaoEnum.Curtida,
-                        TipoAlvoInteracaoEnum.PortfolioItem,
-                        item.Id
-                    );
+                        TipoInteracaoEnum.Curtida, TipoAlvoInteracaoEnum.PortfolioItem, item.Id);
                     item.QuantidadeSalvos = await _interacaoRepository.CountAsync(
-                        TipoInteracaoEnum.Salvamento,
-                        TipoAlvoInteracaoEnum.PortfolioItem,
-                        item.Id
-                    );
+                        TipoInteracaoEnum.Salvamento, TipoAlvoInteracaoEnum.PortfolioItem, item.Id);
 
                     var curtidoPeloUsuario = await _interacaoRepository.ExistsAsync(i =>
-                        i.UsuarioId == usuario.Id &&
-                        i.AlvoId == item.Id &&
+                        i.UsuarioId == usuario.Id && i.AlvoId == item.Id &&
                         i.TipoAlvoInteracao == TipoAlvoInteracaoEnum.PortfolioItem &&
                         i.TipoInteracao == TipoInteracaoEnum.Curtida);
 
                     var salvoPeloUsuario = await _interacaoRepository.ExistsAsync(i =>
-                        i.UsuarioId == usuario.Id &&
-                        i.AlvoId == item.Id &&
+                        i.UsuarioId == usuario.Id && i.AlvoId == item.Id &&
                         i.TipoAlvoInteracao == TipoAlvoInteracaoEnum.PortfolioItem &&
                         i.TipoInteracao == TipoInteracaoEnum.Salvamento);
 
@@ -346,7 +258,8 @@ namespace SMT.Back.Comissoes.Services
                     });
                 }
             }
-            var obterPerfilArtistaOutput = new ObterPerfilArtistaOutput
+
+            return new ObterPerfilArtistaOutput
             {
                 Id = artista.Id,
                 UsuarioId = artista.UsuarioId,
@@ -359,25 +272,39 @@ namespace SMT.Back.Comissoes.Services
                 AtivoParaServicos = artista.AtivoParaServicos,
                 Servicos = artista.Servicos
             };
-
-            return obterPerfilArtistaOutput;
         }
-        public async Task<AtualizarPerfilArtistaOutput> AtualizarPerfilArtista(AtualizarPerfilArtistaInput atualizarPerfilArtistaInput)
-        {
-            
-            var artista = await _usuarioRepository.ObterArtistaPorUsuarioId(atualizarPerfilArtistaInput.UsuarioId);
 
-            if (atualizarPerfilArtistaInput.CargoArtista.HasValue)
-                artista.CargoArtista = atualizarPerfilArtistaInput.CargoArtista ?? artista.CargoArtista;
-            
-            if (atualizarPerfilArtistaInput.PrazoMedioEntrega.HasValue)
-                artista.PrazoMedioEntrega = atualizarPerfilArtistaInput.PrazoMedioEntrega ?? artista.PrazoMedioEntrega;
-            
-            if (atualizarPerfilArtistaInput.EstiloDescricao != null)
-                artista.Estilo = atualizarPerfilArtistaInput.EstiloDescricao;
-            
-            if (atualizarPerfilArtistaInput.TagsArtista != null)
-                artista.TagsArtista = atualizarPerfilArtistaInput.TagsArtista;
+        public async Task<AtualizarPerfilArtistaOutput> AtualizarPerfilArtista(AtualizarPerfilArtistaInput input)
+        {
+            var usuario = await _usuarioRepository.ObterUsuarioPorId(_currentUser.UsuarioId);
+
+            if (!usuario.JaAnunciou)
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.UsuarioNaoEhArtista,
+                    "Usuário ainda não está cadastrado como artista.",
+                    () => Log.Warning($"AtualizarPerfilArtista bloqueado: usuario {usuario.Id} nao e artista."),
+                    (int)HttpStatusCode.Forbidden);
+
+            if (input.CargoArtista.HasValue && !System.Enum.IsDefined(typeof(CargoArtistaEnum), input.CargoArtista.Value))
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
+                    "Cargo de artista inválido.",
+                    () => Log.Warning($"AtualizarPerfilArtista cargo invalido {input.CargoArtista} userId {usuario.Id}."),
+                    (int)HttpStatusCode.BadRequest);
+
+            var artista = await _usuarioRepository.ObterArtistaPorUsuarioId(_currentUser.UsuarioId);
+
+            if (input.CargoArtista.HasValue)
+                artista.CargoArtista = input.CargoArtista ?? artista.CargoArtista;
+
+            if (input.PrazoMedioEntrega.HasValue)
+                artista.PrazoMedioEntrega = input.PrazoMedioEntrega ?? artista.PrazoMedioEntrega;
+
+            if (input.EstiloDescricao != null)
+                artista.Estilo = input.EstiloDescricao;
+
+            if (input.TagsArtista != null)
+                artista.TagsArtista = input.TagsArtista;
 
             await _usuarioRepository.AtualizarPerfilArtista(artista);
 
@@ -388,51 +315,58 @@ namespace SMT.Back.Comissoes.Services
                 EstiloDescricao = artista.Estilo
             };
         }
-        public async Task CadastrarPortfolioAsync(CadastrarPortfolioInput cadastrarPortfolioInput)
-        {
-            var artista = await ObterPerfilArtista(cadastrarPortfolioInput.TokenGoogle);
-            var usuario = await _usuarioRepository.ObterUsuarioPorId(artista.UsuarioId);
 
-            var imagens = cadastrarPortfolioInput.Imagens?
+        public async Task CadastrarPortfolioAsync(CadastrarPortfolioInput input)
+        {
+            var usuario = await _usuarioRepository.ObterUsuarioPorId(_currentUser.UsuarioId);
+
+            if (!usuario.JaAnunciou)
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.UsuarioNaoEhArtista,
+                    "Usuário ainda não está cadastrado como artista.",
+                    () => Log.Warning($"CadastrarPortfolio bloqueado: usuario {usuario.Id} nao e artista."),
+                    (int)HttpStatusCode.Forbidden);
+
+            var artista = await _usuarioRepository.ObterArtistaPorUsuarioId(usuario.Id);
+
+            var imagens = input.Imagens?
                 .Where(i => i != null && i.Length > 0)
                 .ToList();
 
             if (imagens == null || imagens.Count == 0)
-                throw new ArgumentException("Nenhuma imagem enviada.");
+                throw new ExcecaoPersonalizada(
+                    ConstantesCodigoRetornoPadrao.DadoNulo,
+                    "Nenhuma imagem enviada.",
+                    () => Log.Warning($"CadastrarPortfolio sem imagens para userId {usuario.Id}."),
+                    (int)HttpStatusCode.BadRequest);
 
-            // validação de tipo
             foreach (var imagem in imagens)
             {
                 if (!imagem.ContentType.StartsWith("image/"))
                     throw new ExcecaoPersonalizada(
                         ConstantesCodigoRetornoPadrao.TipoDeDadoInvalido,
-                        "Tipo de dado inválido, insira uma imagem/gif",
-                        () => Log.Error($"Tipo inválido para portfolio do artista {usuario.NomePerfil}"),
+                        "Tipo de dado inválido, insira uma imagem/gif.",
+                        () => Log.Warning($"CadastrarPortfolio tipo inválido para userId {usuario.Id} contentType {imagem.ContentType}."),
                         (int)HttpStatusCode.BadRequest);
             }
 
             var portfolioItem = new PortfolioItem
             {
-                Titulo = cadastrarPortfolioInput.Titulo ?? string.Empty,
-                Descricao = cadastrarPortfolioInput.Descricao ?? string.Empty,
+                Titulo = input.Titulo ?? string.Empty,
+                Descricao = input.Descricao ?? string.Empty,
                 ArtistaId = artista.Id,
-                Hashtags = cadastrarPortfolioInput.Hashtags ?? new List<string>(),
-                //TipoServico = TipoServicoEnum.,
+                Hashtags = input.Hashtags ?? new List<string>(),
                 DataCriacao = DateTime.UtcNow,
                 Imagens = new List<PortfolioItemImagem>()
             };
 
             var loteId = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-
             for (int i = 0; i < imagens.Count; i++)
             {
                 var imagem = imagens[i];
-
-                var sufixo = $"{loteId}-{(i + 1).ToString("D2")}";
+                var sufixo = $"{loteId}-{(i + 1):D2}";
                 var pathBucket = $"portfolios/usuarios/{usuario.NomePerfil}/{sufixo}.webp";
-
                 var url = await _bucketService.UploadAsync(imagem, pathBucket);
-
                 portfolioItem.Imagens.Add(new PortfolioItemImagem
                 {
                     UrlArquivo = url,
@@ -442,10 +376,5 @@ namespace SMT.Back.Comissoes.Services
 
             await _usuarioRepository.CadastrarPortfolioArtista(artista.Id, portfolioItem);
         }
-
-        //public async Task CriarServico(criarservico)
-        //{
-
-        //}
     }
 }

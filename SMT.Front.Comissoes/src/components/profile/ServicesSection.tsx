@@ -32,7 +32,7 @@ export function ServicesSection({
           +
         </div>
         <span className="text-sm font-semibold">
-          Adicionar servi?o
+          Adicionar serviço
         </span>
       </div>
     </button>
@@ -68,7 +68,7 @@ export function ServicesSection({
       <div className="space-y-4">
         {addServiceCard}
         <div className="rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center text-sm text-muted-foreground">
-          Nenhum servi?o cadastrado ainda.
+          Nenhum serviço cadastrado ainda.
         </div>
       </div>
     )
@@ -76,7 +76,7 @@ export function ServicesSection({
 
   return (
     <div className="rounded-xl border border-dashed border-border/60 bg-card/50 p-6 text-center text-sm text-muted-foreground">
-      Nenhum servi?o cadastrado ainda.
+      Nenhum serviço cadastrado ainda.
     </div>
   )
 }

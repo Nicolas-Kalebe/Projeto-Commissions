@@ -265,7 +265,7 @@ export function EditProfileDialog({
                       onChange={(event) => onUpdateDraft({ bio: event.target.value })}
                       rows={4}
                       className="bg-background/60"
-                      placeholder="Conte um pouco sobre voce e o seu trabalho."
+                      placeholder="Conte um pouco sobre você e o seu trabalho."
                     />
                   </div>
                   <div className="space-y-2">

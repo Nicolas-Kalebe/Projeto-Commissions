@@ -10,6 +10,7 @@ namespace SMT.Back.Comissoes.Repositories.Interfaces
         Task CadastrarUsuario(Usuario usuario);
         Task<StatusEnum> ObterStatusUsuario(string email);
         Task<Usuario> ObterUsuarioPorEmail(string email);
+        Task<Usuario?> BuscarUsuarioPorEmail(string email);
         Task<Usuario> ObterUsuarioPorId(int id);
         Task AtualizarPerfilUsuario(Usuario usuarioAtualizado);
         Task AtualizarFotoPerfil(int usuarioId, string fotoPerfilUrl, TipoFotoPerfilEnum tipoFotoPerfilEnum);

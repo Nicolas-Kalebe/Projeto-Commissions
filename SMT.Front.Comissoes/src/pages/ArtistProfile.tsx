@@ -30,6 +30,8 @@ import type { ServiceSheet } from "@/components/profile/OwnerPriceSheetRow"
 import type { User } from "@/types"
 import type { PortfolioPost, ProfileDraft, SocialLinkKey } from "@/types/profile"
 import { API_ROUTES } from "@/constants/apiRoutes"
+import { api } from "@/lib/apiClient"
+import { getAuth, setAuth } from "@/lib/authStorage"
 import { useToast } from "@/hooks/use-toast"
 import {
   Bookmark,
@@ -414,6 +416,10 @@ export function ArtistProfile({
   const [draftAvatarPreview, setDraftAvatarPreview] = useState("")
   const [draftCoverPreview, setDraftCoverPreview] = useState("")
   const [draftCoverFile, setDraftCoverFile] = useState<File | null>(null)
+  const [isBecomeArtistOpen, setIsBecomeArtistOpen] = useState(false)
+  const [becomeArtistCargo, setBecomeArtistCargo] = useState<string>("")
+  const [isSubmittingBecomeArtist, setIsSubmittingBecomeArtist] = useState(false)
+  const [jaAnunciou, setJaAnunciou] = useState<boolean>(() => Boolean(getAuth()?.user.jaAnunciou))
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false)
   const [serviceTitle, setServiceTitle] = useState("")
   const [servicePrice, setServicePrice] = useState("")
@@ -493,64 +499,62 @@ export function ArtistProfile({
     }))
   }
 
-  const fetchUsuarioPorToken = async (tokenGoogle: string, force = false) => {
+  const fetchUsuarioPorToken = async (cacheKey: string, force = false) => {
     const now = Date.now()
-    if (!force && userFetchGuard.token === tokenGoogle && now - userFetchGuard.ts < 1500) {
+    if (!force && userFetchGuard.token === cacheKey && now - userFetchGuard.ts < 1500) {
       return
     }
-    userFetchGuard.token = tokenGoogle
+    userFetchGuard.token = cacheKey
     userFetchGuard.ts = now
-    const response = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tokenGoogle }),
-    })
-    if (!response.ok) return
-    const body = await response.json().catch(() => null)
-    const resultado = body?.resultado ?? body?.Resultado
-    if (!resultado || typeof resultado !== "object") return
-    applyUserFromTokenResponse(resultado as Record<string, unknown>)
+    try {
+      const resultado = await api.get<Record<string, unknown>>(API_ROUTES.Usuario.obterMeuUsuario)
+      if (resultado && typeof resultado === "object") {
+        applyUserFromTokenResponse(resultado)
+      }
+    } catch {
+      // Silent fallback
+    }
   }
 
 
   useEffect(() => {
-    const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
-    if (!tokenGoogle) {
+    const auth = getAuth()
+    if (!auth) {
       setBackendProfile(null)
       return
     }
+    const cacheKey = String(auth.user.id)
 
     let isActive = true
     const loadProfile = async () => {
       try {
         const now = Date.now()
         if (
-          artistFetchGuard.token === tokenGoogle &&
+          artistFetchGuard.token === cacheKey &&
           now - artistFetchGuard.ts < 1500 &&
           backendProfile
         ) {
-          await fetchUsuarioPorToken(tokenGoogle, true)
+          await fetchUsuarioPorToken(cacheKey, true)
           return
         }
         const requestId = ++profileRequestIdRef.current
-        artistFetchGuard.token = tokenGoogle
+        artistFetchGuard.token = cacheKey
         artistFetchGuard.ts = now
-        const response = await fetch(API_ROUTES.Usuario.obterPerfilArtista, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tokenGoogle }),
-        })
-        if (!response.ok) {
+
+        // So busca perfil de artista se o usuario for artista
+        if (!auth.user.jaAnunciou) {
+          if (!isActive || requestId !== profileRequestIdRef.current) return
+          setBackendProfile(null)
+          await fetchUsuarioPorToken(cacheKey, true)
           return
         }
 
-        const body = await response.json().catch(() => null)
-        const resultado = body?.resultado ?? body?.Resultado
+        const resultado = await api.get<Record<string, unknown> | null>(API_ROUTES.Usuario.obterPerfilArtista).catch(() => null)
         if (!resultado || typeof resultado !== "object") {
           return
         }
 
-        const resultadoObj = resultado as Record<string, unknown>
+        const resultadoObj = resultado
         const usuarioId = readField<number>(resultadoObj, "usuarioId", "UsuarioId")
         const avaliacao = readField<number>(resultadoObj, "avaliacao", "Avaliacao")
         const estilo = readField<string>(resultadoObj, "estilo", "Estilo")
@@ -599,7 +603,7 @@ export function ArtistProfile({
           usuarioPronome: prev?.usuarioPronome,
           socialLinks: prev?.socialLinks,
         }))
-        await fetchUsuarioPorToken(tokenGoogle, true)
+        await fetchUsuarioPorToken(cacheKey, true)
       } catch {
         // Silent fallback to existing profile data
       }
@@ -625,10 +629,10 @@ export function ArtistProfile({
     ? backendProfile.usuarioBio
     : artist.bio?.trim()
       ? artist.bio
-      : "Bio ainda n?o informada."
+      : "Bio ainda não informada."
   const baseStyleDescription = backendProfile?.estilo?.trim()
     ? backendProfile.estilo
-    : "Estilo ainda n?o informado."
+    : "Estilo ainda não informado."
   const baseStyleTags = backendProfile?.tagsArtista ?? []
   const baseCoverImageUrl =
     typeof backendProfile?.usuarioFotoCapa === "string" && backendProfile.usuarioFotoCapa.trim()
@@ -946,13 +950,11 @@ export function ArtistProfile({
     )
     const shouldSyncProfileData = hasUsuarioFieldsToSync || hasArtistaFieldsToSync || socialEntries.length > 0
 
-    let tokenGoogle = ""
     if (shouldSyncProfileData || Boolean(draftCoverFile)) {
-      tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
-      if (!tokenGoogle) {
+      if (!getAuth()) {
         toast({
-          title: "Sessao expirada",
-          description: "Faca login novamente para salvar suas alteracoes.",
+          title: "Sessão expirada",
+          description: "Faça login novamente para salvar suas alterações.",
           variant: "destructive",
         })
         return
@@ -963,62 +965,34 @@ export function ArtistProfile({
       setIsSavingProfile(true)
       try {
         if (hasUsuarioFieldsToSync) {
-          const responsePerfil = await fetch(API_ROUTES.Usuario.atualizarPerfilUsuario, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              tokenGoogle,
-              nomePerfil: nextOverrides.displayName,
-              bio: nextOverrides.bio,
-              pronome: mapPronomeToEnum(nextOverrides.pronounsBadge),
-            }),
+          await api.patch(API_ROUTES.Usuario.atualizarPerfilUsuario, {
+            nomePerfil: nextOverrides.displayName,
+            bio: nextOverrides.bio,
+            pronome: mapPronomeToEnum(nextOverrides.pronounsBadge),
           })
-          if (!responsePerfil.ok) {
-            throw new Error("Falha ao atualizar dados do perfil")
-          }
         }
 
         if (hasArtistaFieldsToSync) {
-          const usuarioId = backendProfile?.usuarioId
-          if (!usuarioId) {
-            throw new Error("UsuarioId nao encontrado para atualizar artista")
-          }
-          const responseArtista = await fetch(API_ROUTES.Usuario.atualizarPerfilArtista, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              usuarioId,
-              estiloDescricao: nextOverrides.styleDescription,
-              prazoMedioEntrega: mapPrazoToEnum(nextOverrides.deliveryBadge),
-              cargoArtista: mapCargoToEnum(nextOverrides.roleBadge),
-              tagsArtista: nextOverrides.styleTags,
-            }),
+          await api.patch(API_ROUTES.Usuario.atualizarPerfilArtista, {
+            estiloDescricao: nextOverrides.styleDescription,
+            prazoMedioEntrega: mapPrazoToEnum(nextOverrides.deliveryBadge),
+            cargoArtista: mapCargoToEnum(nextOverrides.roleBadge),
+            tagsArtista: nextOverrides.styleTags,
           })
-          if (!responseArtista.ok) {
-            throw new Error("Falha ao atualizar dados do artista")
-          }
         }
 
         for (const [key, handle] of socialEntries) {
-          const response = await fetch(API_ROUTES.Usuario.atualizarRedesSociais, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              tokenGoogle,
-              redeSocial: socialNetworkTitleMap[key],
-              usuario: handle,
-            }),
+          await api.patch(API_ROUTES.Usuario.atualizarRedesSociais, {
+            redeSocial: socialNetworkTitleMap[key],
+            usuario: handle,
           })
-          if (!response.ok) {
-            throw new Error(`Falha ao atualizar ${key}`)
-          }
         }
 
-        await refreshBackendProfile(tokenGoogle)
+        await refreshBackendProfile()
       } catch {
         toast({
           title: "Erro ao atualizar perfil",
-          description: "Nao foi possivel salvar bio, estilo ou redes sociais agora.",
+          description: "Não foi possível salvar bio, estilo ou redes sociais agora.",
           variant: "destructive",
         })
         return
@@ -1032,29 +1006,21 @@ export function ArtistProfile({
       setIsUploadingCover(true)
       try {
         const formData = new FormData()
-        formData.append("TokenGoogle", tokenGoogle)
         formData.append("FotoPerfil", draftCoverFile)
         formData.append("fotoPerfilEnum", "2")
 
-        const response = await fetch(API_ROUTES.Usuario.atualizarFotoUsuario, {
-          method: "PATCH",
-          body: formData,
-        })
+        await api.patchForm(API_ROUTES.Usuario.atualizarFotoUsuario, formData)
 
-        if (!response.ok) {
-          throw new Error("Falha ao atualizar a capa.")
-        }
-
-        await refreshBackendProfile(tokenGoogle)
+        await refreshBackendProfile()
         updatedCoverUrl = undefined
         toast({
           title: "Capa atualizada",
-          description: "Sua nova imagem ja aparece no perfil.",
+          description: "Sua nova imagem já aparece no perfil.",
         })
       } catch {
         toast({
           title: "Erro ao atualizar",
-          description: "Nao foi possivel enviar a capa agora.",
+          description: "Não foi possível enviar a capa agora.",
           variant: "destructive",
         })
         return
@@ -1107,7 +1073,7 @@ export function ArtistProfile({
 
   const backendPosts: PortfolioPost[] = (backendProfile?.portfolioItens ?? []).reduce(
     (acc, item, index) => {
-      const titulo = item.titulo?.trim() ? item.titulo : "Post do portfolio"
+      const titulo = item.titulo?.trim() ? item.titulo : "Post do portfólio"
       const descricao = item.descricao?.trim() ? item.descricao : ""
       const orderedImages = (item.imagens ?? [])
         .slice()
@@ -1223,10 +1189,9 @@ export function ArtistProfile({
     event.target.value = ""
     if (!file) return
 
-    const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
-    if (!tokenGoogle) {
+    if (!getAuth()) {
       toast({
-        title: "Sessao expirada",
+        title: "Sessão expirada",
         description: "Faça login novamente para atualizar a foto.",
         variant: "destructive",
       })
@@ -1236,29 +1201,15 @@ export function ArtistProfile({
     setIsUploadingAvatar(true)
     try {
       const formData = new FormData()
-      formData.append("TokenGoogle", tokenGoogle)
       formData.append("FotoPerfil", file)
+      formData.append("fotoPerfilEnum", "1")
 
-      const response = await fetch(API_ROUTES.Usuario.atualizarFotoUsuario, {
-        method: "PATCH",
-        body: formData,
-      })
+      await api.patchForm(API_ROUTES.Usuario.atualizarFotoUsuario, formData)
 
-      if (!response.ok) {
-        throw new Error("Falha ao atualizar a foto.")
-      }
-
-      const refresh = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tokenGoogle }),
-      })
-
-      if (refresh.ok) {
-        const body = await refresh.json().catch(() => null)
-        const resultado = body?.resultado ?? body?.Resultado
-        const fotoPerfil = (resultado as { fotoPerfil?: unknown; FotoPerfil?: unknown })?.fotoPerfil
-          ?? (resultado as { FotoPerfil?: unknown })?.FotoPerfil
+      const refreshResult = await api.get<Record<string, unknown>>(API_ROUTES.Usuario.obterMeuUsuario).catch(() => null)
+      if (refreshResult) {
+        const fotoPerfil = (refreshResult as { fotoPerfil?: unknown; FotoPerfil?: unknown })?.fotoPerfil
+          ?? (refreshResult as { FotoPerfil?: unknown })?.FotoPerfil
         if (typeof fotoPerfil === "string" && onCurrentUserUpdate) {
           onCurrentUserUpdate({ avatarUrl: fotoPerfil })
         }
@@ -1271,7 +1222,7 @@ export function ArtistProfile({
     } catch {
       toast({
         title: "Erro ao atualizar",
-        description: "Nao foi possivel enviar a imagem agora.",
+        description: "Não foi possível enviar a imagem agora.",
         variant: "destructive",
       })
     } finally {
@@ -1422,17 +1373,15 @@ export function ArtistProfile({
     setPortfolioImages(files)
   }
 
-  const refreshBackendProfile = async (tokenGoogle: string) => {
-    const response = await fetch(API_ROUTES.Usuario.obterUsuarioPorToken, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tokenGoogle }),
-    })
-    if (!response.ok) return
-    const body = await response.json().catch(() => null)
-    const resultado = body?.resultado ?? body?.Resultado
-    if (!resultado || typeof resultado !== "object") return
-    applyUserFromTokenResponse(resultado as Record<string, unknown>)
+  const refreshBackendProfile = async () => {
+    try {
+      const resultado = await api.get<Record<string, unknown>>(API_ROUTES.Usuario.obterMeuUsuario)
+      if (resultado && typeof resultado === "object") {
+        applyUserFromTokenResponse(resultado)
+      }
+    } catch {
+      // ignore
+    }
   }
 
   const handleServiceSubmit = () => {
@@ -1440,7 +1389,7 @@ export function ArtistProfile({
     const priceValue = Number.parseFloat(servicePrice.replace(",", "."))
     if (!Number.isFinite(priceValue) || priceValue <= 0) return
 
-    const title = serviceTitle.trim().slice(0, serviceTitleLimit) || "Novo servico"
+    const title = serviceTitle.trim().slice(0, serviceTitleLimit) || "Novo serviço"
     const description =
       serviceDescription.trim().slice(0, serviceTextLimit) || "Servico personalizado."
     const terms = serviceTerms.trim().slice(0, serviceTextLimit) || undefined
@@ -1474,11 +1423,10 @@ export function ArtistProfile({
       })
       return
     }
-    const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
-    if (!tokenGoogle) {
+    if (!getAuth()) {
       toast({
-        title: "Sessao expirada",
-        description: "Faca login novamente para atualizar o portifolio.",
+        title: "Sessão expirada",
+        description: "Faça login novamente para atualizar o portfólio.",
         variant: "destructive",
       })
       return
@@ -1487,7 +1435,6 @@ export function ArtistProfile({
     setIsUploadingPortfolio(true)
     try {
       const formData = new FormData()
-      formData.append("GoogleToken.GoogleToken", tokenGoogle)
       portfolioImages.forEach((file) => {
         formData.append("Imagens", file)
       })
@@ -1510,26 +1457,19 @@ export function ArtistProfile({
         }
       }
 
-      const response = await fetch(API_ROUTES.Usuario.cadastrarPortfolio, {
-        method: "POST",
-        body: formData,
-      })
+      await api.postForm(API_ROUTES.Usuario.cadastrarPortfolio, formData)
 
-      if (!response.ok) {
-        throw new Error("Falha ao atualizar portifolio.")
-      }
-
-      await refreshBackendProfile(tokenGoogle)
+      await refreshBackendProfile()
       toast({
-        title: "Portifolio atualizado",
-        description: "Sua nova imagem ja aparece no perfil.",
+        title: "Portfólio atualizado",
+        description: "Sua nova imagem já aparece no perfil.",
       })
       setIsAddPortfolioOpen(false)
       resetPortfolioDialog()
     } catch {
       toast({
         title: "Erro ao enviar",
-        description: "Nao foi possivel enviar a imagem agora.",
+        description: "Não foi possível enviar a imagem agora.",
         variant: "destructive",
       })
     } finally {
@@ -1549,17 +1489,16 @@ export function ArtistProfile({
     if (!post.backendId) {
       toast({
         title: "Post indisponivel",
-        description: "Este post ainda nao pode ser curtido.",
+        description: "Este post ainda não pode ser curtido.",
         variant: "destructive",
       })
       return
     }
 
-    const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
-    if (!tokenGoogle) {
+    if (!getAuth()) {
       toast({
-        title: "Sessao expirada",
-        description: "Faca login novamente para curtir.",
+        title: "Sessão expirada",
+        description: "Faça login novamente para curtir.",
         variant: "destructive",
       })
       return
@@ -1577,16 +1516,9 @@ export function ArtistProfile({
     triggerPulse(setPulseLikeId, post.id)
 
     try {
-      const response = await fetch(isLiked ? API_ROUTES.Interacao.descurtir : API_ROUTES.Interacao.curtir, {
-        method: isLiked ? "DELETE" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          googleToken: tokenGoogle,
-          alvoId: post.backendId,
-          tipoAlvoInteracao: 1,
-        }),
-      })
-      if (!response.ok) throw new Error("Falha ao curtir.")
+      const body = { alvoId: post.backendId, tipoAlvoInteracao: 1 }
+      if (isLiked) await api.delete(API_ROUTES.Interacao.descurtir, body)
+      else await api.post(API_ROUTES.Interacao.curtir, body)
     } catch {
       setLikedPosts((prev) => ({ ...prev, [post.id]: isLiked }))
       setPostMetrics((prev) => ({
@@ -1598,7 +1530,7 @@ export function ArtistProfile({
       }))
       toast({
         title: "Erro ao curtir",
-        description: "Nao foi possivel registrar a curtida.",
+        description: "Não foi possível registrar a curtida.",
         variant: "destructive",
       })
     }
@@ -1615,11 +1547,10 @@ export function ArtistProfile({
       return
     }
 
-    const tokenGoogle = localStorage.getItem("google_token")?.trim() ?? ""
-    if (!tokenGoogle) {
+    if (!getAuth()) {
       toast({
-        title: "Sessao expirada",
-        description: "Faca login novamente para salvar.",
+        title: "Sessão expirada",
+        description: "Faça login novamente para salvar.",
         variant: "destructive",
       })
       return
@@ -1637,19 +1568,9 @@ export function ArtistProfile({
     triggerPulse(setPulseSaveId, post.id)
 
     try {
-      const response = await fetch(
-        isSaved ? API_ROUTES.Interacao.removerSalvamento : API_ROUTES.Interacao.salvar,
-        {
-          method: isSaved ? "DELETE" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            googleToken: tokenGoogle,
-            alvoId: post.backendId,
-            tipoAlvoInteracao: 1,
-          }),
-        }
-      )
-      if (!response.ok) throw new Error("Falha ao salvar.")
+      const body = { alvoId: post.backendId, tipoAlvoInteracao: 1 }
+      if (isSaved) await api.delete(API_ROUTES.Interacao.removerSalvamento, body)
+      else await api.post(API_ROUTES.Interacao.salvar, body)
     } catch {
       setSavedPosts((prev) => ({ ...prev, [post.id]: isSaved }))
       setPostMetrics((prev) => ({
@@ -1661,9 +1582,51 @@ export function ArtistProfile({
       }))
       toast({
         title: "Erro ao salvar",
-        description: "Nao foi possivel registrar o salvamento.",
+        description: "Não foi possível registrar o salvamento.",
         variant: "destructive",
       })
+    }
+  }
+
+  const handleBecomeArtist = async () => {
+    const cargo = Number.parseInt(becomeArtistCargo, 10)
+    if (!Number.isFinite(cargo) || cargo < 1) {
+      toast({
+        title: "Selecione um cargo",
+        description: "Escolha o cargo que melhor descreve seu trabalho.",
+        variant: "destructive",
+      })
+      return
+    }
+    setIsSubmittingBecomeArtist(true)
+    try {
+      await api.post(API_ROUTES.Usuario.cadastrarArtista, { cargoArtista: cargo })
+
+      const current = getAuth()
+      if (current) {
+        setAuth({ ...current, user: { ...current.user, jaAnunciou: true } })
+      }
+      setJaAnunciou(true)
+      setIsBecomeArtistOpen(false)
+      setBecomeArtistCargo("")
+
+      if (onCurrentUserUpdate) {
+        onCurrentUserUpdate({ role: "artista" })
+      }
+
+      toast({
+        title: "Você agora é um artista!",
+        description: "Cadastre seus serviços e portfólio para começar.",
+      })
+    } catch (err) {
+      const e = err as { message?: string }
+      toast({
+        title: "Erro ao virar artista",
+        description: e.message || "Não foi possível cadastrar como artista.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmittingBecomeArtist(false)
     }
   }
 
@@ -1687,80 +1650,106 @@ export function ArtistProfile({
           loading="lazy"
         />
       </div>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
-        <section className="space-y-4 bg-card/80 p-4 md:p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-1 rounded-full border bg-background/80 p-1 text-lg font-bold">
-              <Button
-                type="button"
-                size="default"
-                variant={showServices ? "default" : "ghost"}
-                onClick={() => setShowServices(true)}
-                className={
-                  showServices
-                    ? "rounded-full"
-                    : "rounded-full text-muted-foreground"
-                }
-              >
-                Servicos
-              </Button>
-              <Button
-                type="button"
-                size="default"
-                variant={showServices ? "ghost" : "default"}
-                onClick={() => setShowServices(false)}
-                className={
-                  showServices
-                    ? "rounded-full text-muted-foreground"
-                    : "rounded-full"
-                }
-              >
-                Portifolio
-              </Button>
-            </div>
-            {!showServices && (
-              <Select
-                value={portfolioSort}
-                onValueChange={(value) =>
-                  setPortfolioSort(value as "recentes" | "populares")
-                }
-              >
-                <SelectTrigger className="w-36">
-                  <SelectValue placeholder="Ordenar por" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="recentes">Mais recentes</SelectItem>
-                  <SelectItem value="populares">Mais populares</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
+      {canEditProfile && !jaAnunciou && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-border/50 bg-card/80 p-5 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold">Quer virar artista?</h3>
+            <p className="text-sm text-muted-foreground">
+              Cadastre-se como artista para criar serviços, postar portfólio e receber comissões.
+            </p>
           </div>
-          {showServices ? (
-            <ServicesSection
-              activePriceSheets={activePriceSheets}
-              canEditProfile={canEditProfile}
-              isOwnerProfile={isOwnerProfile}
-              serviceGalleries={serviceGalleries}
-              artist={artist}
-              onAddService={() => setIsAddServiceOpen(true)}
-              onRequestCommission={onRequestCommission}
-            />
-          ) : (
-            <PortfolioSection
-              sortedPosts={sortedPosts}
-              canEditProfile={canEditProfile}
-              isOwnerProfile={isOwnerProfile}
-              likedPosts={likedPosts}
-              onAddPortfolio={() => setIsAddPortfolioOpen(true)}
-              onOpenPost={(index) => {
-                setActivePostIndex(index)
-                setActiveImageIndex(0)
-                setPostDialogOpen(true)
-              }}
-              resolveMetrics={resolveMetrics}
-            />
-          )}
-        </section>
+          <Button type="button" onClick={() => setIsBecomeArtistOpen(true)}>
+            Virar Artista
+          </Button>
+        </div>
+      )}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+        {jaAnunciou ? (
+          <section className="space-y-4 bg-card/80 p-4 md:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-1 rounded-full border bg-background/80 p-1 text-lg font-bold">
+                <Button
+                  type="button"
+                  size="default"
+                  variant={showServices ? "default" : "ghost"}
+                  onClick={() => setShowServices(true)}
+                  className={
+                    showServices
+                      ? "rounded-full"
+                      : "rounded-full text-muted-foreground"
+                  }
+                >
+                  Serviços
+                </Button>
+                <Button
+                  type="button"
+                  size="default"
+                  variant={showServices ? "ghost" : "default"}
+                  onClick={() => setShowServices(false)}
+                  className={
+                    showServices
+                      ? "rounded-full text-muted-foreground"
+                      : "rounded-full"
+                  }
+                >
+                  Portfólio
+                </Button>
+              </div>
+              {!showServices && (
+                <Select
+                  value={portfolioSort}
+                  onValueChange={(value) =>
+                    setPortfolioSort(value as "recentes" | "populares")
+                  }
+                >
+                  <SelectTrigger className="w-36">
+                    <SelectValue placeholder="Ordenar por" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recentes">Mais recentes</SelectItem>
+                    <SelectItem value="populares">Mais populares</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+            {showServices ? (
+              <ServicesSection
+                activePriceSheets={activePriceSheets}
+                canEditProfile={canEditProfile}
+                isOwnerProfile={isOwnerProfile}
+                serviceGalleries={serviceGalleries}
+                artist={artist}
+                onAddService={() => setIsAddServiceOpen(true)}
+                onRequestCommission={onRequestCommission}
+              />
+            ) : (
+              <PortfolioSection
+                sortedPosts={sortedPosts}
+                canEditProfile={canEditProfile}
+                isOwnerProfile={isOwnerProfile}
+                likedPosts={likedPosts}
+                onAddPortfolio={() => setIsAddPortfolioOpen(true)}
+                onOpenPost={(index) => {
+                  setActivePostIndex(index)
+                  setActiveImageIndex(0)
+                  setPostDialogOpen(true)
+                }}
+                resolveMetrics={resolveMetrics}
+              />
+            )}
+          </section>
+        ) : (
+          <section className="flex min-h-[240px] items-center justify-center rounded-2xl border border-dashed border-border/60 bg-card/40 p-8 text-center">
+            <div className="space-y-2">
+              <h3 className="text-base font-semibold">Ainda sem serviços ou portfólio</h3>
+              <p className="text-sm text-muted-foreground">
+                {canEditProfile
+                  ? "Cadastre-se como artista para começar a publicar."
+                  : "Este usuário ainda não é um artista."}
+              </p>
+            </div>
+          </section>
+        )}
         <ArtistInfoPanel
           resolvedAvatarUrl={resolvedAvatarUrl}
           resolvedDisplayName={resolvedDisplayName}
@@ -1805,7 +1794,7 @@ export function ArtistProfile({
                 <Separator />
                 <div className="space-y-2">
                   <h3 className="text-3xl font-semibold">
-                    {activePost?.titulo ?? "Post do portifolio"}
+                    {activePost?.titulo ?? "Post do portfólio"}
                   </h3>
                   <p className="min-w-0 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-sm text-muted-foreground">
                     {clampedDescription}
@@ -1981,6 +1970,40 @@ export function ArtistProfile({
               </div>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isBecomeArtistOpen} onOpenChange={setIsBecomeArtistOpen}>
+        <DialogContent className="w-[94vw] max-w-md">
+          <DialogHeader>
+            <DialogTitle>Virar Artista</DialogTitle>
+            <DialogDescription>
+              Escolha o cargo que melhor descreve seu trabalho. Você poderá ajustar depois.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 py-2">
+            <Label htmlFor="cargoArtista">Cargo</Label>
+            <Select value={becomeArtistCargo} onValueChange={setBecomeArtistCargo}>
+              <SelectTrigger id="cargoArtista">
+                <SelectValue placeholder="Selecione um cargo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Ilustrador(a)</SelectItem>
+                <SelectItem value="2">Designer</SelectItem>
+                <SelectItem value="3">Concept Artist</SelectItem>
+                <SelectItem value="4">Animador(a)</SelectItem>
+                <SelectItem value="5">Modelador(a) 3D</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBecomeArtistOpen(false)} disabled={isSubmittingBecomeArtist}>
+              Cancelar
+            </Button>
+            <Button onClick={handleBecomeArtist} disabled={isSubmittingBecomeArtist || !becomeArtistCargo}>
+              {isSubmittingBecomeArtist ? "Cadastrando..." : "Confirmar"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -2185,9 +2208,9 @@ export function ArtistProfile({
       <Dialog open={isAddPortfolioOpen} onOpenChange={setIsAddPortfolioOpen}>
         <DialogContent className="w-[94vw] max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Adicionar no portifolio</DialogTitle>
+            <DialogTitle>Adicionar no portfólio</DialogTitle>
             <DialogDescription>
-              Envie uma ou mais imagens para o seu portifolio.
+              Envie uma ou mais imagens para o seu portfólio.
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">

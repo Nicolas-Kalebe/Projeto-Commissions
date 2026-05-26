@@ -17,6 +17,10 @@ namespace SMT.Back.Comissoes.Models.Entity
         public DateOnly DataNascimento { get; set; } // Data de nascimento do usuário
         [Required]
         public string Email { get; set; } = string.Empty; // Email do usuário
+        public string? SenhaHash { get; set; } // Hash BCrypt (null para usuarios Google)
+        public bool EmailConfirmado { get; set; } = false;
+        [Required]
+        public ProvedorAutenticacaoEnum ProvedorAutenticacao { get; set; } = ProvedorAutenticacaoEnum.Local;
         public int? Celular { get; set; } // Número de celular do usuário
         public string? FotoPerfil { get; set; } // Url da foto de perfil do usuário (opcional)
         public string? FotoCapa { get; set; } // Url da foto de capa do usuário (opcional)

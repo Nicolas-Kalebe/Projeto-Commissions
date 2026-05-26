@@ -1,40 +1,32 @@
 import { Toaster } from "@/components/ui/toaster"
 import { AppShell } from "@/components/layout/AppShell"
 import { useEffect, useState } from "react"
+import { getAuth, subscribeAuth } from "@/lib/authStorage"
+import { authService } from "@/services/authService"
 
 function App() {
-  // Mock authentication state
-  // In a real app, this would check a token or auth provider status
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    try {
-      return Boolean(localStorage.getItem("google_token"))
-    } catch {
-      return false
-    }
-  })
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => Boolean(getAuth()))
 
   useEffect(() => {
+    const unsub = subscribeAuth((next) => setIsAuthenticated(Boolean(next)))
+
     const handleStorage = (event: StorageEvent) => {
-      if (event.key === "google_token") {
-        setIsAuthenticated(Boolean(event.newValue))
-        return
-      }
-      if (event.key === null) {
-        setIsAuthenticated(Boolean(localStorage.getItem("google_token")))
+      if (event.key === "auth" || event.key === null) {
+        setIsAuthenticated(Boolean(getAuth()))
       }
     }
-
     window.addEventListener("storage", handleStorage)
+
     return () => {
+      unsub()
       window.removeEventListener("storage", handleStorage)
     }
   }, [])
 
-  const handleLogin = () => {
-    setIsAuthenticated(true)
-  }
+  const handleLogin = () => setIsAuthenticated(true)
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await authService.logout()
     setIsAuthenticated(false)
   }
 

@@ -36,12 +36,12 @@ export function AboutPage() {
             Sobre nos
           </p>
           <h1 className="text-3xl font-semibold leading-tight md:text-4xl">
-            Projeto Comissoes nasce para dar clareza, ritmo e seguranca ao trabalho
+            Projeto Comissões nasce para dar clareza, ritmo e segurança ao trabalho
             criativo.
           </h1>
           <p className="text-sm text-muted-foreground md:text-base">
-            Somos uma plataforma focada em comissoes artisticas. Conectamos
-            clientes e criadores com fluxos organizados, comunicacao objetiva e
+            Somos uma plataforma focada em comissões artísticas. Conectamos
+            clientes e criadores com fluxos organizados, comunicação objetiva e
             ferramentas que valorizam cada etapa do processo.
           </p>
           <div className="flex flex-wrap items-center gap-3">
@@ -54,11 +54,11 @@ export function AboutPage() {
           <CardContent className="space-y-4 p-6">
             <div className="rounded-xl border border-border/60 bg-muted/40 p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Nossa missao
+                Nossa missão
               </p>
               <p className="mt-2 text-sm font-semibold md:text-base">
-                Simplificar comissoes digitais e valorizar o talento criativo com
-                processos claros e confiaveis.
+                Simplificar comissões digitais e valorizar o talento criativo com
+                processos claros e confiáveis.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">

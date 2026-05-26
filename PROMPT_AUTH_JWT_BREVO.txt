@@ -1,0 +1,411 @@
+================================================================================
+PROMPT DE IMPLEMENTACAO - Autenticacao Local + JWT + Brevo + FK Artista->Usuario
+Projeto: SMT.Back.Comissoes (.NET 9 / EF Core 8 / PostgreSQL)
+================================================================================
+
+
+CONTEXTO ATUAL DO PROJETO
+-------------------------
+- Backend ASP.NET Core (.NET 9) em SMT.Back.Comissoes/, EF Core 8 + Npgsql
+  (PostgreSQL no Aiven), Serilog, Swagger.
+- Autenticacao hoje: somente Google. O backend valida o ID token do Google em
+  cada chamada (Google.Apis.Auth) - nao emite token proprio, nao ha senha, e
+  app.UseAuthorization() esta comentado em Program.cs:84.
+- Todas as rotas estao abertas (nenhum [Authorize] ativo).
+- Entidade Usuario (Models/Entity/Usuario.cs) NAO tem senha nem flag de email
+  confirmado.
+- Entidade Artista (Models/Entity/Artista.cs) tem UsuarioId : int mas o
+  [ForeignKey(nameof(UsuarioId))] esta MAL posicionado (apontando para Estilo).
+  Nao existe nav property Usuario nem configuracao da relacao no
+  DbContextClass - portanto a FK efetivamente nao existe.
+- Front-end em React/Vite (SMT.Front.Comissoes/), origem http://localhost:5173
+  ja liberada via CORS DevCors.
+- UserSecretsId ja existe no .csproj.
+
+
+OBJETIVO
+--------
+1. Permitir dois fluxos de cadastro/login:
+   (a) Google (mantem o existente, refatorado para emitir JWT proprio)
+   (b) Email + senha com confirmacao por codigo de 6 digitos enviado por email
+       via Brevo (free-plan, API HTTP transactional-emails)
+
+2. Apos autenticar (em qualquer um dos fluxos), o backend emite um JWT proprio.
+   Todas as rotas (exceto as publicas de auth) passam a exigir esse token via
+   [Authorize] global + app.UseAuthentication()/UseAuthorization().
+
+3. Tornar Artista.UsuarioId uma FK real para Usuario.Id, com nav property
+   bidirecional e configuracao via Fluent API.
+
+
+================================================================================
+A. MODELO DE DADOS (uma unica migration cobrindo tudo)
+================================================================================
+
+Usuario (alteracoes):
+  - SenhaHash : string?           (nullable; usuarios Google ficam sem senha)
+  - EmailConfirmado : bool        (default false; Google entra com true)
+  - ProvedorAutenticacao : enum { Local, Google }
+
+Nova entidade CodigoVerificacaoEmail:
+  - Id              int PK
+  - Email           string  (indice)
+  - CodigoHash      string  (NUNCA o codigo em claro)
+  - ExpiraEm        DateTime UTC  (now + 10 min)
+  - Tentativas      int      (max 5)
+  - Consumido       bool
+  - DataCriacao     DateTime UTC
+
+Nova entidade RefreshToken:
+  - Id              int PK
+  - UsuarioId       int FK -> Usuario(Id) [Cascade]
+  - TokenHash       string  (NUNCA o token em claro)
+  - ExpiraEm        DateTime UTC  (now + 5 dias)
+  - Revogado        bool
+  - SubstituidoPor  int?    (id do novo refresh em caso de rotation)
+  - DataCriacao     DateTime UTC
+  - IpCriacao       string? (auditoria opcional)
+
+Artista (correcao da FK):
+  - Adicionar:  public Usuario Usuario { get; set; }
+  - Remover [ForeignKey] mal posicionado
+  - Em DbContextClass.OnModelCreating:
+      modelBuilder.Entity<Artista>()
+          .HasOne(a => a.Usuario)
+          .WithOne()
+          .HasForeignKey<Artista>(a => a.UsuarioId)
+          .OnDelete(DeleteBehavior.Cascade);
+
+Observacao sobre dados existentes:
+  - O usuario informou que vai EXCLUIR todos os usuarios atuais antes do
+    deploy, entao nao ha migracao de dados a fazer.
+
+
+================================================================================
+B. FLUXO DE CADASTRO LOCAL (email + senha)
+================================================================================
+
+Politica de senha:
+  - Minimo 8 caracteres
+  - Maximo 20 caracteres
+  - Pelo menos 1 letra maiuscula
+  - Pelo menos 1 simbolo (nao alfanumerico)
+  - Hash com BCrypt.Net-Next (work factor 11-12)
+
+Codigo de verificacao:
+  - 6 digitos numericos gerados com RNG cripto-seguro
+  - Expira em 10 minutos
+  - Maximo 5 tentativas erradas antes de invalidar
+  - Reenvio: cooldown de 60 segundos entre cada, max 3 por hora
+  - Armazenado como HASH (HMAC-SHA256 com pepper OU bcrypt)
+
+Endpoints:
+
+  POST /api/Auth/Cadastrar             [AllowAnonymous]
+    Body: { email, senha, nomePerfil, dataNascimento, pronome? }
+    Comportamento:
+      - Valida formato/forca da senha
+      - Checa duplicidade de email e NomePerfil
+      - Bloqueia se email ja existe com ProvedorAutenticacao=Google
+        (mensagem clara: "Esse email ja foi cadastrado via Google,
+        use o login do Google.")
+      - Cria Usuario COM EmailConfirmado=false, ProvedorAutenticacao=Local
+      - Gera codigo de 6 digitos, grava hash em CodigoVerificacaoEmail
+      - Envia email via Brevo
+      - Retorna 204 No Content
+    Importante: usuario fica criado mas NAO pode logar ate confirmar email.
+
+  POST /api/Auth/ConfirmarEmail        [AllowAnonymous]
+    Body: { email, codigo }
+    Comportamento:
+      - Valida codigo nao expirado, nao consumido, dentro do limite de
+        tentativas
+      - Marca CodigoVerificacaoEmail.Consumido=true
+      - Marca Usuario.EmailConfirmado=true
+      - Emite JWT + RefreshToken
+    Retorna: { accessToken, refreshToken, expiresIn }
+
+  POST /api/Auth/ReenviarCodigo        [AllowAnonymous]
+    Body: { email }
+    Comportamento:
+      - Rate-limit: cooldown 60s, max 3/hora
+      - Invalida codigos anteriores nao consumidos do mesmo email
+      - Gera novo codigo, envia
+      - Retorna 204
+    Mensagem generica se email nao existe (nao revelar enumeracao).
+
+  POST /api/Auth/LoginLocal            [AllowAnonymous]
+    Body: { email, senha }
+    Comportamento:
+      - Bloqueia se EmailConfirmado=false
+      - Bloqueia se ProvedorAutenticacao != Local
+      - Verifica senha (BCrypt.Verify)
+      - Emite JWT + RefreshToken
+    Retorna: { accessToken, refreshToken, expiresIn }
+    Mensagens de erro genericas ("credenciais invalidas") para nao
+    revelar se o email existe.
+
+
+================================================================================
+C. FLUXO GOOGLE (refatorar)
+================================================================================
+
+  POST /api/Auth/ValidarTokenGoogle    [AllowAnonymous]
+    Body: { tokenGoogle }
+    Comportamento:
+      - Valida ID token Google (igual hoje)
+      - Upsert do Usuario:
+          - Se existe e ProvedorAutenticacao=Local: BLOQUEAR com mensagem
+            clara ("Esse email ja foi cadastrado com senha local.")
+          - Se nao existe: cria com ProvedorAutenticacao=Google,
+            EmailConfirmado=true
+          - Se ja existe Google: apenas autentica
+      - Emite JWT + RefreshToken NOSSO (nao mais o payload Google)
+    Retorna: { accessToken, refreshToken, expiresIn }
+
+UsuarioService.CadastrarUsuario / ObterUsuarioPorToken / AutenticarUsuario:
+  - Devem parar de validar token Google em cada request
+  - Passam a ler claims do JWT via HttpContext.User
+  - Ex.: var usuarioId = int.Parse(User.FindFirst("sub")!.Value);
+
+
+================================================================================
+D. JWT + AUTHORIZATION
+================================================================================
+
+Pacote NuGet a adicionar:
+  - Microsoft.AspNetCore.Authentication.JwtBearer
+
+Configuracao do token (access token):
+  - Algoritmo: HS256 (HMAC-SHA256)
+  - Claims:
+      sub          = Usuario.Id
+      email        = Usuario.Email
+      nomePerfil   = Usuario.NomePerfil
+      provedor     = "Google" ou "Local"
+      exp          = now + 60 min
+      iss          = "SMT.Back.Comissoes"
+      aud          = "SMT.Front.Comissoes"
+  - SigningKey: minimo 32 bytes, em user-secrets/env var
+                (NUNCA no appsettings.json versionado)
+
+Refresh token:
+  - String opaca aleatoria (32+ bytes, Base64Url)
+  - Expira em 5 dias
+  - Hash armazenado em RefreshToken.TokenHash
+  - Rotation: a cada uso, revoga o antigo (Revogado=true,
+    SubstituidoPor=novoId) e emite novo par
+
+Endpoint de refresh:
+  POST /api/Auth/RefreshToken          [AllowAnonymous]
+    Body: { tokenAntigo, refreshTokenAntigo }
+    Comportamento:
+      - Aceita access token EXPIRADO mas com assinatura valida
+        (ValidateLifetime=false so neste endpoint)
+      - Valida refresh token: existe, nao revogado, nao expirado,
+        pertence ao mesmo usuario do access token
+      - Revoga o refresh antigo
+      - Emite novo par (access + refresh)
+    Retorna: { accessToken, refreshToken, expiresIn }
+
+Endpoint de logout:
+  POST /api/Auth/Logout                [Authorize]
+    Body: { refreshToken }
+    Comportamento: marca o refresh token como Revogado=true
+    Retorna: 204
+
+Authorization global em Program.cs:
+
+  builder.Services
+      .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+      .AddJwtBearer(options =>
+      {
+          options.TokenValidationParameters = new TokenValidationParameters
+          {
+              ValidateIssuer = true,
+              ValidateAudience = true,
+              ValidateLifetime = true,
+              ValidateIssuerSigningKey = true,
+              ValidIssuer = builder.Configuration["Jwt:Issuer"],
+              ValidAudience = builder.Configuration["Jwt:Audience"],
+              IssuerSigningKey = new SymmetricSecurityKey(
+                  Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SigningKey"]!)),
+              ClockSkew = TimeSpan.Zero
+          };
+      });
+
+  builder.Services.AddAuthorization();
+
+  // Policy global - todas as rotas exigem auth
+  builder.Services.AddControllers(o =>
+  {
+      var policy = new AuthorizationPolicyBuilder()
+          .RequireAuthenticatedUser()
+          .Build();
+      o.Filters.Add(new AuthorizeFilter(policy));
+  });
+
+  // ... resto ...
+
+  app.UseAuthentication();   // ORDEM IMPORTA: Authentication ANTES de Authorization
+  app.UseAuthorization();
+
+Rotas publicas (marcar com [AllowAnonymous]):
+  - POST /Auth/Cadastrar
+  - POST /Auth/ConfirmarEmail
+  - POST /Auth/ReenviarCodigo
+  - POST /Auth/LoginLocal
+  - POST /Auth/ValidarTokenGoogle
+  - POST /Auth/RefreshToken
+
+Todas as demais rotas (Usuario/*, Interacao/*, etc.) exigem JWT.
+
+Swagger:
+  - Adicionar SecurityDefinition "Bearer" para que o botao "Authorize"
+    apareca no Swagger UI.
+
+
+================================================================================
+E. BREVO - EMAILS TRANSACIONAIS
+================================================================================
+
+API: POST https://api.brevo.com/v3/smtp/email
+Header: api-key: <BREVO_API_KEY>
+Free-plan: 300 emails/dia
+
+Implementacao:
+  - Interface IEmailService
+  - Implementacao BrevoEmailService usando HttpClient tipado
+    (sem dependencia do SDK sib_api_v3_sdk para evitar peso extra)
+  - Registrado como Scoped no DI
+  - Em caso de falha no envio: logar via Serilog e lancar excecao
+
+Configs em appsettings (chaves em user-secrets):
+  Brevo:ApiKey
+  Brevo:SenderEmail
+  Brevo:SenderName
+
+Template do email:
+  - HTML simples inline no codigo
+  - Conteudo: logo (opcional), saudacao, codigo grande em destaque,
+    aviso "expira em 10 minutos", call-to-action
+  - Migrar para template ID do Brevo no futuro (fora do escopo)
+
+
+================================================================================
+F. SEGURANCA / BOAS PRATICAS
+================================================================================
+
+- Hash de senha: BCrypt.Net-Next (work factor 11-12)
+- Hash de codigo de verificacao: BCrypt ou HMAC-SHA256 com pepper
+- Hash de refresh token: SHA-256 (suficiente para token opaco aleatorio)
+- Rate-limit nos endpoints de auth via Microsoft.AspNetCore.RateLimiting
+- Mensagens de erro genericas em login/confirmar (anti-enumeracao)
+- Sanitizacao de inputs em todos DTOs
+- Senha nunca aparece em log (Serilog destructure)
+- HTTPS obrigatorio em producao
+
+
+================================================================================
+G. ARMAZENAMENTO DE SEGREDOS
+================================================================================
+
+Recomendacao: dotnet user-secrets em dev + variaveis de ambiente em prod.
+
+UserSecretsId ja existe no .csproj. Em PowerShell:
+
+  dotnet user-secrets set "Jwt:Issuer" "SMT.Back.Comissoes"
+  dotnet user-secrets set "Jwt:Audience" "SMT.Front.Comissoes"
+  dotnet user-secrets set "Jwt:SigningKey" "<chave-aleatoria-min-32-bytes>"
+  dotnet user-secrets set "Jwt:AccessTokenMinutes" "60"
+  dotnet user-secrets set "Jwt:RefreshTokenDays" "5"
+  dotnet user-secrets set "Brevo:ApiKey" "xkeysib-..."
+  dotnet user-secrets set "Brevo:SenderEmail" "noreply@dominio.com"
+  dotnet user-secrets set "Brevo:SenderName" "Projeto Commissions"
+
+Em producao: mesmas chaves como env vars com double-underscore:
+  Jwt__SigningKey, Brevo__ApiKey, etc.
+
+TODO ADICIONAL (a decidir se entra junto ou depois):
+  - Mover senha do Postgres do appsettings.json:32 para user-secrets/env
+  - Mover access key do S3/Backblaze do Program.cs:46-50 para user-secrets/env
+  - Mover GoogleAuth:ClientId do appsettings.json:28 para user-secrets/env
+    (nao e segredo critico mas convem centralizar)
+
+
+================================================================================
+H. FRONT-END (React/Vite em SMT.Front.Comissoes/)
+================================================================================
+
+Decisao pendente: entra junto nessa entrega ou em PR separada?
+
+Se entrar junto:
+  - Telas novas: cadastro local, confirmacao de codigo, login local,
+    reenvio de codigo
+  - Centralizar fetch/axios em um apiClient com:
+    * Request interceptor: injeta Authorization: Bearer ${accessToken}
+    * Response interceptor: em 401 -> POST /Auth/RefreshToken ->
+      atualiza tokens -> retry da request original. Se refresh falhar
+      -> limpa storage -> redireciona pra /login
+  - Storage: localStorage (ou sessionStorage se preferir)
+
+
+================================================================================
+I. ENTREGAVEIS
+================================================================================
+
+- Codigo compilando, build sem warnings novos
+- 1 migration cobrindo:
+  * Campos novos em Usuario (SenhaHash, EmailConfirmado, ProvedorAutenticacao)
+  * Tabela CodigoVerificacaoEmail
+  * Tabela RefreshToken
+  * FK Artista.UsuarioId -> Usuario.Id
+- Swagger atualizado com botao "Authorize" (Bearer)
+- appsettings.example.json listando as chaves novas (Jwt:*, Brevo:*)
+- Smoke test manual descrito:
+  1) Cadastro local -> email recebido -> ConfirmarEmail -> recebe JWT ->
+     bate em rota protegida com Bearer -> 200
+  2) Login Google -> recebe JWT -> bate em rota protegida -> 200
+  3) Refresh token -> recebe novo par -> par antigo nao funciona mais
+  4) Logout -> refresh token nao funciona mais
+
+
+================================================================================
+DECISOES JA FECHADAS (resumo)
+================================================================================
+
+[x] Cadastro: cria Usuario com EmailConfirmado=false e bloqueia login ate
+    confirmar (opcao B)
+[x] Senha: 8-20 chars, 1 maiuscula, 1 simbolo
+[x] Codigo: 6 digitos, expira 10 min, max 5 tentativas, cooldown reenvio 60s
+[x] Access token: 60 min
+[x] Refresh token: 5 dias, com rotation
+[x] Refresh endpoint recebe { tokenAntigo, refreshTokenAntigo }
+[x] Brevo: API key + sender ja configurados pelo usuario
+[x] Email: HTML simples inline
+[x] FK Artista->Usuario: OnDelete Cascade
+[x] Conflito Google vs Local com mesmo email: BLOQUEAR
+[x] Rotas publicas: apenas Auth/Cadastrar, ConfirmarEmail, ReenviarCodigo,
+    LoginLocal, ValidarTokenGoogle, RefreshToken. Todo o resto exige JWT.
+[x] Logout: endpoint dedicado que revoga refresh token
+[x] POST /Auth/Cadastrar e PUBLICO (qualquer um pode se cadastrar)
+[x] Dados existentes: usuario vai excluir todos antes do deploy
+[x] Segredos: dotnet user-secrets em dev, env vars em prod
+
+
+================================================================================
+DECISOES PENDENTES
+================================================================================
+
+[ ] Limpeza de segredos hard-coded (Postgres, S3, GoogleClientId):
+    - opcao 1: junto com essa feature
+    - opcao 2: em PR separada
+
+[ ] Front-end faz parte dessa entrega?
+    - opcao 1: backend + front juntos (entrega maior, testavel fim-a-fim)
+    - opcao 2: somente backend agora; front em entrega separada
+
+
+================================================================================
+FIM
+================================================================================
