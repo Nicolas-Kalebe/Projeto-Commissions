@@ -1,3 +1,6 @@
+#NOTA
+Atualmente o projeto foi migrado para um github próprio e está privado. Pretendemos dar continuidade ao projeto mas optamos por algo menos aberto. Assim que puder dou mais atualizações aqui.
+
 # Projeto Commissions
 
 Bem-vindo ao repositório do Projeto Commissions! Este projeto é uma aplicação web completa composta por um backend .NET e um frontend React (Vite).
